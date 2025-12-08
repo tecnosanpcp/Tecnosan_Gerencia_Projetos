@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = "http://localhost:3001/vwSumary";
+const API_URL = "http://localhost:3001/vwSummary";
 
 export const vwProjectMaterialsSummary = async (user_id) => {
   try {
@@ -38,6 +38,21 @@ export const vwComponentRecipeMaterials = async () => {
   } catch (error) {
     console.error(
       "Erro no Service ao contar quantidade de materiais na receita do equipamento",
+      error
+    );
+    return [];
+  }
+};
+
+export const vwTotalProjectsMaterials = async (user_id) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/total/projects/${user_id}`
+    );
+    return response.data && Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error(
+      "Erro no Service",
       error
     );
     return [];

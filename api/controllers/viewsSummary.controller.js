@@ -137,3 +137,30 @@ export const vwComponentMaterialsSummary = async (req, res) => {
     res.status(500).json({ error: "Erro ao listar sumário" });
   }
 };
+
+export const vwTotalsMaterialsProjecst = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    if (!user_id) {
+      return res.status(500).json({ error: "Usuário vazio" });
+    }
+
+    const response = await pool.query(
+      `
+        SELECT 
+          ms.* 
+        FROM vw_projects_materials_summary ms 
+        JOIN projects_users pu ON pu.project_id = ms.project_id 
+        WHERE pu.user_id = $1
+        ORDER BY ms.project_id, ms.material_id;;
+        `,
+      [user_id]
+    );
+    
+    res.status(200).json(response.rows);
+
+  } catch (error) {
+    res.status(500).json({ error: "Erro na requisição " });
+  }
+};

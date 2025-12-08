@@ -36,7 +36,7 @@ app.use("/departments", departmentsRoutes);
 app.use("/employees", employeesRoutes);
 app.use("/materials", materialRoutes);
 app.use("/views", viewRoutes);
-app.use("/vwSumary", viewsSummaryRoutes);
+app.use("/vwSummary", viewsSummaryRoutes);
 
 // Rotas para o que é Realmente produzido
 app.use("/components", componentsRoutes);

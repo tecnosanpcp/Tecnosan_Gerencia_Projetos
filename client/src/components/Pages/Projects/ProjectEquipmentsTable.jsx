@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-import { vwProjectMaterialsSummary } from "@services/ViewsSummary.js";
+import {
+  vwProjectMaterialsSummary,
+  vwTotalProjectsMaterials,
+} from "@services/ViewsSummary.js";
 import { VerifyAuth } from "@services/AuthService.js";
 
 function TotalEquipmentMaterial(equipment) {
@@ -57,13 +60,11 @@ function renderMaterialColumns(
   ));
 }
 
-function renderComponentRow(
-  components,
-  compTimes
-) {
+function renderComponentRow(components, compTimes) {
   return components.map((comp) => {
-    const time = compTimes[comp?.component_id];
-    console.log(comp);
+    console.log(compTimes);
+    const time = compTimes[comp?.component_id] || {};
+    console.log(compTimes[comp?.component_id]);
     return (
       <tr key={comp.component_id}>
         <td colSpan={2}>{comp.component_name}</td>
@@ -91,11 +92,30 @@ function renderComponentRow(
   });
 }
 
+function RenderTotals(totalProjectMaterials, projId) {
+  const IDs = [1, 2, 3, 4, 5, 6, 7];
+  const projectMaterials = totalProjectMaterials.filter(
+    (proj) => proj.project_id == projId
+  );
+  return IDs.map((idCol) => {
+    const materialEncontrado = projectMaterials.find(
+      (mat) => mat.material_id == idCol
+    );
+
+    return (
+      <th key={idCol}>
+        {/* Se achou, mostra a qtd, senão mostra 0 */}
+        {materialEncontrado ? materialEncontrado.total_quantity : 0}
+      </th>
+    );
+  });
+}
+
 function ProjectEquipmentsTable({ project_id, times }) {
   const [currentProject, setCurrentProject] = useState(null);
   const [projectsSummary, setProjectsSummary] = useState([]);
   const [rowsExpands, setRowsExpand] = useState([]);
-  const [rowsCompExpands, setRowsCompExpand] = useState([]);
+  const [totalProjectMaterials, setTotalProjectMaterials] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -103,6 +123,9 @@ function ProjectEquipmentsTable({ project_id, times }) {
 
       const summary_data = await vwProjectMaterialsSummary(user.user_id);
       setProjectsSummary(summary_data);
+
+      const total_data = await vwTotalProjectsMaterials(user.user_id);
+      if (Array.isArray(total_data)) setTotalProjectMaterials(total_data);
     };
     loadData();
   }, []);
@@ -185,15 +208,32 @@ function ProjectEquipmentsTable({ project_id, times }) {
                 <th>{time.total_hours}</th>
               </tr>
               {expanded &&
-                renderComponentRow(
-                  equip.components,
-                  rowsCompExpands,
-                  setRowsCompExpand,
-                  times.components
-                )}
+                renderComponentRow(equip.components, times.components)}
             </React.Fragment>
           );
         })}
+        <tr className="text-left bg-[#DBEBFF]">
+          <th className="first:rounded-bl-lg" colSpan={2}>
+            Totais
+          </th>
+          <th>
+            {currentProject &&
+              formatDateTime(
+                times.projects[currentProject?.project_id].start_date
+              )}
+          </th>
+          <th>
+            {currentProject &&
+              formatDateTime(
+                times.projects[currentProject?.project_id].end_date
+              )}
+          </th>
+          <th>Status</th>
+          {RenderTotals(totalProjectMaterials, currentProject?.project_id)}
+
+          <th>Valor</th>
+          <th className="last:rounded-br-lg">Horas</th>
+        </tr>
       </tbody>
     </table>
   );

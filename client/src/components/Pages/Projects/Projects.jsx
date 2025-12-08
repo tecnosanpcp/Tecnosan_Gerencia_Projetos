@@ -9,19 +9,12 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
 
 import { listProjects } from "@services/ProjectService";
-import {
-  vwProjectConsumedMaterials,
-  getTimesCascade,
-} from "@services/ViewsService";
+import { getTimesCascade } from "@services/ViewsService";
 import { VerifyAuth } from "@services/AuthService";
 
 function Projects() {
   const [projects, setProjects] = useState([]); // inicial vazio
   const [isAddBudgetModalOpen, setAddBudgetModalOpen] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [projectsConsumedMaterials, setProjectsConsumedMaterials] = useState(
-    []
-  );
   const { currentProject, setCurrentProject } = useContext(
     selectedProjectContext
   );
@@ -35,9 +28,6 @@ function Projects() {
 
       const project_data = await listProjects(user.user_id);
       if (project_data) setProjects(project_data);
-
-      const consumed_data = await vwProjectConsumedMaterials(user.user_id);
-      if (consumed_data) setProjectsConsumedMaterials(consumed_data);
 
       const hours_data = await getTimesCascade();
       setTimes(hours_data);
@@ -115,7 +105,7 @@ function Projects() {
                   {times?.projects?.[currentProject?.id]?.qtd_employees ?? 0} F
                 </p>
                 <p>
-                  Total Horas-Homem: {" "}
+                  Total Horas-Homem:{" "}
                   {(times?.projects?.[currentProject?.id]?.qtd_employees ?? 0) *
                     (times?.projects?.[currentProject?.id]?.total_hours ??
                       0)}{" "}
