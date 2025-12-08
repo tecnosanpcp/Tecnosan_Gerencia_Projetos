@@ -62,9 +62,7 @@ function renderMaterialColumns(
 
 function renderComponentRow(components, compTimes) {
   return components.map((comp) => {
-    console.log(compTimes);
     const time = compTimes[comp?.component_id] || {};
-    console.log(compTimes[comp?.component_id]);
     return (
       <tr key={comp.component_id}>
         <td colSpan={2}>{comp.component_name}</td>
@@ -139,6 +137,9 @@ function ProjectEquipmentsTable({ project_id, times }) {
     });
   }, [project_id, projectsSummary]);
 
+  // Debug
+  useEffect(() => console.log(currentProject), [currentProject]);
+
   return (
     <table className="w-full project-equipments text-center">
       <thead>
@@ -164,11 +165,12 @@ function ProjectEquipmentsTable({ project_id, times }) {
         {currentProject?.equipments?.map((equip) => {
           const equip_totals = TotalEquipmentMaterial(equip);
           const total_value = sumEquipmentValue(equip_totals);
+          console.log(total_value)
           const time = times.equipments[equip.equipment_id];
           const expanded = isExpanded(rowsExpands, equip.equipment_id);
 
           return (
-            <React.Fragment key={currentProject.id}>
+            <React.Fragment key={equip.equipment_id}>
               <tr className="bg-white-gray" key={equip.equipment_id}>
                 {/* Botão expand/collapse */}
                 <th>
