@@ -44,9 +44,22 @@ export const vwEquipmentRecipesMaterialSummary = async () => {
   }
 };
 
-export const vwComponentRecipeMaterials = async () => {
+export const vwComponentRecipeMaterialsSummary = async () => {
   try {
     const response = await axios.get(API_URL + "/component-recipe-materials");
+    return response.data && Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error(
+      "Erro no Service ao contar quantidade de materiais na receita do componente",
+      error
+    );
+    return [];
+  }
+};
+
+export const vwBudgetsMaterialsSummary = async () => {
+  try {
+    const response = await axios.get(API_URL + "/budgets-materials-summary");
     return response.data && Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error(

@@ -6,7 +6,7 @@ import { vwSummaryStatus } from "@services/ViewsSummary";
 import { selectedProjectContext } from "@content/SeletedProject.jsx";
 
 // eslint-disable-next-line no-unused-vars
-export default function ProjectTimeline({ searchTerm, times }) {
+export default function BudgetTimeline({ searchTerm, times }) {
   const [equipments, setEquipments] = useState([]);
   const [components, setComponents] = useState([]);
   const [timelineDates, setTimelineDates] = useState([]);

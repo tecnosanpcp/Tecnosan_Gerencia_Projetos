@@ -55,7 +55,7 @@ function AddBudgetModal({ isOpen, setOpen }) {
                 onChange={(e) => set_budget_local(e.target.value)}
               />
               <label htmlFor="description" className="font-semibold">
-                Descrição do Projeto
+                Descrição do Orçamento
               </label>
               <textarea
                 id="description"

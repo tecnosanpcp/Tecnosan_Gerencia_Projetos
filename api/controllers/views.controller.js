@@ -33,10 +33,10 @@ export const vwProjectDepartmentDelays = async (req, res) => {
   }
 };
 
-export const vwComponentRecipeMaterials = async (req, res) => {
+export const vwComponentRecipeMaterialsSummary = async (req, res) => {
   try {
     const response = await pool.query(
-      "select * from component_recipe_material"
+      "select * from vw_components_recipes_materials_summary"
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -50,7 +50,7 @@ export const vwComponentRecipeMaterials = async (req, res) => {
 export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
   try {
     const response = await pool.query(
-      "SELECT * FROM view_equipment_recipes_material_summary"
+      "SELECT * FROM vw_equipments_recipes_materials_summary"
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -60,6 +60,20 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
     );
     res.status(500).json({
       error: "Erro ao listar o sumario de materiais do equipamento" + error,
+    });
+  }
+};
+
+export const vwBudgetsMaterialsSummary = async (req, res) => {
+  try {
+    const response = await pool.query(
+      "SELECT * FROM vw_budgets_materials_summary"
+    );
+    res.status(200).json(response.rows);
+  } catch (error) {
+    console.error("Erro ao listar o sumario de materiais do orçamento", error);
+    res.status(500).json({
+      error: "Erro ao listar o sumario de materiais do orçamento" + error,
     });
   }
 };
@@ -108,53 +122,56 @@ export const getTimesCascade = async (req, res) => {
   try {
     // Consultas às novas views criadas
     const projectQuery = await pool.query(`SELECT * FROM vw_project_hours;`);
-    const equipmentQuery = await pool.query(`SELECT * FROM vw_equipment_hours;`);
-    const componentQuery = await pool.query(`SELECT * FROM vw_component_hours;`);
+    const equipmentQuery = await pool.query(
+      `SELECT * FROM vw_equipment_hours;`
+    );
+    const componentQuery = await pool.query(
+      `SELECT * FROM vw_component_hours;`
+    );
 
     const result = {
       projects: {},
       equipments: {},
-      components: {}
+      components: {},
     };
 
     // ----- PROJECTS -----
     // Mapeamos 'actual_start' para 'start_date' para manter compatibilidade com seu Front-end
-    projectQuery.rows.forEach(row => {
+    projectQuery.rows.forEach((row) => {
       result.projects[row.project_id] = {
         project_id: row.project_id,
         // Usamos o realizado (actual), se não houver, o planejado (planned)
         start_date: row.actual_start || row.planned_start,
         end_date: row.actual_end || row.planned_deadline,
         total_hours: parseFloat(row.total_hours || 0),
-        qtd_employees: parseInt(row.qtd_employees || 0)
+        qtd_employees: parseInt(row.qtd_employees || 0),
       };
     });
 
     // ----- EQUIPMENTS -----
-    equipmentQuery.rows.forEach(row => {
+    equipmentQuery.rows.forEach((row) => {
       result.equipments[row.equipment_id] = {
         equipment_id: row.equipment_id,
         start_date: row.actual_start || row.planned_start,
         end_date: row.actual_end || row.planned_deadline,
         total_hours: parseFloat(row.total_hours || 0),
-        qtd_employees: parseInt(row.qtd_employees || 0)
+        qtd_employees: parseInt(row.qtd_employees || 0),
       };
     });
 
     // ----- COMPONENTS -----
     // Na vw_component_hours, as colunas são start_date (tabela) e end_date (MAX da execução)
-    componentQuery.rows.forEach(row => {
+    componentQuery.rows.forEach((row) => {
       result.components[row.component_id] = {
         component_id: row.component_id,
         start_date: row.start_date, // Data de início do componente
         end_date: row.end_date || row.deadline, // Fim real ou prazo
         total_hours: parseFloat(row.total_hours || 0),
-        qtd_employees: parseInt(row.qtd_employees || 0)
+        qtd_employees: parseInt(row.qtd_employees || 0),
       };
     });
 
     res.json(result);
-
   } catch (error) {
     console.error("Erro ao buscar dados em cascata:", error);
     res.status(500).json({ error: "Erro interno ao processar cronograma." });

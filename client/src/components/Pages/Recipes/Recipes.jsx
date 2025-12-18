@@ -10,7 +10,7 @@ import RecipeHeader from "./RecipeHeader";
 import { listMaterials } from "@services/MaterialService.js";
 import {
   vwEquipmentRecipesMaterialSummary,
-  vwComponentRecipeMaterials,
+  vwComponentRecipeMaterialsSummary,
 } from "@services/ViewsService.js";
 
 function Recipes() {
@@ -22,7 +22,7 @@ function Recipes() {
   const [componentsList, setComponentsList] = useState([]);
   const [equipmentsList, setEquipmentsList] = useState([]);
 
-  // 🔍 Novos estados de busca
+  // Novos estados de busca
   const [searchMaterial, setSearchMaterial] = useState("");
   const [searchComponent, setSearchComponent] = useState("");
   const [searchEquipment, setSearchEquipment] = useState("");
@@ -47,57 +47,71 @@ function Recipes() {
   );
 
   useEffect(() => {
-    const fletchMaterials = async () => {
-      const data = await listMaterials();
-
-      const formatted_data = data.map((i) => ({
-        ID: i.material_id,
-        Nome: i.material_name,
-        Descrição: i.material_desc,
-        "Valor Unitário": i.value + " R$/" + i.uni,
-      }));
-
-      setMaterialsList(formatted_data);
+    const fetchMaterials = async () => {
+      try {
+        const data = await listMaterials();
+        const formatted_data = data.map((i) => ({
+          ID: i.material_id,
+          Nome: i.material_name,
+          Descrição: i.material_desc,
+          "Valor Unitário": `R$ ${i.value} / ${i.uni}`,
+        }));
+        setMaterialsList(formatted_data);
+      } catch (error) {
+        console.error("Erro ao buscar materiais", error);
+      }
     };
 
-    const fletchComponentRecipeMaterial = async () => {
-      const data = await vwComponentRecipeMaterials();
+    const fetchComponentRecipeMaterial = async () => {
+      try {
+        const data = await vwComponentRecipeMaterialsSummary();
 
-      const formatted_data = data.map((i) => ({
-        ID: i.component_id,
-        Componente: i.componente,
-        Resina: i.resina,
-        Manta: i.manta,
-        Roving: i.roving,
-        Catalizador: i.catalizador,
-        "Tecido KG": i.tecido,
-        "Horas Homem": i.horas_homem,
-        "Valor Total": i.total_value,
-      }));
-      setComponentsList(formatted_data);
+        const formatted_data = data.map((i) => ({
+          ID: i.component_recipe_id,
+          Componente: i.recipe_name,
+          Resina: i.resina,
+          "Resina ISO": i.resina_iso,
+          Manta: i.manta,
+          Roving: i.roving,
+          Catalizador: i.catalizador,
+          "Tecido KG": i.tecido_kg,
+          "Tecido CMD": i.tecido_cmd,
+          "Horas Homem": i.horas_homem,
+          "Valor Total": i.total_value,
+        }));
+        setComponentsList(formatted_data);
+      } catch (error) {
+        console.error("Erro ao buscar componentes", error);
+      }
     };
 
-    const fletchProjectMateials = async () => {
-      const data = await vwEquipmentRecipesMaterialSummary();
+    const fetchProjectMaterials = async () => {
+      try {
+        const data = await vwEquipmentRecipesMaterialSummary();
 
-      const formatted_data = data.map((i) => ({
-        ID: i.equipment_recipe_id,
-        "Nome do Equipamento": i.recipe_name,
-        Resina: i.resina,
-        Manta: i.manta,
-        Roving: i.roving,
-        Catalizador: i.catalizador,
-        "Tecido KG": i.tecico_kg,
-        "Horas Homem": i.horas_homem,
-        "Valor Total": i.total_value,
-      }));
+        const formatted_data = data.map((i) => ({
+          ID: i.equipment_recipe_id,
+          "Nome do Equipamento": i.recipe_name,
+          Resina: i.resina,
+          "Resina ISO": i.resina_iso,
+          Manta: i.manta,
+          Roving: i.roving,
+          Catalizador: i.catalizador,
+          "Tecido KG": i.tecido_kg,
+          "Tecido CMD": i.tecido_cmd,
+          "Horas Homem": i.horas_homem,
+          "Valor Total": i.total_value,
+        }));
 
-      setEquipmentsList(formatted_data);
+        setEquipmentsList(formatted_data);
+      } catch (error) {
+        console.error("Erro ao buscar equipamentos", error);
+      }
     };
 
-    fletchMaterials();
-    fletchComponentRecipeMaterial();
-    fletchProjectMateials();
+    fetchMaterials();
+    fetchComponentRecipeMaterial();
+    fetchProjectMaterials();
   }, []);
 
   return (

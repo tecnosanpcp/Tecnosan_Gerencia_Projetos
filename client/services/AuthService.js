@@ -22,6 +22,13 @@ export async function VerifyAuth() {
     const response = await axios.get("http://localhost:3001/auth/verify", {
       headers: { Authorization: `Bearer ${TOKEN}` },
     });
+
+    if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      return null;
+    }
+
     return response.data;
   } catch (error) {
     console.error("Erro ao verificar o token", error);

@@ -1,6 +1,6 @@
 // Imports de componentes gerais
-import NavBar from "../../Ui/NavBar";
 import SidebarList from "../../Ui/SlideBarList";
+import DashboardLayout from "../../Ui/DashboardLayout";
 
 // Import de componentes de especifícos a outro componente
 import AddBudgetModal from "../Budgets/AddBudgetModal";
@@ -44,69 +44,58 @@ function Projects() {
   }, []);
 
   return (
-    <>
-      <div className="flex flex-col max-w-screen min-h-screen overflow-x-hidden gap-6">
-        <NavBar select_index={1} />
+    <DashboardLayout
+      title="Projetos"
+      // O botão de navegação entra aqui
+      actions={
+        <button
+          className="px-4 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm"
+          onClick={() => navigate("/budgets")}
+        >
+          Ir para Orçamento
+        </button>
+      }
+      // A Sidebar inteira entra aqui
+      sidebar={
+        <SidebarList
+          items={projects.map((project) => ({
+            id: project.project_id,
+            name: project.project_name,
+            desc: project.project_desc,
+            status: project.status,
+            start_date: project.start_date,
+            completion_date: project.completion_date,
+            deadline: project.deadline,
+          }))}
+          selectedItem={currentProject}
+          onSelectItem={setCurrentProject}
+          onAdd={() => setAddBudgetModalOpen(true)}
+          addLabel="+ Novo Projeto"
+          titleAll="Todos os Projetos"
+          filterOptions={[
+            { value: "Running", label: "Executando" },
+            { value: "Pending", label: "Pendente" },
+          ]}
+        />
+      }
+      // O Header de métricas (resinas, horas) entra aqui
+      header={<ProjectsHeader times={times} />}
+    >
+      {/* O conteúdo principal (que estava dentro de ProjectsMain e Footer) */}
+      <div className="flex flex-col gap-4">
+        <ProjectsMain times={times} />
 
-        {/* Header Principal */}
-        <div className="card justify-between">
-          <h1 className="text-base font-medium">Projetos</h1>
-          <button
-            className="px-4 py-1 rounded bg-gray-100 hover:bg-gray-200"
-            onClick={() => navigate("/budgets")}
-          >
-            Ir para Orçamento
-          </button>
-        </div>
-
-        {/* Layout Principal */}
-        <div className="flex flex-1 ml-8 gap-4 mb-8">
-          {/* Sidebar */}
-          <div className="w-1/12 min-w-[150px]">
-            <SidebarList
-              items={projects.map((project) => ({
-                id: project.project_id,
-                name: project.project_name,
-                desc: project.project_desc,
-                status: project.status,
-                start_date: project.start_date,
-                completion_date: project.completion_date,
-                deadline: project.deadline,
-              }))}
-              selectedItem={currentProject}
-              onSelectItem={setCurrentProject}
-              onAdd={() => setAddBudgetModalOpen(true)}
-              addLabel="+ Novo Projeto"
-              titleAll="Todos os Projetos"
-              filterOptions={[
-                { value: "Running", label: "Executando" },
-                { value: "Pending", label: "Pendente" },
-              ]}
-            />
-          </div>
-
-          {/* Conteúdo Principal */}
-          <div className="flex flex-col flex-1 gap-4">
-            {/* Header do Projeto */}
-            <ProjectsHeader times={times} />
-
-            {/* MAIN expansivo */}
-            <ProjectsMain times={times}/>
-
-            {/* Footer */}
-            <ProjectsFooter />
-          </div>
-        </div>
+        <ProjectsFooter />
       </div>
 
-      {/* Modal de Adicionar Orçamento */}
+      {/* Seus Modais continuam aqui, fora do visual, mas dentro da lógica */}
       {isAddBudgetModalOpen && (
         <AddBudgetModal
           isOpen={isAddBudgetModalOpen}
           setOpen={setAddBudgetModalOpen}
         />
       )}
-    </>
+    </DashboardLayout>
   );
 }
 

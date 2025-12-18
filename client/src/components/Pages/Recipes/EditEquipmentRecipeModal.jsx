@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import SelectMenu from "../../Ui/SelectMenu";
 
-import { vwComponentRecipeMaterials } from "@services/ViewsService.js";
+import { vwComponentRecipeMaterialsSummary } from "@services/ViewsService.js";
 import { updateEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import {
   readEquipRecipeCompRecipeById,
@@ -28,7 +28,7 @@ export default function EditEquipmentRecipeModal({
 
   useEffect(() => {
     const fletchComponentsRecipes = async () => {
-      const data = await vwComponentRecipeMaterials();
+      const data = await vwComponentRecipeMaterialsSummary();
       if (!Array.isArray(data) || data.length <= 0) {
         console.error("erro no array components recipes");
         return null;
