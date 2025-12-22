@@ -1,8 +1,6 @@
 import { Router } from "express";
 import {
   vwProjectMaterialsSummary,
-  vwEquipmentMaterialsSummary,
-  vwComponentMaterialsSummary,
   vwTotalsMaterialsProjecst,
   vwStatusEquipments,
   vwStatusProjects,
@@ -18,8 +16,6 @@ const router = Router();
 
 // Views de mmateriais
 router.get("/projects/:user_id", vwProjectMaterialsSummary);
-router.get("/equipments", vwEquipmentMaterialsSummary);
-router.get("/components", vwComponentMaterialsSummary);
 router.get("/total/projects/:user_id", vwTotalsMaterialsProjecst);
 
 // View de status

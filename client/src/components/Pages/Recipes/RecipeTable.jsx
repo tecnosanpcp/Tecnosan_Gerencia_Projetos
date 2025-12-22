@@ -17,8 +17,6 @@ export default function RecipeTable({ i }) {
 
   const [editType, setEditType] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
-
-  // 🔥 NOVO — controla qual linha está expandida
   const [expandedRow, setExpandedRow] = useState(null);
 
   const updateModalDeleteVisible = (key, value) => {

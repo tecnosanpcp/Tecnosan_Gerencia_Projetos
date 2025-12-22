@@ -42,9 +42,13 @@ export const totalValuesProjects = async (user_id) => {
   }
 };
 
-export const vwEquipmentMaterialsSummary = async () => {
+export const vwEquipmentMaterialsSummary = async (user_id) => {
   try {
-    const response = await axios.get(API_URL + "/department");
+    if (!user_id) {
+      console.error("Usuário inválido");
+      return;
+    }
+    const response = await axios.get(`${API_URL}/equipments/${user_id}`);
     return response.data ? response.data : [];
   } catch (error) {
     console.error(
@@ -55,9 +59,13 @@ export const vwEquipmentMaterialsSummary = async () => {
   }
 };
 
-export const vwComponentRecipeMaterials = async () => {
+export const vwComponentRecipeMaterials = async (user_id) => {
   try {
-    const response = await axios.get(API_URL + "/components");
+    if (!user_id) {
+      console.error("usuario inválido");
+      return;
+    }
+    const response = await axios.get(API_URL + "/components/" + user_id);
     return response.data && Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error(

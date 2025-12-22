@@ -211,3 +211,31 @@ export const getTimesCascade = async (req, res) => {
     res.status(500).json({ error: "Erro interno ao processar cronograma." });
   }
 };
+
+// --- COMPONENTES ---
+export const vwComponentRecipeMaterials = async (req, res) => {
+  try {
+    const response = await pool.query(
+      "SELECT * FROM vw_components_recipes_materials_summary"
+    );
+
+    res.status(200).json(response.rows);
+  } catch (error) {
+    console.error("Erro ao buscar resumo de materiais de componentes", error);
+    res.status(500).json({ error: "Erro interno ao buscar componentes" });
+  }
+};
+
+// --- EQUIPAMENTOS ---
+export const vwEquipmentMaterialsSummary = async (req, res) => {
+  try {
+    const response = await pool.query(
+      "SELECT * FROM vw_equipments_recipes_materials_summary"
+    );
+    
+    res.status(200).json(response.rows);
+  } catch (error) {
+    console.error("Erro ao buscar resumo de materiais de equipamentos", error);
+    res.status(500).json({ error: "Erro interno ao buscar equipamentos" });
+  }
+};

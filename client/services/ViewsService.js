@@ -125,3 +125,26 @@ export const getTimesCascade = async () => {
     return null;
   }
 };
+
+
+export const vwComponentRecipeMaterials = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/recipe/component`);
+    return response.data;
+  } catch (error) {
+    console.error("Erro no front, ", error);
+    return null;
+  }
+};
+
+export const vwEquipmentMaterialsSummary = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/recipe/equipment`);
+    return response.data;
+  } catch (error) {
+    console.error("Erro no front, ", error);
+    return null;
+  }
+};
+
+

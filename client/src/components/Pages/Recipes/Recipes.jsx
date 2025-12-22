@@ -1,5 +1,6 @@
 // Bibliotecas
 import { useEffect, useState } from "react";
+import { parseBRL } from "../../../utils/IntUtils";
 
 // Componentes
 import NavBar from "../../Ui/NavBar";
@@ -8,9 +9,11 @@ import RecipeHeader from "./RecipeHeader";
 
 // Serviços
 import { listMaterials } from "@services/MaterialService.js";
+
+import { VerifyAuth } from "@services/AuthService.js";
 import {
-  vwEquipmentRecipesMaterialSummary,
-  vwComponentRecipeMaterialsSummary,
+  vwComponentRecipeMaterials,
+  vwEquipmentMaterialsSummary,
 } from "@services/ViewsService.js";
 
 function Recipes() {
@@ -27,32 +30,13 @@ function Recipes() {
   const [searchComponent, setSearchComponent] = useState("");
   const [searchEquipment, setSearchEquipment] = useState("");
 
-  // Listas filtradas
-  const filteredMaterials = materialsList.filter((item) =>
-    Object.values(item).some((v) =>
-      String(v).toLowerCase().includes(searchMaterial.toLowerCase())
-    )
-  );
-
-  const filteredComponents = componentsList.filter((item) =>
-    Object.values(item).some((v) =>
-      String(v).toLowerCase().includes(searchComponent.toLowerCase())
-    )
-  );
-
-  const filteredEquipments = equipmentsList.filter((item) =>
-    Object.values(item).some((v) =>
-      String(v).toLowerCase().includes(searchEquipment.toLowerCase())
-    )
-  );
-
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
         const data = await listMaterials();
         const formatted_data = data.map((i) => ({
           ID: i.material_id,
-          Nome: i.material_name,
+          Material: i.material_name,
           Descrição: i.material_desc,
           "Valor Unitário": `R$ ${i.value} / ${i.uni}`,
         }));
@@ -62,57 +46,57 @@ function Recipes() {
       }
     };
 
-    const fetchComponentRecipeMaterial = async () => {
-      try {
-        const data = await vwComponentRecipeMaterialsSummary();
+    const loadData = async () => {
+      await VerifyAuth();
 
-        const formatted_data = data.map((i) => ({
-          ID: i.component_recipe_id,
-          Componente: i.recipe_name,
-          Resina: i.resina,
-          "Resina ISO": i.resina_iso,
-          Manta: i.manta,
-          Roving: i.roving,
-          Catalizador: i.catalizador,
-          "Tecido KG": i.tecido_kg,
-          "Tecido CMD": i.tecido_cmd,
-          "Horas Homem": i.horas_homem,
-          "Valor Total": i.total_value,
-        }));
-        setComponentsList(formatted_data);
-      } catch (error) {
-        console.error("Erro ao buscar componentes", error);
-      }
-    };
+      const data_comp = await vwComponentRecipeMaterials();
+      const formatted_data_comp = data_comp.map((dc) => ({
+        ID: dc.component_recipe_id,
+        Componente: dc.recipe_name,
+        Resina: dc.resina,
+        "Resina ISO": dc.resina_iso,
+        Manta: dc.manta,
+        Roving: dc.roving,
+        Catalizador: dc.catalizador,
+        "Tecido (KG)": dc.tecido_kg,
+        "Tecido (CMD)": dc.tecido_cmd,
+        "Horas-Homens": dc.horas_homem,
+        "Valor Total": parseBRL(dc.total_value),
+      }));
+      setComponentsList(formatted_data_comp);
 
-    const fetchProjectMaterials = async () => {
-      try {
-        const data = await vwEquipmentRecipesMaterialSummary();
-
-        const formatted_data = data.map((i) => ({
-          ID: i.equipment_recipe_id,
-          "Nome do Equipamento": i.recipe_name,
-          Resina: i.resina,
-          "Resina ISO": i.resina_iso,
-          Manta: i.manta,
-          Roving: i.roving,
-          Catalizador: i.catalizador,
-          "Tecido KG": i.tecido_kg,
-          "Tecido CMD": i.tecido_cmd,
-          "Horas Homem": i.horas_homem,
-          "Valor Total": i.total_value,
-        }));
-
-        setEquipmentsList(formatted_data);
-      } catch (error) {
-        console.error("Erro ao buscar equipamentos", error);
-      }
+      const data_equip = await vwEquipmentMaterialsSummary();
+      const formatted_data_equip = data_equip.map((de) => ({
+        ID: de.equipment_recipe_id,
+        Equipamento: de.recipe_name,
+        Resina: de.resina,
+        "Resina ISO": de.resina_iso,
+        Manta: de.manta,
+        Roving: de.roving,
+        Catalizador: de.catalizador,
+        "Tecido (KG)": de.tecido_kg,
+        "Tecido (CMD)": de.tecido_cmd,
+        "Horas-Homens": de.horas_homem,
+        "Valor Total": parseBRL(de.total_value),
+      }));
+      setEquipmentsList(formatted_data_equip);
     };
 
     fetchMaterials();
-    fetchComponentRecipeMaterial();
-    fetchProjectMaterials();
+    loadData();
   }, []);
+
+  const filterMaterials = materialsList.filter((m) =>
+    m.Material.includes(searchMaterial)
+  );
+
+  const filterComponents = componentsList.filter((c) =>
+    c.Componente.includes(searchComponent)
+  );
+
+  const filterEquipments = equipmentsList.filter((e) =>
+    e.Equipamento.includes(searchEquipment)
+  );
 
   return (
     <div className="w-full flex flex-col gap-4 text-xs mb-16 overflow-x-hidden overflow-y-auto">
@@ -121,21 +105,21 @@ function Recipes() {
       {[
         {
           label: "Material",
-          list: filteredMaterials,
+          list: filterMaterials,
           isExpand: materialsExpanded,
           setExpand: setMaterialsExpanded,
           setSearch: setSearchMaterial,
         },
         {
           label: "Componente",
-          list: filteredComponents,
+          list: filterComponents,
           isExpand: componentsExpanded,
           setExpand: setcomponetsExpanded,
           setSearch: setSearchComponent,
         },
         {
           label: "Equipamento",
-          list: filteredEquipments,
+          list: filterEquipments,
           isExpand: equipmentsExpanded,
           setExpand: setEquipmentsExpanded,
           setSearch: setSearchEquipment,

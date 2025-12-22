@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import SelectMenu from "../../Ui/SelectMenu";
 
+import { VerifyAuth } from "@services/AuthService.js";
 import { vwComponentRecipeMaterialsSummary } from "@services/ViewsService.js";
 import { createEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { createEquipRecipeCompRecipe } from "@services/EquipRecipeCompRecipe.js";
@@ -15,7 +16,8 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
 
   useEffect(() => {
     const fletchComponentsRecipes = async () => {
-      const data = await vwComponentRecipeMaterialsSummary();
+      const user = await VerifyAuth();
+      const data = await vwComponentRecipeMaterialsSummary(user.user_id);
       if (!Array.isArray(data) || data.length <= 0) {
         console.error("erro no array components recipes");
         return null;
