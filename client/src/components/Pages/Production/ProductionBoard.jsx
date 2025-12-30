@@ -14,7 +14,7 @@ export default function ProductionBoard({ weekDays, tasks, setIsAddOpen }) {
   };
 
   return (
-    <div className="glass-effect bg-gray-50 mx-8 p-4 shadow-md rounded-md overflow-x-auto">
+    <div className="card overflow-x-auto">
       <div className="flex w-full h-min-96 gap-2">
         {weekDays.map((day, idx) => {
           const dayTasks = tasks.filter((t) => {

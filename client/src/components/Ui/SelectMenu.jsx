@@ -22,7 +22,7 @@ function SelectMenu({
       {/* Botão */}
       <button
         type="button"
-        className="flex items-center justify-between bg-gray-50 p-1 rounded-md w-full text-left"
+        className="flex items-center justify-between bg-gray-50 p-2 rounded-md w-full text-left"
         onClick={() => setOpen((v) => !v)}
       >
         <span className="truncate">

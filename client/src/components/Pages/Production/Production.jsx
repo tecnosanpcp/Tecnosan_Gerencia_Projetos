@@ -11,6 +11,7 @@ import ProductionBoard from "./ProductionBoard";
 import { listDepartments } from "@services/DepartmentService.js";
 import { listProjects } from "@services/ProjectService.js";
 import { listEmployees } from "@services/EmployeesService.js";
+import { listEquipments } from "@services/EquipmentService.js";
 import { getComponents } from "@services/ComponentsServices.js";
 import { VerifyAuth } from "@services/AuthService.js";
 
@@ -22,7 +23,7 @@ function generateWeek(weekOffset = 0) {
   today.setHours(0, 0, 0, 0);
   today.setDate(today.getDate() + weekOffset * 7);
 
-  const dayOfWeek = today.getDay(); 
+  const dayOfWeek = today.getDay();
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - dayOfWeek);
   startOfWeek.setHours(0, 0, 0, 0);
@@ -36,10 +37,10 @@ function generateWeek(weekOffset = 0) {
 
     week.push({
       dateObj: day, // Mantenha o objeto Date original se precisar fazer contas depois
-      
+
       // ESTA É A CHAVE MÁGICA PARA COMPARAÇÃO
       dateKey: day.toLocaleDateString("pt-BR"), // Retorna "12/01/2025"
-      
+
       formatted: day.toLocaleDateString("pt-BR", {
         weekday: "short",
         day: "numeric",
@@ -65,6 +66,8 @@ export default function Production() {
   const [employees, setEmployees] = useState([]);
   const [selectedEmp, setSelectedEmp] = useState([]);
 
+  const [equipments, setEquipments] = useState([]);
+
   const [tasks, setTasks] = useState([]);
 
   // --- Semana ---
@@ -76,17 +79,20 @@ export default function Production() {
       try {
         const user = await VerifyAuth();
 
-        const [deptData, empData, projData, compData] = await Promise.all([
-          listDepartments(),
-          listEmployees(),
-          listProjects(user.user_id),
-          getComponents(),
-        ]);
+        const [deptData, empData, projData, compData, equipData] =
+          await Promise.all([
+            listDepartments(),
+            listEmployees(),
+            listProjects(user.user_id),
+            getComponents(),
+            listEquipments(),
+          ]);
 
         if (deptData) setDepartments(deptData);
         if (empData) setEmployees(empData);
         if (projData) setProjects(projData);
         if (compData) setTasks(compData);
+        if (equipData) setEquipments(equipData);
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       }
@@ -102,6 +108,7 @@ export default function Production() {
         setOpen={setIsAddOpen}
         departmens={departments}
         projects={projects}
+        equipments={equipments}
         employees={employees}
       />
 

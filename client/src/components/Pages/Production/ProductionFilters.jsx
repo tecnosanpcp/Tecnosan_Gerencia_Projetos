@@ -15,7 +15,7 @@ export default function ProductionFilters({
   setSelectedEmp,
 }) {
   return (
-    <div className="glass-effect bg-gray-50 mx-8 p-4 shadow-md rounded-md flex flex-wrap space-x-2">
+    <div className="card rounded-md flex flex-wrap space-x-2">
       <div className="flex flex-row items-center space-x-2">
         <CiFilter className="h-5 w-5" />
         <p>Departamento:</p>

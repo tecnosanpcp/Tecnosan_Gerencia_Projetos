@@ -8,7 +8,7 @@ export default function ProductionHeader({ weekDays, setIsAddOpen, offset, setOf
   const endDate = weekDays[6]?.formatted.split(" ")[1];
 
   return (
-    <div className="glass-effect bg-gray-50 flex flex-row items-center justify-between mx-8 p-4 shadow-md rounded-md">
+    <div className="card items-center justify-between ">
       {/* Título e Data */}
       <div className="flex flex-row items-center space-x-2">
         <FaCalendar className="h-5 w-5" />

@@ -30,3 +30,93 @@ export const getComponents = async () => {
     console.error("Erro ao listar componentes", error);
   }
 };
+
+export const createComponents = async (
+  component_name,
+  completion_date,
+  start_date,
+  deadline,
+  status,
+  equipment_id,
+  department_id
+) => {
+  try {
+    if (
+      !component_name ||
+      !start_date ||
+      !deadline ||
+      !status ||
+      !equipment_id ||
+      ! department_id
+    ) {
+      console.error("dados insuficientes");
+      return;
+    }
+
+    const response = await axios.post(API_URL, {
+      component_name,
+      completion_date,
+      start_date,
+      deadline,
+      status,
+      equipment_id,
+      department_id
+    });
+
+    console.log(`DATA: ${response.data}`)
+    return response.data;
+  } catch (error) {
+    console.log("Erro no service", error);
+  }
+};
+
+export const updateComponents = async (
+  component_id,
+  component_name,
+  completion_name,
+  start_date,
+  deadline,
+  status,
+  equipment_id
+) => {
+  try {
+    if (
+      !component_id ||
+      !component_name ||
+      !completion_name ||
+      !start_date ||
+      !deadline ||
+      !status ||
+      !equipment_id
+    ) {
+      console.error("dados insuficientes");
+      return;
+    }
+
+    const response = await axios.put(`${API_URL}/${component_id}`, {
+      component_name,
+      completion_name,
+      start_date,
+      deadline,
+      status,
+      equipment_id,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.log("Erro no service", error);
+  }
+};
+
+export const deleteComponents = async (component_id) => {
+  try {
+    if (!component_id) {
+      console.error("dados insuficientes");
+      return;
+    }
+    const response = await axios.delete(`${API_URL}/${component_id}`);
+    return response.data;
+  } catch (error) {
+    console.log("Erro no service", error);
+  }
+};
