@@ -1,7 +1,6 @@
 import { FaCircle, FaRegClock } from "react-icons/fa";
 
 export default function TaskCard({ task, onClick }) {
-  
   // 1. Configuração de Estilos por Status
   const getStatusStyles = (status) => {
     switch (status) {
@@ -11,7 +10,7 @@ export default function TaskCard({ task, onClick }) {
           bg: "bg-blue-50",
           text: "text-blue-600",
           dot: "text-blue-500",
-          label: "Pendente"
+          label: "Pendente",
         };
       case "Completed":
         return {
@@ -19,7 +18,7 @@ export default function TaskCard({ task, onClick }) {
           bg: "bg-green-50",
           text: "text-green-600",
           dot: "text-green-500",
-          label: "Concluído"
+          label: "Concluído",
         };
       case "Running":
         return {
@@ -27,7 +26,7 @@ export default function TaskCard({ task, onClick }) {
           bg: "bg-yellow-50",
           text: "text-yellow-700",
           dot: "text-yellow-500",
-          label: "Em Execução"
+          label: "Em Execução",
         };
       case "Delayed":
         return {
@@ -35,7 +34,7 @@ export default function TaskCard({ task, onClick }) {
           bg: "bg-orange-50",
           text: "text-orange-600",
           dot: "text-orange-500",
-          label: "Atrasado"
+          label: "Atrasado",
         };
       case "Failed":
         return {
@@ -43,7 +42,7 @@ export default function TaskCard({ task, onClick }) {
           bg: "bg-red-50",
           text: "text-red-600",
           dot: "text-red-500",
-          label: "Falhou"
+          label: "Falhou",
         };
       default:
         return {
@@ -51,7 +50,7 @@ export default function TaskCard({ task, onClick }) {
           bg: "bg-gray-50",
           text: "text-gray-500",
           dot: "text-gray-400",
-          label: status || "Indefinido"
+          label: status || "Indefinido",
         };
     }
   };
@@ -62,7 +61,10 @@ export default function TaskCard({ task, onClick }) {
   const formatDate = (isoDate) => {
     if (!isoDate) return "--/--";
     const date = new Date(isoDate);
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+    });
   };
 
   return (
@@ -87,19 +89,22 @@ export default function TaskCard({ task, onClick }) {
 
       {/* Rodapé: Status e Deadline */}
       <div className="flex flex-row items-center justify-between mt-2 pt-2 border-t border-gray-200/50">
-        
         {/* Status com bolinha colorida */}
-        <span className={`text-[11px] font-bold flex items-center gap-1.5 ${styles.text}`}>
-            <FaCircle className={`w-1.5 h-1.5 ${styles.dot}`} />
-            {styles.label}
+        <span
+          className={`text-[11px] font-bold flex items-center gap-1.5 ${styles.text}`}
+        >
+          <FaCircle className={`w-1.5 h-1.5 ${styles.dot}`} />
+          {styles.label}
         </span>
-        
-        {/* Prazo / Deadline */}
-        <div className="flex items-center gap-1 text-[10px] text-gray-500" title={`Prazo: ${formatDate(task.deadline)}`}>
-            <FaRegClock />
-            <span>{formatDate(task.deadline)}</span>
-        </div>
 
+        {/* Prazo / Deadline */}
+        <div
+          className="flex items-center gap-1 text-[10px] text-gray-500"
+          title={`Prazo: ${formatDate(task.deadline)}`}
+        >
+          <FaRegClock />
+          <span>{formatDate(task.deadline)}</span>
+        </div>
       </div>
     </div>
   );

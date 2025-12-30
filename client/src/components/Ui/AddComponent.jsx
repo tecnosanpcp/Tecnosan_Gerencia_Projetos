@@ -12,13 +12,14 @@ function AddComponent({
   equipments = [],
   projects = [],
   employees = [],
+  recipes = [],
 }) {
   const [selectDept, setSelectedDept] = useState([]);
   const [selectedProj, setSelectedProj] = useState([]);
   const [selectedEquip, setSelectedEquip] = useState([]);
   const [selectedEmp, setSelectedEmp] = useState([]);
+  const [selectedRecipe, setSelectedRecipe] = useState([]);
 
-  const [componentName, setComponentName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -29,8 +30,8 @@ function AddComponent({
     setSelectedProj([]);
     setSelectedEquip([]);
     setSelectedEmp([]);
+    setSelectedRecipe([]);
 
-    setComponentName("");
     setStartDate("");
     setEndDate("");
     setStartTime("");
@@ -46,19 +47,21 @@ function AddComponent({
       const start_date = `${startDate} ${startTime}:00`;
       const equipment_id = selectedEquip[0];
       const department_id = selectDept[0];
-
+      const recipe = recipes.find(
+        (recipe) => selectedRecipe[0] === recipe.component_recipe_id
+      );
       // 1. CRIA O COMPONENTE
       const response = await createComponents(
-        componentName,
+        recipe.recipe_name,
         null,
         start_date,
         deadline,
         "Pending",
         equipment_id,
-        department_id
+        department_id,
+        recipe.component_recipe_id
       );
 
-      console.log(`Response: ${response}`);
       // Verificação de segurança
       if (!response || response.length === 0) {
         console.error("Erro: O servidor não retornou o ID do componente.");
@@ -102,16 +105,17 @@ function AddComponent({
             <div className="flex flex-row items-center justify-between space-x-8">
               <div className="flex flex-col w-full">
                 <label htmlFor="project_name" className="text-gray-700">
-                  Nome do Componente *
+                  Componente *
                 </label>
-                <input
-                  type="text"
-                  name="project_name"
-                  className="p-2 rounded"
-                  placeholder="Peça Exemplo"
-                  value={componentName}
-                  onChange={(e) => setComponentName(e.target.value)}
-                  required
+                <SelectMenu
+                  variant="full"
+                  maxSelections={1}
+                  options={recipes.map((recipe) => ({
+                    id: recipe.component_recipe_id,
+                    label: recipe.recipe_name,
+                  }))}
+                  selectedOption={selectedRecipe}
+                  setSelectedOption={setSelectedRecipe}
                 />
               </div>
             </div>

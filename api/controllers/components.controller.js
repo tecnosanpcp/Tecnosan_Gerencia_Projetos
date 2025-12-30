@@ -40,6 +40,7 @@ export const createComponents = async (req, res) => {
       status,
       equipment_id,
       department_id,
+      component_recipe_id
     } = req.body;
 
     if (
@@ -48,7 +49,8 @@ export const createComponents = async (req, res) => {
       !deadline ||
       !status ||
       !equipment_id ||
-      !department_id
+      !department_id ||
+      !component_recipe_id
     ) {
       console.error("dados insuficientes", {
         component_name,
@@ -58,15 +60,16 @@ export const createComponents = async (req, res) => {
         status,
         equipment_id,
         department_id,
+        component_recipe_id
       });
       return res.status(500).json({ error: "dados insuficientes" });
     }
 
     const response = await pool.query(
       `INSERT INTO components
-        (component_name, completion_date, start_date, deadline, status, equipment_id, department_id) 
+        (component_name, completion_date, start_date, deadline, status, equipment_id, department_id, component_recipe_id) 
       VALUES 
-        ($1, $2, $3, $4, $5, $6, $7)
+        ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING component_id;`,
       [
         component_name,
@@ -76,6 +79,7 @@ export const createComponents = async (req, res) => {
         status,
         equipment_id,
         department_id,
+        component_recipe_id
       ]
     );
 

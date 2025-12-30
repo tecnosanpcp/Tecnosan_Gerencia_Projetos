@@ -38,7 +38,8 @@ export const createComponents = async (
   deadline,
   status,
   equipment_id,
-  department_id
+  department_id,
+  component_recipe_id
 ) => {
   try {
     if (
@@ -47,7 +48,8 @@ export const createComponents = async (
       !deadline ||
       !status ||
       !equipment_id ||
-      ! department_id
+      !department_id ||
+      !component_recipe_id
     ) {
       console.error("dados insuficientes");
       return;
@@ -60,10 +62,10 @@ export const createComponents = async (
       deadline,
       status,
       equipment_id,
-      department_id
+      department_id,
+      component_recipe_id
     });
 
-    console.log(`DATA: ${response.data}`)
     return response.data;
   } catch (error) {
     console.log("Erro no service", error);

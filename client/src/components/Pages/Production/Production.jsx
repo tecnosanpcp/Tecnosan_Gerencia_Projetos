@@ -14,6 +14,8 @@ import { listEmployees } from "@services/EmployeesService.js";
 import { listEquipments } from "@services/EquipmentService.js";
 import { getComponents } from "@services/ComponentsServices.js";
 import { VerifyAuth } from "@services/AuthService.js";
+import { getComponentRecipe } from "@services/ComponentRecipes.js"
+import {getEmployeesComponents} from "@services/EmployeesComponentsServices.js"
 
 /**
  * Gera a semana atual (ou deslocada) sem bugs de timezone
@@ -67,8 +69,10 @@ export default function Production() {
   const [selectedEmp, setSelectedEmp] = useState([]);
 
   const [equipments, setEquipments] = useState([]);
+  const [recipes, setRecipes] = useState([])
 
   const [tasks, setTasks] = useState([]);
+  const [responsible, setReponsible] = useState([])
 
   // --- Semana ---
   const weekDays = generateWeek(offset);
@@ -79,13 +83,15 @@ export default function Production() {
       try {
         const user = await VerifyAuth();
 
-        const [deptData, empData, projData, compData, equipData] =
+        const [deptData, empData, projData, compData, equipData, recipesData, emplCompData] =
           await Promise.all([
             listDepartments(),
             listEmployees(),
             listProjects(user.user_id),
             getComponents(),
             listEquipments(),
+            getComponentRecipe(),
+            getEmployeesComponents()
           ]);
 
         if (deptData) setDepartments(deptData);
@@ -93,6 +99,8 @@ export default function Production() {
         if (projData) setProjects(projData);
         if (compData) setTasks(compData);
         if (equipData) setEquipments(equipData);
+        if(recipesData) setRecipes(recipesData)
+        if(emplCompData) setReponsible(emplCompData)
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       }
@@ -110,6 +118,7 @@ export default function Production() {
         projects={projects}
         equipments={equipments}
         employees={employees}
+        recipes={recipes}
       />
 
       <div className="bg-slate-200 flex flex-col space-y-5 rounded-lg p-0 m-0 min-h-screen">
@@ -137,7 +146,9 @@ export default function Production() {
         <ProductionBoard
           weekDays={weekDays}
           tasks={tasks}
+          responsible={responsible}
           setIsAddOpen={setIsAddOpen}
+          employees={employees}
         />
       </div>
     </>
