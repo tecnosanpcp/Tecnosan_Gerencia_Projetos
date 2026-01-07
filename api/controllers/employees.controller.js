@@ -1,4 +1,6 @@
 import { pool } from "../config/db.js";
+import bcrypt from "bcrypt";
+import { randomInt } from "node:crypto";
 
 // Listar todos
 export const getEmployees = async (req, res) => {
@@ -40,6 +42,7 @@ export const getEmployeeById = async (req, res) => {
 // Criar funcionário
 export const createEmployee = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const {
       email,
@@ -51,16 +54,23 @@ export const createEmployee = async (req, res) => {
       department_id,
     } = req.body;
 
+    if (!email || !password) {
+      throw new Error("Email e senha são obrigatórios");
+    }
+
+    const salt = randomInt(10, 16);
+    const passwordHash = await bcrypt.hash(password.trim(), salt);
+
     await client.query("BEGIN");
 
     const userResult = await client.query(
       `INSERT INTO users (email, user_name, password, access_type)
        VALUES ($1, $2, $3, $4) RETURNING user_id`,
-      [email.trim(), user_name.trim(), password.trim(), access_type || 3]
+      [email.trim(), user_name.trim(), passwordHash, access_type || 3]
     );
 
     const userId = userResult.rows[0].user_id;
-    console.log(userId)
+
     await client.query(
       `INSERT INTO employees (user_id, salary, job_title, department_id)
        VALUES ($1, $2, $3, $4)`,
@@ -72,6 +82,11 @@ export const createEmployee = async (req, res) => {
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Erro ao cadastrar funcionário:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "Email ou usuário já cadastrado." });
+    }
+
     res.status(500).json({ error: error.message });
   } finally {
     client.release();
@@ -80,6 +95,7 @@ export const createEmployee = async (req, res) => {
 
 export const editEmployee = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const {
       user_id,
@@ -93,26 +109,63 @@ export const editEmployee = async (req, res) => {
       department_id,
     } = req.body;
 
-    await client.query("BEGIN");
+    if (!user_id) {
+      return res.status(400).json({ error: "O ID do usuário é obrigatório." });
+    }
 
+    let passwordHash = null;
+    if (pass && pass.trim() !== "") {
+      const salt = await randomInt(10, 16);
+      passwordHash = await bcrypt.hash(pass.trim(), salt);
+    }
+
+    await client.query("BEGIN");
     await client.query(
-      `UPDATE users SET email = $1, user_name = $2, pass = $3, access_type = $4
+      `UPDATE users 
+       SET 
+         email = COALESCE($1, email), 
+         user_name = COALESCE($2, user_name), 
+         password = COALESCE($3, password), 
+         access_type = COALESCE($4, access_type)
        WHERE user_id = $5`,
-      [email, user_name, pass, access_type, user_id]
+      [
+        email || null,
+        user_name || null,
+        passwordHash,
+        access_type || null,
+        user_id,
+      ]
     );
 
     await client.query(
-      `UPDATE employees SET salary = $1, performance = $2, job_title = $3, department_id = $4
+      `UPDATE employees 
+       SET 
+         salary = COALESCE($1, salary), 
+         performance = COALESCE($2, performance), 
+         job_title = COALESCE($3, job_title), 
+         department_id = COALESCE($4, department_id)
        WHERE user_id = $5`,
-      [salary, performance, job_title, department_id, user_id]
+      [
+        salary || null,
+        performance || null,
+        job_title || null,
+        department_id || null,
+        user_id,
+      ]
     );
 
     await client.query("COMMIT");
-
     res.json({ message: "Dados atualizados com sucesso" });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Erro ao atualizar dados:", error);
+
+    if (error.code === "23505") {
+      return res
+        .status(409)
+        .json({ error: "Este email já está em uso por outro usuário." });
+    }
+
     res.status(500).json({ error: error.message });
   } finally {
     client.release();
