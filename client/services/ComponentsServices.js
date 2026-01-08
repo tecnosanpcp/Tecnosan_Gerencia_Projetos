@@ -1,18 +1,15 @@
-import api from "./api.js"
+import api from "./api.js";
 
 export const countStatusComponents = async (
   project_id,
+  equipment_id,
   start_date,
   end_date
 ) => {
   try {
-    const response = await api.get("/components/status_count", {
-      params: {
-        project_id: project_id,
-        start_date: start_date,
-        end_date: end_date,
-      },
-    });
+    const response = await api.get(
+      `/components/status/${project_id}/${equipment_id}/${start_date}/${end_date}`
+    );
     return response.data;
   } catch (error) {
     console.error("Erro ao contar status dos componentes", error);
@@ -78,7 +75,7 @@ export const updateComponents = async (
   deadline,
   status,
   department_id,
-  total_time_spent 
+  total_time_spent
 ) => {
   try {
     if (!component_id || !status) {
@@ -92,7 +89,7 @@ export const updateComponents = async (
       deadline,
       status,
       department_id,
-      total_time_spent
+      total_time_spent,
     });
 
     return response.data;

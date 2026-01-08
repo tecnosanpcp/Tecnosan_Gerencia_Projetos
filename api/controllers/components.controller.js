@@ -2,8 +2,33 @@ import { pool } from "../config/db.js";
 
 export const getComponentStatus = async (req, res) => {
   try {
+    const { project_id, equipment_id, start_date, end_date } = req.params;
+
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+
+    if (!start_date || !end_date || end < start) {
+      throw new Error("Selecione um espaço de tempo váido");
+    }
+
+    const projIdParam =
+      project_id && project_id !== "undefined" ? project_id : null;
+    const equipIdParam =
+      equipment_id && equipment_id !== "undefined" ? equipment_id : null;
+
     const response = await pool.query(
-      `SELECT component_id, status FROM components;`
+      `SELECT 
+        COALESCE(SUM(CASE WHEN C.STATUS = 'Completed' THEN 1 ELSE 0 END), 0)::int AS TOTAL_COMPLETED,
+        COALESCE(SUM(CASE WHEN C.STATUS != 'Completed' THEN 1 ELSE 0 END), 0)::int AS TOTAL_PENDING
+      FROM COMPONENTS C
+      LEFT JOIN EQUIPMENTS E ON C.EQUIPMENT_ID = E.EQUIPMENT_ID
+      LEFT JOIN PROJECTS P ON E.PROJECT_ID = P.PROJECT_ID
+      WHERE 
+        ($1::int IS NULL OR P.PROJECT_ID = $1::int) AND
+        ($2::int IS NULL OR E.EQUIPMENT_ID = $2::int) AND
+        C.START_DATE >= $3 AND 
+	      (C.COMPLETION_DATE <= $4 OR C.DEADLINE <= $4)`,
+      [projIdParam, equipIdParam, start_date, end_date]
     );
 
     if (response.rowCount == 0) {
@@ -12,6 +37,7 @@ export const getComponentStatus = async (req, res) => {
 
     res.status(200).json(response.rows);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.menssage });
   }
 };

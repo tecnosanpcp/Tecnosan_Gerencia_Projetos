@@ -69,44 +69,29 @@ export default function Reports() {
   );
 
   // Contar status dos componentes
-  const [countStatus, setCountStatus] = useState();
-  const [totalComplete, setTotalComplete] = useState(0);
+  const [countStatus, setCountStatus] = useState(0);
+  const [totalCompleted, setTotalCompleted] = useState(0);
   const [totalPending, setTotalPending] = useState(0);
 
-  const fetchStatusCount = async (proejct_id, start_date, end_date) => {
+  const fetchStatusCount = async (
+    project_id,
+    equipment_id,
+    start_date,
+    end_date
+  ) => {
     try {
+      const formatDate = (date) => `${date} 00:00:00`;
+
       const response = await countStatusComponents(
-        proejct_id,
-        start_date,
-        end_date
+        project_id,
+        equipment_id,
+        formatDate(start_date),
+        formatDate(end_date)
       );
-      let a = [];
-      let total_complete_temp = 0;
-      let total_pending_temp = 0;
-      response.map((aux) =>
-        aux.status === "concluído"
-          ? [
-              (total_complete_temp =
-                total_complete_temp + parseInt(aux.numero_pecas)),
-              a.push({
-                equipment_name: aux.equipment_name,
-                status: "concluído",
-                numero_pecas: aux.numero_pecas,
-              }),
-            ]
-          : [
-              (total_pending_temp =
-                total_pending_temp + parseInt(aux.numero_pecas)),
-              a.push({
-                equipment_name: aux.equipment_name,
-                status: "pendente",
-                numero_pecas: aux.numero_pecas,
-              }),
-            ]
-      );
-      setCountStatus(a);
-      setTotalComplete(total_complete_temp);
-      setTotalPending(total_pending_temp);
+
+      setCountStatus(response[0].total_completed + response[0].total_pending);
+      setTotalCompleted(response[0].total_completed);
+      setTotalPending(response[0].total_pending);
     } catch (error) {
       console.error(
         "Erro ao contar os status dos components no frontend",
@@ -127,17 +112,22 @@ export default function Reports() {
       const user = await VerifyAuth();
       await fetchProjects(user.user_id);
       await fetchEquipamentDetails(user.user_id);
-      await fetchStatusCount(selectedProj[0], startDate, endDate);
+      await fetchStatusCount(
+        selectedProj[0],
+        selectedEquip[0],
+        startDate,
+        endDate
+      );
       await flechtProjectMaterials(user.user_id);
       await processDelays();
     }
     loadData();
-  }, [endDate, startDate, selectedProj]);
+  }, [endDate, startDate, selectedProj, selectedEquip]);
 
   return (
     <>
       <div className="h-screen w-screen space-y-4 pb-16">
-        <NavBar select_index={3}/>
+        <NavBar select_index={3} />
 
         {/* Título da Página */}
         <div className="flex flex-row bg-white py-1 px-2 items-center justify-between shadow-lg mx-4 rounded">
@@ -200,7 +190,7 @@ export default function Reports() {
             <div className="flex flex-col space-y-8 w-1/6 py-1">
               <InfoCard
                 title="Entregues"
-                value={totalComplete}
+                value={totalCompleted}
                 icon={<img src="src/imgs/entrega.png" className="w-6 h-6" />}
               />
               <InfoCard
@@ -226,7 +216,7 @@ export default function Reports() {
             <CascadeTable
               title="Detalhamento por Projeto"
               headers={["Equipamentos", "Valores"]}
-              filter={() => dataProjects.map((p) => p.material_name)}
+              filter={dataProjects.map((p) => p.material_name)}
               values={dataProjects}
             />
           </div>

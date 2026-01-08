@@ -24,7 +24,7 @@ export default function ProductionHeader({ weekDays, setIsAddOpen, offset, setOf
       <div className="flex flex-row items-center space-x-4">
         <button
           onClick={() => setIsAddOpen(true)}
-          className="flex flex-row items-center space-x-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700"
+          className="flex flex-row items-center px-3 py-2 rounded-md space-x-1 bnt-add"
         >
           <IoMdAdd />
           <p>Adicionar Componente</p>
