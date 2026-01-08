@@ -22,7 +22,7 @@ export const vwProjectConsumedMaterials = async (req, res) => {
 export const vwProjectDepartmentDelays = async (req, res) => {
   try {
     const response = await pool.query(
-      "SELECT department_name, component_name, days_late FROM vw_project_department_delays"
+      "SELECT * FROM vw_project_department_delays"
     );
     res.status(200).json(response.rows);
   } catch (error) {

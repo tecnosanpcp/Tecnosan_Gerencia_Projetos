@@ -16,6 +16,29 @@ export const countStatusComponents = async (
   }
 };
 
+export const countStatusComponentsByProj = async (
+  project_id,
+  equipment_id,
+  start_date,
+  end_date
+) => {
+  try {
+    const response = await api.get(`/components/statusByProj`, {
+      params: {
+        project_id,
+        equipment_id,
+        start_date,
+        end_date
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao contar status dos componentes", error);
+    return []; // Retorna array vazio em caso de erro real de rede
+  }
+};
+
 export const getComponents = async () => {
   try {
     const response = await api.get("/components");
