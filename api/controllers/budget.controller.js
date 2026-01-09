@@ -1,19 +1,20 @@
 import { pool } from "../config/db.js";
 
 export const createBudget = async (req, res) => {
-  const { user_id, budget_name, budget_local, budget_desc } = req.body;
+  const { user_id, budget_name, budget_local } = req.body;
   try {
+    console.log(user_id, budget_name, budget_local);
     const client = await pool.connect();
     await client.query("BEGIN");
 
     const budgetResult = await client.query(
-      `INSERT INTO budgets(budget_name, budget_local, budget_desc) VALUES ($1, $2, $3) RETURNING budget_id`,
-      [budget_name, budget_local, budget_desc]
+      `INSERT INTO budgets(budget_name, budget_local, status) VALUES ($1, $2, 'Em Planejamento') RETURNING budget_id`,
+      [budget_name, budget_local]
     );
 
     const budget_id = budgetResult.rows[0].budget_id;
     await client.query(
-      `INSERT INTO budgets_users(user_id, budget_id) VALUES ($1, $2)`,
+      `INSERT INTO BUDGETS_USERS(user_id, budget_id) VALUES ($1, $2)`,
       [user_id, budget_id]
     );
     client.release();
@@ -47,5 +48,27 @@ export const listBudget = async (req, res) => {
   } catch (error) {
     console.error("Erro ao listar orçamentos", error);
     res.status(500).json({ error: "Erro ao listar orçamentos" });
+  }
+};
+
+export const uploadStatusBudget = async (req, res) => {
+  try {
+    const { budget_id } = req.params;
+    const { status } = req.body;
+
+    if (!budget_id || !status) {
+      res.status(400).json({ message: "Faltando dados" });
+      throw new Error({ message: "Faltando dados" });
+    }
+
+    const response = await pool.query(
+      `UPDATE Budgets SET status = $1 WHERE budget_id = $2`,
+      [status, budget_id]
+    );
+
+    res.status(200).json(response.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };

@@ -44,7 +44,7 @@ export default function ProjectsMain({ times }) {
       {/* Barra de Pesquisa */}
       <div className="flex flex-row justify-between w-full">
         <form
-          className="flex flex-row justify-between space-x-4 p-2 rounded-xl bg-white-gray h-fit"
+          className="flex flex-row justify-between space-x-4 p-2 rounded-xl bg-white-gray h-fit w-fit"
           onSubmit={(e) => {
             e.preventDefault();
           }}
@@ -54,7 +54,7 @@ export default function ProjectsMain({ times }) {
           </button>
           <input
             type="text"
-            placeholder="Pesquisar..."
+            placeholder="Pesquisar equipamento"
             className="bg-transparent"
             value={searchTerm}
             onChange={(e) => {

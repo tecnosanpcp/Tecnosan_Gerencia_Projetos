@@ -6,6 +6,7 @@ import { FaSearch } from "react-icons/fa";
 import BudgetEquipmentTable from "./BudgetEquipmentsTable";
 import BudgetTimeline from "./BudgetTimeline";
 
+// Iport Services
 import {
   getTasksTimeline,
   getEquipmentsTimeline,
@@ -94,7 +95,7 @@ export default function BudgetsMain({ currentBudget }) {
           </button>
           <input
             type="text"
-            placeholder="Pesquisar..."
+            placeholder="Pesquisar equipamento"
             className="bg-transparent"
             value={searchTerm}
             onChange={(e) => {

@@ -12,10 +12,12 @@ export const createProject = async (req, res) => {
       begin_date,
       end_date,
       deadline,
+      status,
+      budget_id,
     } = req.body;
 
     // Basic validation
-    if (!user_id || !project_name) {
+    if (!user_id || !project_name || !budget_id) {
       return res.status(400).json({ error: "Missing required fields." });
     }
 
@@ -27,11 +29,13 @@ export const createProject = async (req, res) => {
         project_name, 
         project_desc, 
         project_local, 
-        begin_date, 
-        end_date, 
-        deadline
+        start_date, 
+        completion_date, 
+        deadline,
+        status,
+        budget_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING project_id`,
       [
         project_name?.trim(),
@@ -40,11 +44,12 @@ export const createProject = async (req, res) => {
         begin_date,
         end_date,
         deadline,
+        status.trim(),
+        budget_id,
       ]
     );
 
-    const { project_id } = projectResult.rows[0];
-
+    const project_id = projectResult.rows[0].project_id;
     // Associate project with user
     await client.query(
       `INSERT INTO projects_users (user_id, project_id)
@@ -55,11 +60,10 @@ export const createProject = async (req, res) => {
     await client.query("COMMIT");
     client.release();
 
-    return res.status(201).json({
+    return res.status(200).json({
       message: "Project created successfully.",
       project_id,
     });
-
   } catch (error) {
     await pool.query("ROLLBACK");
     client.release();
@@ -73,7 +77,8 @@ export const listProject = async (req, res) => {
     const { user_id } = req.params;
 
     if (!user_id) {
-      return res.status(200).json([]);
+      res.status(400).json({ message: "Faltando dados" });
+      throw new Error("Faltando Dados");
     }
 
     const result = await pool.query(
@@ -86,7 +91,6 @@ export const listProject = async (req, res) => {
     );
 
     return res.json(result.rows);
-
   } catch (error) {
     console.error("Error listing projects:", error);
     return res.status(500).json({ error: "Error listing projects." });
@@ -131,7 +135,6 @@ export const editProject = async (req, res) => {
     );
 
     return res.json(result.rows[0]);
-
   } catch (error) {
     console.error("Error editing project:", error);
     return res.status(500).json({ error: "Error editing project." });
@@ -154,7 +157,6 @@ export const deleteProject = async (req, res) => {
     );
 
     return res.json(result.rows[0]);
-
   } catch (error) {
     console.error("Error deleting project:", error);
     return res.status(500).json({ error: "Error deleting project." });

@@ -25,8 +25,7 @@ function renderMaterialSummary(
 
     return i_mat >= 0 ? (
       <p key={index}>
-        {" "}
-        {mat.label}: {project_materials[i_mat]?.total_value}{" "}
+        {mat.label}: {project_materials[i_mat]?.total_value}
       </p>
     ) : (
       <p key={index}> {mat.label}: 0 </p>
@@ -96,7 +95,7 @@ export default function ProjectsHeader({ times }) {
         <p>
           Total Horas-Homem:{" "}
           {(times?.projects?.[currentProject?.id]?.qtd_employees ?? 0) *
-            (times?.projects?.[currentProject?.id]?.total_hours ?? 0)}{" "}
+            (times?.projects?.[currentProject?.id]?.total_hours ?? 0)}
           HH
         </p>
       </div>

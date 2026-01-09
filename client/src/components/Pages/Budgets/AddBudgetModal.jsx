@@ -1,22 +1,21 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import {createBudget} from "@services/BudgetService.js";
+import { createBudget } from "@services/BudgetService.js";
+import { VerifyAuth } from "@services/AuthService.js";
 
 function AddBudgetModal({ isOpen, setOpen }) {
   const [budget_name, set_budget_name] = useState("");
   const [budget_local, set_budget_local] = useState("");
-  const [budget_desc, set_budget_desc] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    createBudget(1, budget_name, budget_desc, "Running")
-      .then((newBudget) => {
-        console.log("Orçamento criado com sucesso:", newBudget);
-        setOpen(false);
-      })
-      .catch((error) => {
-        console.error("Erro ao criar orçamento:", error);
-      });
+  const handleSubmit = async (e) => {
+    try {
+      e.preventDefault();
+      const user = await VerifyAuth();
+      await createBudget(user.user_id, budget_name, budget_local);
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -27,7 +26,9 @@ function AddBudgetModal({ isOpen, setOpen }) {
             className="bg-white p-6 rounded shadow-md w-1/3"
             onSubmit={handleSubmit}
           >
-            <h1 className="text-base font-semibold text-gray-800 align-middle text-center">Adicionar Orçamento</h1>
+            <h1 className="text-base font-semibold text-gray-800 align-middle text-center">
+              Adicionar Orçamento
+            </h1>
             <div className="flex flex-col space-y-4 ">
               <label htmlFor="projectName" className="font-semibold">
                 Nome do Orçamento
@@ -40,10 +41,7 @@ function AddBudgetModal({ isOpen, setOpen }) {
                 value={budget_name}
                 onChange={(e) => set_budget_name(e.target.value)}
               />
-              <label
-                htmlFor="projectLocation"
-                className="font-semibold"
-              >
+              <label htmlFor="projectLocation" className="font-semibold">
                 Localização do Projeto
               </label>
               <input
@@ -54,16 +52,6 @@ function AddBudgetModal({ isOpen, setOpen }) {
                 value={budget_local}
                 onChange={(e) => set_budget_local(e.target.value)}
               />
-              <label htmlFor="description" className="font-semibold">
-                Descrição do Orçamento
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                className="border border-gray-300 p-2 rounded"
-                value={budget_desc}
-                onChange={(e) => set_budget_desc(e.target.value)}
-              ></textarea>
             </div>
             <div className="flex justify-end space-x-4 mt-4">
               <button

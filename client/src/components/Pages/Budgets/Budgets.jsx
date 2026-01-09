@@ -63,7 +63,7 @@ function Budgets() {
     >
       <div className="flex flex-col gap-4">
         <BudgetsMain currentBudget={selectedBudget} />
-        <BudgetFooter />
+        <BudgetFooter currentBudget={selectedBudget}/>
       </div>
 
       {isAddBudgetModalOpen && (
