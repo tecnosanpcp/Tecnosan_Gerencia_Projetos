@@ -247,7 +247,6 @@ export default function Reports() {
               component_name: data.component_name,
               department_id: data.department_id,
               department_name: data.department_name,
-              // Usa operador de encadeamento opcional para segurança
               days_late: data.total_delay_time?.days || 0,
             }))}
           />
