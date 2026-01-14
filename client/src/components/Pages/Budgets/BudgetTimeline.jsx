@@ -1,86 +1,82 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import StatusButton from "../../Ui/StatusButton";
-import { getEquipmentsTimelineByBudget } from "@services/ViewsSummary";
 
 export default function ProjectTimeline({
   currentBudget,
-  searchTerm,
+  searchTerm = "",
   timelineTasks = [],
   timelineEquipments = [],
-  timelineBudgets,
+  timelineBudgets = [],
 }) {
-  const [timelineDates, setTimelineDates] = useState([]);
-  const [equipmentsInBudgets, setEquipmentsInBudgets] = useState([]);
-  useEffect(() => {
-    const dateLoader = () => {
-      const rawStartDate = timelineBudgets?.project_start_at;
-      let startDate = rawStartDate ? new Date(rawStartDate) : new Date();
-      if (isNaN(startDate.getTime())) startDate = new Date();
-      startDate.setHours(0, 0, 0, 0);
-
-      const rawEndDate = timelineBudgets?.project_end_at;
-      let endDate = rawEndDate ? new Date(rawEndDate) : new Date();
-
-      if (isNaN(endDate.getTime()) || endDate < startDate) {
-        endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 30);
-      } else {
-        endDate.setDate(endDate.getDate() + 30);
-      }
-
-      endDate.setHours(0, 0, 0, 0);
-
-      const datesArray = [];
-      let currentDate = new Date(startDate);
-      let safety = 0;
-
-      while (currentDate <= endDate && safety < 1000) {
-        datesArray.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-        safety++;
-      }
-
-      setTimelineDates(datesArray);
-    };
-
-    const LoadData = async () => {
-      if (!currentBudget) {
-        console.error("Orçamento inválido");
-        return;
-      }
-
-      const data = await getEquipmentsTimelineByBudget(currentBudget?.id);
-      setEquipmentsInBudgets(data);
-    };
-
-    dateLoader();
-    LoadData();
+  
+  // 1. LÓGICA: Encontrar o orçamento atual
+  const currentBudgetTimeline = useMemo(() => {
+    return timelineBudgets.find((b) => b.budget_id === currentBudget?.id);
   }, [timelineBudgets, currentBudget]);
 
-  // Função utilitária para verificar se a data está no range
+  // 2. LÓGICA: Geração das datas
+  const timelineDates = useMemo(() => {
+    if (!currentBudgetTimeline?.project_start_at) return [];
+
+    const start = new Date(currentBudgetTimeline.project_start_at);
+    const end = currentBudgetTimeline.project_end_at
+      ? new Date(currentBudgetTimeline.project_end_at)
+      : new Date(start);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    if (end < start) end.setDate(end.getDate() + 30);
+
+    const dates = [];
+    let curr = new Date(start);
+    let safety = 0;
+
+    while (curr <= end && safety < 365) {
+      dates.push(new Date(curr));
+      curr.setDate(curr.getDate() + 1);
+      safety++;
+    }
+    return dates;
+  }, [currentBudgetTimeline]);
+
+  // 3. LÓGICA: Verificação de Intervalo
   const isDateInRange = (date, startStr, endStr) => {
     if (!startStr || !endStr) return false;
-    const current = new Date(date).setHours(0, 0, 0, 0);
-    const start = new Date(startStr).setHours(0, 0, 0, 0);
-    const end = new Date(endStr).setHours(0, 0, 0, 0);
-    return current >= start && current <= end;
+    
+    const checkTime = date.getTime();
+    
+    const startDate = new Date(startStr);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(endStr);
+    endDate.setHours(0, 0, 0, 0);
+
+    return checkTime >= startDate.getTime() && checkTime <= endDate.getTime();
   };
 
   const formatDateHeader = (date) => {
-    if (!date || isNaN(date.getTime())) return "-";
     return date.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
     });
   };
 
-  // Loading state simples
-  if (!timelineEquipments) {
-    return <div className="text-gray-500 p-4">Carregando dados...</div>;
+  if (!currentBudgetTimeline) {
+    return <div className="text-gray-500 p-4">Selecione um orçamento para visualizar o cronograma.</div>;
   }
 
   return (
-    <div className="w-full max-w-[calc(100vw-280px)] overflow-x-auto pb-4 border border-gray-200 rounded-lg">
+    <div 
+      className="w-full max-w-[calc(100vw-280px)] overflow-x-auto pb-4 border border-gray-200 rounded-lg 
+      [&::-webkit-scrollbar]:h-2 
+      [&::-webkit-scrollbar]:w-2 
+      [&::-webkit-scrollbar-track]:bg-[#f1f1f1] 
+      [&::-webkit-scrollbar-track]:rounded 
+      [&::-webkit-scrollbar-thumb]:bg-slate-300 
+      [&::-webkit-scrollbar-thumb]:rounded 
+      [&::-webkit-scrollbar-thumb]:hover:bg-slate-400"
+    >
       <table className="w-full text-sm text-left border-collapse whitespace-nowrap">
         <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
           <tr>
@@ -99,23 +95,21 @@ export default function ProjectTimeline({
         </thead>
 
         <tbody>
-          {equipmentsInBudgets
+          {timelineEquipments
             .filter((equip) =>
-              equip?.recipe_name
-                ?.toLowerCase()
-                ?.includes(searchTerm.toLowerCase())
+              equip?.recipe_name?.toLowerCase()?.includes(searchTerm.toLowerCase())
             )
             .map((equip) => {
               const tasksDoEquipamento = timelineTasks.filter(
                 (t) => t.equipment_recipe_id == equip.equipment_recipe_id
               );
+
               return (
                 <React.Fragment key={equip.equipment_recipe_id}>
                   {/* LINHA DO EQUIPAMENTO */}
                   <tr className="border-b border-gray-100 bg-gray-50/30 hover:bg-gray-100 transition-colors">
                     <td className="sticky left-0 z-10 font-bold text-gray-800 bg-white border-r border-gray-200 px-4">
                       {equip.recipe_name}
-                      {/* Use recipe_name ou equipment_name conforme sua view */}
                     </td>
                     {timelineDates.map((date, index) => (
                       <td
@@ -131,33 +125,31 @@ export default function ProjectTimeline({
                     ))}
                   </tr>
 
-                  {/* LINHAS DOS COMPONENTES (Filtradas) */}
-                  {tasksDoEquipamento.map((comp) => {
-                    return (
-                      <tr
-                        key={comp.task_id || comp.component_id} // Prefira task_id se vier da view de timeline
-                        className="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="sticky left-0 z-10 text-gray-600 bg-white border-r border-gray-200 px-4 pl-8">
-                          <div className="flex items-center gap-2 text-xs">
-                            {comp.component_name}
-                          </div>
+                  {/* LINHAS DOS COMPONENTES */}
+                  {tasksDoEquipamento.map((comp) => (
+                    <tr
+                      key={comp.task_id}
+                      className="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="sticky left-0 z-10 text-gray-600 bg-white border-r border-gray-200 px-4 pl-8">
+                        <div className="flex items-center gap-2 text-xs">
+                          {comp.component_name}
+                        </div>
+                      </td>
+                      {timelineDates.map((date, index) => (
+                        <td
+                          key={index}
+                          className="text-center border-r border-gray-100 last:border-0 p-0 h-8"
+                        >
+                          {isDateInRange(
+                            date,
+                            comp?.planned_start_at,
+                            comp?.planned_end_at
+                          ) && <StatusButton status="Pending" />}
                         </td>
-                        {timelineDates.map((date, index) => (
-                          <td
-                            key={index}
-                            className="text-center border-r border-gray-100 last:border-0 p-0 h-8"
-                          >
-                            {isDateInRange(
-                              date,
-                              comp?.planned_start_at,
-                              comp?.planned_end_at
-                            ) && <StatusButton status="Pending" />}
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
+                      ))}
+                    </tr>
+                  ))}
                 </React.Fragment>
               );
             })}

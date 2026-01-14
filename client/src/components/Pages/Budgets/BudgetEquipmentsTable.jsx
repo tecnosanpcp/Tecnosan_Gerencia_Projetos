@@ -41,8 +41,8 @@ function BudgetEquipmentTable({
   const [componentsRecipesSummary, setComponentsRecipesSummary] = useState([]);
   const [rowsExpands, setRowsExpand] = useState([]);
 
-  // Estado para armazenar alterações locais (Input Controlado)
   const [modifiedData, setModifiedData] = useState({});
+  const [inputDisable, setInputDisable] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,6 +55,11 @@ function BudgetEquipmentTable({
       setComponentsRecipesSummary(componentsSummaryData);
     };
     loadData();
+    if (currentBudget.status != "Em Planejamento") {
+      setInputDisable(true);
+    } else {
+      setInputDisable(false);
+    }
   }, [currentBudget]);
 
   // Atualiza o estado visual enquanto o usuário digita
@@ -74,33 +79,19 @@ function BudgetEquipmentTable({
     component_recipe_id,
     type
   ) => {
-    // 1. Pega o valor que está no estado (o que o usuário acabou de digitar/sair)
     const newValue = modifiedData[component_recipe_id]?.[type];
-
-    // Se não houver valor alterado no estado para esse campo, não faz nada
     if (!newValue) return;
 
     try {
-      console.log(
-        `Salvando Parcial... Equip: ${equipment_recipe_id}, Comp: ${component_recipe_id}, Alterando: ${type} para ${newValue}`
-      );
-
-      // 2. Define os payloads.
-      // Como o backend aceita atualização parcial, enviamos apenas o que mudou.
-      // O outro campo vai como null (ou undefined) para que o backend o ignore.
       const startToSend = type === "start" ? newValue : null;
       const endToSend = type === "end" ? newValue : null;
 
-      // 3. Chama o serviço
       await updateDates(
         equipment_recipe_id,
         component_recipe_id,
         startToSend,
         endToSend
       );
-
-      console.log("Data atualizada com sucesso!");
-      
     } catch (error) {
       console.error("Erro ao salvar data:", error);
       alert("Erro ao salvar a data no cronograma.");
@@ -116,6 +107,8 @@ function BudgetEquipmentTable({
     }
     return formatForInput(originalDate);
   };
+
+  useEffect(() => console.log(currentBudget), [currentBudget]);
 
   return (
     <table className="w-full project-equipments text-center">
@@ -237,6 +230,7 @@ function BudgetEquipmentTable({
                                   "start"
                                 )
                               }
+                              disabled={inputDisable}
                             />
                           </td>
 
@@ -264,6 +258,7 @@ function BudgetEquipmentTable({
                                   "end"
                                 )
                               }
+                              disabled={inputDisable}
                             />
                           </td>
 
