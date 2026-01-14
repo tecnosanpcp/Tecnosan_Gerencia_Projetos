@@ -149,11 +149,24 @@ export const updateDate = async (component_id, start_date, deadline) => {
       console.error("Faltando dados");
       return [];
     }
-    const response = await api.put(`/date/${component_id}`, {
+    const response = await api.put(`/components/date/${component_id}`, {
       start_date,
       deadline,
     });
 
+    return response.data;
+  } catch (error) {
+    console.error("Erro no service", error);
+  }
+};
+
+export const updateStatus = async (component_id, status) => {
+  try {
+    if (!component_id || !status) {
+      console.error("Faltando dados");
+      return [];
+    }
+    const response = await api.put(`/components/status/${component_id}`, { status });
     return response.data;
   } catch (error) {
     console.error("Erro no service", error);

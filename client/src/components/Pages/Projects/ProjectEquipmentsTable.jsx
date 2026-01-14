@@ -4,8 +4,11 @@ import {
   vwSummaryStatus,
 } from "@services/ViewsSummary.js";
 import { VerifyAuth } from "@services/AuthService.js";
+import { updateStatus } from "@services/ComponentsServices.js";
 
 import { selectedProjectContext } from "@content/SeletedProject.jsx";
+
+import SelectMenu from "../../Ui/SelectMenu.jsx";
 
 // --- Funções Auxiliares ---
 function TotalEquipmentMaterial(equipment) {
@@ -74,20 +77,64 @@ function statusLabel(status) {
   }
 }
 
-function renderComponentRow(components, compTimes, statusComponents) {
+function renderComponentRow(
+  components,
+  compTimes,
+  statusComponents,
+  onStatusChange
+) {
+  // Definição das opções (deve bater com os IDs que você salva no banco)
+  const statusOptions = [
+    { id: "Pending", label: "Pendente" },
+    { id: "Completed", label: "Concluído" },
+    { id: "Running", label: "Em Andamento" },
+    { id: "Delayed", label: "Atrasado" },
+    { id: "Failed", label: "Não Concluído" },
+    { id: "No Status", label: "Sem Status" },
+  ];
+
   return components.map((comp, index) => {
-    const bg_color = index % 2 == 0 ? "bg-gray-50" : "bg-gray-100";
+    const bg_color = index % 2 === 0 ? "bg-gray-50" : "bg-gray-100";
     const time = compTimes[comp?.component_id] || {};
-    const status = statusComponents?.find(
-      (c) => c.component_id == comp.component_id
+
+    // 1. Pega APENAS a string do status (Ex: "Pending")
+    // Se for null/undefined, usa um fallback para não quebrar
+    const rawStatus = statusComponents?.find(
+      (c) => c.component_id === comp.component_id
     )?.status;
+
+    const currentStatusId = rawStatus || "No Status";
 
     return (
       <tr key={comp.component_id} className={bg_color}>
         <td colSpan={2}>{comp.component_name}</td>
         <td>{formatDateTime(time.start_date)}</td>
         <td>{formatDateTime(time.end_date)}</td>
-        <td>{statusLabel(status)}</td>
+        <td>
+          <SelectMenu
+            variant="full" // Ajuste conforme necessário (small/full)
+            options={statusOptions}
+            maxSelections={1}
+            // CORREÇÃO 1: Passamos um array de STRINGS (IDs), nunca objetos.
+            selectedOption={[currentStatusId]}
+            // CORREÇÃO 2: O SelectMenu envia uma "função de atualização" (prev => ...).
+            // Precisamos executar essa função para pegar o valor real.
+            setSelectedOption={(updaterFunction) => {
+              // O SelectMenu espera que isso seja um useState, então ele manda uma função.
+              // Nós simulamos o state passando o valor atual para a função dele.
+              const newSelectionArray = updaterFunction([currentStatusId]);
+
+              // O resultado é um array de IDs (Ex: ["Completed"])
+              const newStatus = newSelectionArray[0];
+
+              // Chama a função do pai para salvar no banco
+              if (onStatusChange && newStatus) {
+                onStatusChange(comp.component_id, newStatus);
+              }
+            }}
+          />
+        </td>
+
         {[1, 2, 3, 4, 5, 6, 7].map((id) => (
           <td key={id}>{comp.materials[id]?.total_material_consumed ?? 0}</td>
         ))}
@@ -104,7 +151,6 @@ function renderComponentRow(components, compTimes, statusComponents) {
     );
   });
 }
-
 // --- Componente Principal ---
 
 function ProjectEquipmentsTable({ times, searchTerm }) {
@@ -120,6 +166,28 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
     return projectsSummary.find((proj) => proj.project_id == project.id);
   }, [projectsSummary, project?.id]);
 
+  // Função para lidar com a mudança (Exemplo)
+  const handleStatusChange = async (componentId, newStatus) => {
+    try {
+      setSummaryStatus((prev) => {
+        if (!prev || !prev.components) return prev;
+
+        return {
+          ...prev,
+          components: prev.components.map((comp) => {
+            if (comp.component_id === componentId) {
+              return { ...comp, status: newStatus };
+            }
+            return comp;
+          }),
+        };
+      });
+      await updateStatus(componentId, newStatus);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       const user = await VerifyAuth();
@@ -133,7 +201,7 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
     loadData();
   }, []);
 
-  useEffect(()=>console.log(projectsSummary), [projectsSummary])
+  useEffect(() => console.log(projectsSummary), [projectsSummary]);
 
   useEffect(() => {
     if (!currentProject?.equipments) {
@@ -219,7 +287,8 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
                 renderComponentRow(
                   equip.components,
                   times?.components || {},
-                  summaryStatus.components
+                  summaryStatus.components,
+                  handleStatusChange // <--- Passa a função aqui
                 )}
             </React.Fragment>
           );

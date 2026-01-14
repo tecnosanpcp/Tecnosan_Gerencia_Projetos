@@ -226,7 +226,6 @@ export const createComponents = async (req, res) => {
 export const updateComponents = async (req, res) => {
   try {
     const { component_id } = req.params;
-    // Adicionei total_time_spent aqui
     const {
       completion_date,
       start_date,
@@ -307,6 +306,31 @@ export const updateDate = async (req, res) => {
     );
 
     res.status(200).json({ message: "Data atualizada com sucesso" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.menssage });
+  }
+};
+
+export const updateStatus = async (req, res) => {
+  try {
+    const { component_id } = req.params;
+    const { status } = req.body;
+
+    if (!component_id || !status) {
+      res.status(400).json({ message: "Faltando dados" });
+      throw new Error("Faltando dados");
+    }
+
+    const response = await pool.query(
+      `
+      UPDATE COMPONENTS 
+        SET STATUS = $1
+      WHERE COMPONENT_ID = $2`,
+      [status, component_id]
+    );
+
+    res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.menssage });

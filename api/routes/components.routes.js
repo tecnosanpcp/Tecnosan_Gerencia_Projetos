@@ -8,6 +8,7 @@ import {
   getComponentStatusByProj,
   getLeadTimeComparison,
   updateDate,
+  updateStatus,
   getStatus
 } from "../controllers/components.controller.js";
 
@@ -21,6 +22,7 @@ router.get("/", getComponents);
 router.post("/", createComponents);
 router.put("/:component_id", updateComponents);
 router.put("/date/:component_id", updateDate);
+router.put("/status/:component_id", updateStatus);
 router.delete("/", deleteComponent);
 
 export default router;
