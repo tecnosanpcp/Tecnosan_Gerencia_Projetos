@@ -5,25 +5,13 @@ export const createProject = async (
   project_name,
   project_desc,
   project_local,
-  begin_date,
+  start_date,
   end_date,
   deadline,
   status,
   budget_id
 ) => {
   try {
-    console.log({
-      user_id,
-      project_name,
-      project_desc,
-      project_local,
-      begin_date,
-      end_date,
-      deadline,
-      status,
-      budget_id,
-    });
-
     if (!user_id || !project_name || !budget_id) {
       console.error("Missing required fields.");
       return;
@@ -34,7 +22,7 @@ export const createProject = async (
       project_name,
       project_desc,
       project_local,
-      begin_date,
+      start_date,
       end_date,
       deadline,
       status,

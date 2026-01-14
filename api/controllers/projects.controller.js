@@ -1,74 +1,40 @@
 import { pool } from "../config/db.js";
 
+// NOTE: A criação de equipamentos e componentes é feita via Database Triggers (trg_auto_create_equipments).
 export const createProject = async (req, res) => {
-  const client = await pool.connect();
-
   try {
     const {
       user_id,
       project_name,
       project_desc,
       project_local,
-      begin_date,
-      end_date,
-      deadline,
-      status,
-      budget_id,
+      budget_id, // Só isso importa agora
     } = req.body;
 
-    // Basic validation
-    if (!user_id || !project_name || !budget_id) {
-      return res.status(400).json({ error: "Missing required fields." });
-    }
-
-    await client.query("BEGIN");
-
-    // Create project
-    const projectResult = await client.query(
-      `INSERT INTO projects (
-        project_name, 
-        project_desc, 
-        project_local, 
-        start_date, 
-        completion_date, 
-        deadline,
-        status,
-        budget_id
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING project_id`,
-      [
-        project_name?.trim(),
-        project_desc?.trim(),
-        project_local?.trim(),
-        begin_date,
-        end_date,
-        deadline,
-        status.trim(),
-        budget_id,
-      ]
+    // Apenas inserimos o projeto. O Banco fará o resto.
+    const result = await pool.query(
+      `INSERT INTO projects (project_name, project_desc, project_local, status, budget_id)
+       VALUES ($1, $2, $3, 'Pending', $4)
+       RETURNING project_id`,
+      [project_name, project_desc, project_local, budget_id]
     );
 
-    const project_id = projectResult.rows[0].project_id;
-    // Associate project with user
-    await client.query(
-      `INSERT INTO projects_users (user_id, project_id)
-       VALUES ($1, $2)`,
-      [user_id, project_id]
+    const newProjectId = result.rows[0].project_id;
+
+    // Vincula o usuário
+    await pool.query(
+      "INSERT INTO projects_users (user_id, project_id) VALUES ($1, $2)",
+      [user_id, newProjectId]
     );
 
-    await client.query("COMMIT");
-    client.release();
-
-    return res.status(200).json({
-      message: "Project created successfully.",
-      project_id,
+    res.status(200).json({ 
+        message: "Projeto gerado automaticamente pelo Banco de Dados!", 
+        project_id: newProjectId 
     });
+
   } catch (error) {
-    await pool.query("ROLLBACK");
-    client.release();
-    console.error("Error creating project:", error);
-    return res.status(500).json({ error: "Error creating project." });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };
 

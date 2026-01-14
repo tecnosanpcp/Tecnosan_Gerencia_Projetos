@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import { VerifyAuth } from "@services/AuthService.js";
 import { createProject } from "@services/ProjectService.js";
+// import { createEquipment } from "@services/EquipmentService.js"
 import { uploadStatusBudget } from "@services/BudgetService.js";
 
 import AlertModal from "../../Ui/AlertModal";
@@ -13,7 +14,7 @@ export default function BudgetFooter({ currentBudget }) {
     try {
       const user = await VerifyAuth();
       
-      await createProject(
+      const projectData =  await createProject(
         user.user_id,
         project_name,
         "desc",
@@ -24,6 +25,8 @@ export default function BudgetFooter({ currentBudget }) {
         "Peding",
         budget_id
       );
+
+      console.log(projectData)
 
       await uploadStatusBudget(budget_id, "Aprovado");
       setShowApproveModal(false);

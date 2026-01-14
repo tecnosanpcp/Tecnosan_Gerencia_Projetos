@@ -20,10 +20,34 @@ export const listEquipments = async () => {
   }
 };
 
-// export const createEquipment = async () => {
-//   try {
-//     const response = await api.post("/equipments");
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
+export const createEquipment = async (
+  equipment_name,
+  start_date,
+  deadline,
+  project_id,
+  equipment_recipe_id
+) => {
+  try {
+    if (
+      !equipment_name ||
+      !start_date ||
+      !deadline ||
+      !project_id ||
+      equipment_recipe_id
+    ) {
+      throw new Error("Faltando dados");
+    }
+
+    const response = await api.post("/equipments", {
+      equipment_name,
+      start_date,
+      deadline,
+      project_id,
+      equipment_recipe_id,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};

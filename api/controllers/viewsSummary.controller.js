@@ -18,7 +18,7 @@ function buildHierarchy(rows) {
       total_value,
     } = row;
 
-    // --- PROJECT ---
+    // --- 1. PROJECT ---
     if (!projects[project_id]) {
       projects[project_id] = {
         project_id,
@@ -27,9 +27,12 @@ function buildHierarchy(rows) {
       };
     }
 
+    // Se o LEFT JOIN trouxe um projeto sem equipamentos (caso raro, mas possível), paramos aqui
+    if (!equipment_id) return;
+
     const proj = projects[project_id];
 
-    // --- EQUIPMENT ---
+    // --- 2. EQUIPMENT ---
     if (!proj.equipments[equipment_id]) {
       proj.equipments[equipment_id] = {
         equipment_id,
@@ -38,9 +41,12 @@ function buildHierarchy(rows) {
       };
     }
 
+    // Se o componente for null, paramos aqui
+    if (!component_id) return;
+
     const equip = proj.equipments[equipment_id];
 
-    // --- COMPONENT ---
+    // --- 3. COMPONENT ---
     if (!equip.components[component_id]) {
       equip.components[component_id] = {
         component_id,
@@ -51,27 +57,35 @@ function buildHierarchy(rows) {
 
     const comp = equip.components[component_id];
 
-    // --- MATERIAL ---
-    comp.materials.push({
-      material_id,
-      material_name,
-      material_type_id,
-      total_material_consumed,
-      total_value,
-    });
+    // --- 4. MATERIAL (A Correção Importante) ---
+    // Só adicionamos no array se o material_id existir. 
+    // Como usamos LEFT JOIN, ele pode vir NULL se for um projeto novo.
+    if (material_id) {
+      comp.materials.push({
+        material_id,
+        material_name,
+        material_type_id,
+        total_material_consumed,
+        total_value,
+      });
+    }
   });
 
-  // transformar objetos internos em arrays
+  // transformar objetos internos em arrays (Isso mantive igual ao seu)
   return Object.values(projects).map((project) => ({
     ...project,
     equipments: Object.values(project.equipments).map((equip) => ({
       ...equip,
-      components: Object.values(equip.components),
+      components: Object.values(equip.components).map((comp) => ({
+          ...comp,
+          // Garante array vazio se não tiver materiais
+          materials: comp.materials || [] 
+      })),
     })),
   }));
 }
 
-export const vwProjectMaterialsSummary = async (req, res) => {
+export const vwProjectMaterialsSummary = async (req, res) => { 
   try {
     const { user_id } = req.params;
 

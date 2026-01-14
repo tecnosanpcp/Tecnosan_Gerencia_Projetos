@@ -133,6 +133,8 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
     loadData();
   }, []);
 
+  useEffect(()=>console.log(projectsSummary), [projectsSummary])
+
   useEffect(() => {
     if (!currentProject?.equipments) {
       setEquipmentsFilter([]);

@@ -23,8 +23,32 @@ export const listEquipments = async (req, res) => {
 
 export const createEquipment = async (req, res) => {
   try {
-    
+    const {
+      equipment_name,
+      start_date,
+      deadline,
+      project_id,
+      equipment_recipe_id
+    } = req.body;
+
+    if (
+      !equipment_name ||
+      !start_date ||
+      !deadline ||
+      !project_id ||
+      equipment_recipe_id
+    ) {
+      res.status(400).json({ message: "Faltando dados" });
+      throw new Error("Faltando dados");
+    }
+
+    const response = await pool.query(`
+      INSERT INTO EQUIPMENTS(equipment_name, start_date, deadline, project_id, equipment_recipe_id)
+      VALUES ('TESTE', '14-01-2026', '14-04-2026', 10, 1) RETURNING *`);
+
+    res.status(200).json(response.rows[0]);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
