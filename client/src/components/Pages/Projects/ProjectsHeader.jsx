@@ -42,10 +42,11 @@ export default function ProjectsHeader({ times }) {
   useEffect(() => {
     const loadData = async () => {
       const user = await VerifyAuth();
-      const times_data = await totalValuesProjects(user.user_id);
+      const [times_data, material_data] = await Promise.all([
+        totalValuesProjects(user.user_id),
+        totalMaterialsProjects(user.user_id),
+      ]);
       setProjectsValues(times_data);
-
-      const material_data = await totalMaterialsProjects(user.user_id);
       setProjectsMaterial(material_data);
     };
     loadData();

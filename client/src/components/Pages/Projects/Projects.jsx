@@ -33,15 +33,17 @@ function Projects() {
   useEffect(() => {
     async function loadData() {
       const user = await VerifyAuth();
-
-      const project_data = await listProjects(user.user_id);
+      const [project_data, hours_data] = await Promise.all([
+        listProjects(user.user_id),
+        await getTimesCascade(),
+      ]);
       if (project_data) setProjects(project_data);
-
-      const hours_data = await getTimesCascade();
-      setTimes(hours_data);
+      if (hours_data) setTimes(hours_data);
     }
     loadData();
   }, []);
+
+  useEffect(()=>console.log(times))
 
   return (
     <DashboardLayout

@@ -7,29 +7,7 @@ import {
 
 // Importação do serviço
 import { updateDates } from "@services/EquipRecipeCompRecipe";
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return "-";
-  const date = new Date(timestamp);
-
-  if (isNaN(date.getTime())) return "Data Inválida";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-};
-
-const formatForInput = (timestamp) => {
-  if (!timestamp) return "";
-  try {
-    return new Date(timestamp).toISOString().split("T")[0];
-  } catch (error) {
-    console.log(error);
-    return "";
-  }
-};
+import { formatDate, formatForInput } from "@utils/dateUtils.js";
 
 function BudgetEquipmentTable({
   currentBudget,

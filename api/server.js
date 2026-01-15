@@ -14,6 +14,7 @@ import viewsSummaryRoutes from "./routes/viewsSummary.routes.js";
 import componentsRoutes from "./routes/components.routes.js";
 import equipmentRoutes from "./routes/equipment.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
+import timesheetRoutes from "./routes/timesheet.routes.js";
 
 // Rotas para Receitas / Planejamento
 
@@ -46,6 +47,7 @@ app.use("/components", componentsRoutes);
 app.use("/components/materials", componentsMaterialsRoutes);
 app.use("/equipments", equipmentRoutes);
 app.use("/projects", projectsRoutes);
+app.use("/timesheets", timesheetRoutes);
 
 // Rotas para Receitas / Planejamento
 app.use("/comp-recipe-mat", componentRecipeMaterialsRouter);

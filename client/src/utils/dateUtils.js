@@ -48,3 +48,27 @@ export const formatDateForApi = (dateStr) => {
   // Garante que pega apenas a parte da data e adiciona o horário zerado
   return `${dateStr.split(" ")[0]} 00:00:00`;
 };
+
+
+export const formatDate = (timestamp) => {
+  if (!timestamp) return "-";
+  const date = new Date(timestamp);
+
+  if (isNaN(date.getTime())) return "Data Inválida";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
+export const formatForInput = (timestamp) => {
+  if (!timestamp) return "";
+  try {
+    return new Date(timestamp).toISOString().split("T")[0];
+  } catch (error) {
+    console.log(error);
+    return "";
+  }
+};

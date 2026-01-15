@@ -7,6 +7,7 @@ import { VerifyAuth } from "@services/AuthService.js";
 import { updateStatus } from "@services/ComponentsServices.js";
 
 import { selectedProjectContext } from "@content/SeletedProject.jsx";
+import { formatDateForInput } from "@utils/dateUtils.js";
 
 import SelectMenu from "../../Ui/SelectMenu.jsx";
 
@@ -81,9 +82,9 @@ function renderComponentRow(
   components,
   compTimes,
   statusComponents,
-  onStatusChange
+  onStatusChange,
+  onDateChange
 ) {
-  // Definição das opções (deve bater com os IDs que você salva no banco)
   const statusOptions = [
     { id: "Pending", label: "Pendente" },
     { id: "Completed", label: "Concluído" },
@@ -92,49 +93,57 @@ function renderComponentRow(
     { id: "Failed", label: "Não Concluído" },
     { id: "No Status", label: "Sem Status" },
   ];
-
   return components.map((comp, index) => {
+    // Define cor
     const bg_color = index % 2 === 0 ? "bg-gray-50" : "bg-gray-100";
+
+    // Seleciona o tempo daquele componente
     const time = compTimes[comp?.component_id] || {};
 
-    // 1. Pega APENAS a string do status (Ex: "Pending")
-    // Se for null/undefined, usa um fallback para não quebrar
+    // Seleciona o status daquele componente
     const rawStatus = statusComponents?.find(
       (c) => c.component_id === comp.component_id
     )?.status;
-
     const currentStatusId = rawStatus || "No Status";
 
     return (
       <tr key={comp.component_id} className={bg_color}>
-        <td colSpan={2}>{comp.component_name}</td>
-        <td>{formatDateTime(time.start_date)}</td>
-        <td>{formatDateTime(time.end_date)}</td>
+        <td>{comp.component_name}</td>
+        <td>{formatDateTime(time?.planned_start)}</td>
+        <td>{formatDateTime(time.real_start)}</td>
+        <td className="text-gray-500 font-medium text-xs">
+          {formatDateTime(time?.planned_end)}
+        </td>
+        <td>
+          <input
+            type="datetime-local"
+            className="bg-transparent border border-transparent hover:border-gray-300 rounded p-1 cursor-pointer w-full text-center text-xs"
+            defaultValue={formatDateForInput(time.real_end)}
+            onBlur={(e) => {
+              if (e.target.value)
+                onDateChange(
+                  comp.component_id,
+                  "completion_date",
+                  e.target.value
+                );
+            }}
+          />
+        </td>
         <td>
           <SelectMenu
-            variant="full" // Ajuste conforme necessário (small/full)
+            variant="full"
             options={statusOptions}
             maxSelections={1}
-            // CORREÇÃO 1: Passamos um array de STRINGS (IDs), nunca objetos.
             selectedOption={[currentStatusId]}
-            // CORREÇÃO 2: O SelectMenu envia uma "função de atualização" (prev => ...).
-            // Precisamos executar essa função para pegar o valor real.
             setSelectedOption={(updaterFunction) => {
-              // O SelectMenu espera que isso seja um useState, então ele manda uma função.
-              // Nós simulamos o state passando o valor atual para a função dele.
               const newSelectionArray = updaterFunction([currentStatusId]);
-
-              // O resultado é um array de IDs (Ex: ["Completed"])
               const newStatus = newSelectionArray[0];
-
-              // Chama a função do pai para salvar no banco
               if (onStatusChange && newStatus) {
                 onStatusChange(comp.component_id, newStatus);
               }
             }}
           />
         </td>
-
         {[1, 2, 3, 4, 5, 6, 7].map((id) => (
           <td key={id}>{comp.materials[id]?.total_material_consumed ?? 0}</td>
         ))}
@@ -146,11 +155,12 @@ function renderComponentRow(
             }))
           )}
         </td>
-        <td>{time.total_hours}</td>
+        <td>{time?.total_hours / time?.qtd_employees || 0}</td>
       </tr>
     );
   });
 }
+
 // --- Componente Principal ---
 
 function ProjectEquipmentsTable({ times, searchTerm }) {
@@ -188,6 +198,15 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
     }
   };
 
+  const handleDateChange = async (componentId, field, newValue) => {
+    try {
+      console.log(`Salvando ${field}: ${newValue}`);
+    } catch (error) {
+      console.error("Erro ao atualizar data:", error);
+      alert("Erro ao salvar data.");
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       const user = await VerifyAuth();
@@ -200,8 +219,6 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
     };
     loadData();
   }, []);
-
-  useEffect(() => console.log(projectsSummary), [projectsSummary]);
 
   useEffect(() => {
     if (!currentProject?.equipments) {
@@ -224,11 +241,11 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
     <table className="w-full project-equipments text-center">
       <thead>
         <tr className="text-left bg-[#DBEBFF]">
-          <th className="first:rounded-tl-lg" colSpan={2}>
-            Equipamentos
-          </th>
-          <th>Início</th>
-          <th>Fim</th>
+          <th className="first:rounded-tl-lg">Equipamentos</th>
+          <th>Início Prev.</th>
+          <th>Início Real</th>
+          <th>Fim Prev.</th>
+          <th>Fim Real</th>
           <th>Status</th>
           <th>Resina</th>
           <th>Roving</th>
@@ -238,57 +255,52 @@ function ProjectEquipmentsTable({ times, searchTerm }) {
           <th>Manta</th>
           <th>Reina ISO</th>
           <th>Valor</th>
-          <th className="last:rounded-tr-lg">Horas</th>
+          <th className="last:rounded-tr-lg">Horas-Homem</th>
         </tr>
       </thead>
       <tbody>
         {equipmentsFilter?.map((equip) => {
           const equip_totals = TotalEquipmentMaterial(equip);
           const total_value = sumEquipmentValue(equip_totals);
-          const time = times?.equipments?.[equip.equipment_id] || {};
+
+          // ACESSA O OBJETO DE EQUIPAMENTOS DO SEU JSON (Se precisar)
+          const equipTime = times?.equipments?.[equip.equipment_id] || {};
+
           const expanded = isExpanded(rowsExpands, equip.equipment_id);
           const found = summaryStatus?.equipments?.find(
             (e) => e.equipment_id == equip.equipment_id
           );
-
+          console.log(equipTime)
           return (
             <React.Fragment key={equip.equipment_id}>
-              <tr className="bg-gray-200" key={equip.equipment_id}>
-                <th>
-                  <button
-                    onClick={() =>
-                      setRowsExpand((prev) =>
-                        expanded
-                          ? prev.filter((id) => id !== equip.equipment_id)
-                          : [...prev, equip.equipment_id]
-                      )
-                    }
-                  >
-                    <img
-                      src={
-                        expanded
-                          ? "src/imgs/remove-square.png"
-                          : "src/imgs/add-square.png"
-                      }
-                      className="w-5 h-5"
-                      alt="Toggle"
-                    />
-                  </button>
-                </th>
+              <tr
+                className="bg-gray-200 hover:cursor-pointer "
+                key={equip.equipment_id}
+                onClick={() =>
+                  setRowsExpand((prev) =>
+                    expanded
+                      ? prev.filter((id) => id !== equip.equipment_id)
+                      : [...prev, equip.equipment_id]
+                  )
+                }
+              >
                 <th>{equip.equipment_name}</th>
-                <th>{formatDateTime(time.start_date)}</th>
-                <th>{formatDateTime(time.end_date)}</th>
+                <th>{formatDateTime(equipTime.planned_start)}</th>
+                <th>{formatDateTime(equipTime.real_start)}</th>
+                <th>{formatDateTime(equipTime.planned_end)}</th>
+                <th>{formatDateTime(equipTime.real_end)}</th>
                 <th>{statusLabel(found?.status)}</th>
                 {renderMaterialColumns(equip_totals)}
                 <th>{total_value}</th>
-                <th>{time.total_hours}</th>
+                <th>{equipTime.total_hours / equipTime.qtd_employees || 0}</th>
               </tr>
               {expanded &&
                 renderComponentRow(
                   equip.components,
                   times?.components || {},
                   summaryStatus.components,
-                  handleStatusChange // <--- Passa a função aqui
+                  handleStatusChange,
+                  handleDateChange
                 )}
             </React.Fragment>
           );

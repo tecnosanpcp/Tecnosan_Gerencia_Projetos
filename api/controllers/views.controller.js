@@ -154,14 +154,10 @@ export const vwMaterialDetailsEquipmentsRecipes = async (req, res) => {
 
 export const getTimesCascade = async (req, res) => {
   try {
-    // Consultas às novas views criadas
-    const projectQuery = await pool.query(`SELECT * FROM vw_project_hours;`);
-    const equipmentQuery = await pool.query(
-      `SELECT * FROM vw_equipment_hours;`
-    );
-    const componentQuery = await pool.query(
-      `SELECT * FROM vw_component_hours;`
-    );
+    // 1. Buscando dados (O SQL já traz os nomes das colunas corretos)
+    const projectQuery = await pool.query("SELECT * FROM vw_project_hours;");
+    const equipmentQuery = await pool.query("SELECT * FROM vw_equipment_hours;");
+    const componentQuery = await pool.query("SELECT * FROM vw_component_hours;");
 
     const result = {
       projects: {},
@@ -169,41 +165,21 @@ export const getTimesCascade = async (req, res) => {
       components: {},
     };
 
-    // ----- PROJECTS -----
-    // Mapeamos 'actual_start' para 'start_date' para manter compatibilidade com seu Front-end
-    projectQuery.rows.forEach((row) => {
-      result.projects[row.project_id] = {
-        project_id: row.project_id,
-        // Usamos o realizado (actual), se não houver, o planejado (planned)
-        start_date: row.actual_start || row.planned_start,
-        end_date: row.actual_end || row.planned_deadline,
-        total_hours: parseFloat(row.total_hours || 0),
-        qtd_employees: parseInt(row.qtd_employees || 0),
-      };
-    });
+    // FUNÇÃO AUXILIAR: Transforma Array em Objeto indexado por ID
+    // Isso evita repetir código nos 3 loops
+    const mapRowsToId = (rows, idField, targetObject) => {
+      rows.forEach((row) => {
+        targetObject[row[idField]] = {
+          ...row,
+          total_hours: Number(row.total_hours || 0),
+          qtd_employees: Number(row.qtd_employees || 0),
+        };
+      });
+    };
 
-    // ----- EQUIPMENTS -----
-    equipmentQuery.rows.forEach((row) => {
-      result.equipments[row.equipment_id] = {
-        equipment_id: row.equipment_id,
-        start_date: row.actual_start || row.planned_start,
-        end_date: row.actual_end || row.planned_deadline,
-        total_hours: parseFloat(row.total_hours || 0),
-        qtd_employees: parseInt(row.qtd_employees || 0),
-      };
-    });
-
-    // ----- COMPONENTS -----
-    // Na vw_component_hours, as colunas são start_date (tabela) e end_date (MAX da execução)
-    componentQuery.rows.forEach((row) => {
-      result.components[row.component_id] = {
-        component_id: row.component_id,
-        start_date: row.start_date, // Data de início do componente
-        end_date: row.end_date || row.deadline, // Fim real ou prazo
-        total_hours: parseFloat(row.total_hours || 0),
-        qtd_employees: parseInt(row.qtd_employees || 0),
-      };
-    });
+    mapRowsToId(projectQuery.rows, 'project_id', result.projects);
+    mapRowsToId(equipmentQuery.rows, 'equipment_id', result.equipments);
+    mapRowsToId(componentQuery.rows, 'component_id', result.components);
 
     res.json(result);
   } catch (error) {
@@ -212,7 +188,6 @@ export const getTimesCascade = async (req, res) => {
   }
 };
 
-// --- COMPONENTES ---
 export const vwComponentRecipeMaterials = async (req, res) => {
   try {
     const response = await pool.query(
@@ -226,7 +201,6 @@ export const vwComponentRecipeMaterials = async (req, res) => {
   }
 };
 
-// --- EQUIPAMENTOS ---
 export const vwEquipmentMaterialsSummary = async (req, res) => {
   try {
     const response = await pool.query(
@@ -240,7 +214,6 @@ export const vwEquipmentMaterialsSummary = async (req, res) => {
   }
 };
 
-// -- PESQUISAS PONTUAIS --
 export const projectTask = async (req, res) => {
   try {
     const { component_id } = req.params;

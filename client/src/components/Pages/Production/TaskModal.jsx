@@ -15,6 +15,9 @@ import {
   deleteEmployeesComponents,
 } from "@services/EmployeesComponentsServices.js";
 
+// IMPORTANDO O SERVIÇO REAL
+import { createTimesheet } from "@services/TimesheetServices"; 
+
 function TaskModal({
   isOpen,
   setOpen,
@@ -37,8 +40,9 @@ function TaskModal({
   const [selectEmp, setSelectEmp] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-  // NOVO: Estado para controlar os inputs de consumo (Lógica necessária)
+  // Inputs
   const [inputValues, setInputValues] = useState({});
+  const [timesheetValues, setTimesheetValues] = useState({});
 
   const listStatus = [
     { id: "Pending", label: "Planejado" },
@@ -57,8 +61,9 @@ function TaskModal({
         setStatus([taskData?.status]);
         setTotalTimeSpent(taskData.total_time_spent || "");
 
-        // Reseta inputs de adição
+        // Reseta inputs
         setInputValues({});
+        setTimesheetValues({});
 
         const materialData = await vwMaterialDetailsComponentsRecipes(
           taskData.component_recipe_id
@@ -79,15 +84,24 @@ function TaskModal({
     init();
   }, [isOpen, responsible, taskData]);
 
+  const handleTimesheetChange = (userId, field, value) => {
+    setTimesheetValues((prev) => ({
+      ...prev,
+      [userId]: {
+        ...prev[userId],
+        [field]: value,
+      },
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // 1. Formatador
       const fmt = (d) => (d ? d.replace("T", " ") + ":00" : null);
       const user = await VerifyAuth();
 
-      // 2. Atualiza Componente
+      // 1. Atualiza Componente
       await updateComponents(
         taskData.component_id,
         fmt(finishDate),
@@ -98,7 +112,7 @@ function TaskModal({
         parseFloat(totalTimeSpent) || 0
       );
 
-      // 3. Sincronização Funcionários
+      // 2. Sincronização Funcionários
       const allRelations = await getEmployeesComponents();
       const dbIds = allRelations
         .filter((r) => r.component_id == taskData.component_id)
@@ -109,10 +123,11 @@ function TaskModal({
         (id) => !selectEmp.map(Number).includes(id)
       );
 
-      // 4. Prepara Consumo de Materiais
+      // 3. Consumo de Materiais
       const materialPromises = Object.entries(inputValues).map(
         async ([matId, quantity]) => {
           const qtd = parseFloat(quantity);
+          if (!qtd) return;
           return addMaterialConsumption(
             taskData.component_id,
             parseInt(matId),
@@ -122,7 +137,26 @@ function TaskModal({
         }
       );
 
-      // 5. Executa tudo
+      // 4. Apontamento de Horas (AGORA COM O SERVIÇO REAL)
+      const timesheetPromises = Object.entries(timesheetValues).map(
+        async ([userId, times]) => {
+          // Só envia se tiver Início E Fim preenchidos
+          if (!times.start || !times.end) return;
+
+          // Monta o objeto conforme o Backend espera no req.body
+          const payload = {
+            component_id: taskData.component_id,
+            user_id: parseInt(userId),
+            start_time: fmt(times.start),
+            end_time: fmt(times.end),
+          };
+
+          // Chama a função importada
+          return createTimesheet(payload);
+        }
+      );
+
+      // 5. Executa tudo em paralelo
       await Promise.all([
         ...toAdd.map((id) =>
           createEmployeesComponents(taskData.component_id, id)
@@ -131,20 +165,25 @@ function TaskModal({
           deleteEmployeesComponents(taskData.component_id, id)
         ),
         ...materialPromises,
+        ...timesheetPromises, // <--- Adicionado
       ]);
 
       console.log("Salvo com sucesso!");
       setOpen(false);
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      alert("Erro ao salvar.");
+      alert("Erro ao salvar dados. Verifique o console.");
     }
   };
 
   if (!isOpen) return null;
 
+  const assignedEmployees = employees.filter((emp) =>
+    selectEmp.map(Number).includes(emp.user_id)
+  );
+
   return createPortal(
-    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto">
+    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto py-10">
       <form
         className="bg-gray-200 p-6 rounded-lg shadow-lg w-1/2 flex flex-col space-y-6"
         onSubmit={handleSubmit}
@@ -277,7 +316,6 @@ function TaskModal({
                         {amount} {mat.uni}
                       </td>
                       <td className="px-4 py-2">
-                        {/* AQUI ESTÁ A ÚNICA MUDANÇA: Lógica do inputValues mantendo o estilo original */}
                         <input
                           type="text"
                           className="w-20 p-1 border rounded bg-yellow-50 focus:bg-white"
@@ -301,6 +339,69 @@ function TaskModal({
                       className="px-4 py-2 text-center text-gray-500"
                     >
                       Nenhum material vinculado à receita.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* --- Apontamento de Horas --- */}
+        <div className="flex flex-col w-full">
+          <label className="text-gray-700 mb-1 font-medium">
+            Apontamento de Horas
+          </label>
+          <div className="bg-white rounded overflow-hidden shadow-sm">
+            <table className="min-w-full text-sm text-left">
+              <thead className="bg-gray-100 text-gray-700 font-bold">
+                <tr>
+                  <th className="px-4 py-2">Funcionário</th>
+                  <th className="px-4 py-2">Início Trabalho</th>
+                  <th className="px-4 py-2">Fim Trabalho</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignedEmployees.map((emp) => (
+                  <tr key={emp.user_id} className="border-b last:border-0">
+                    <td className="px-4 py-2 font-medium">{emp.user_name}</td>
+                    <td className="px-4 py-2">
+                      <input
+                        type="datetime-local"
+                        className="p-1 border rounded bg-yellow-50 focus:bg-white w-full"
+                        value={timesheetValues[emp.user_id]?.start || ""}
+                        onChange={(e) =>
+                          handleTimesheetChange(
+                            emp.user_id,
+                            "start",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input
+                        type="datetime-local"
+                        className="p-1 border rounded bg-yellow-50 focus:bg-white w-full"
+                        value={timesheetValues[emp.user_id]?.end || ""}
+                        onChange={(e) =>
+                          handleTimesheetChange(
+                            emp.user_id,
+                            "end",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {assignedEmployees.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="3"
+                      className="px-4 py-2 text-center text-gray-500"
+                    >
+                      Nenhum funcionário selecionado.
                     </td>
                   </tr>
                 )}
