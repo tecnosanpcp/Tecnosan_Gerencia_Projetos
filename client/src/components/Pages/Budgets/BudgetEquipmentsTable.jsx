@@ -92,7 +92,7 @@ function BudgetEquipmentTable({
     <table className="w-full project-equipments text-center">
       <thead>
         <tr className="text-left bg-[#DBEBFF]">
-          <th className="first:rounded-tl-lg" colSpan={2}>
+          <th className="first:rounded-tl-lg" >
             Equipamentos
           </th>
           <th>Início</th>
@@ -122,37 +122,21 @@ function BudgetEquipmentTable({
             );
             return (
               <React.Fragment key={equip?.equipment_recipe_id}>
-                <tr className="bg-gray-200">
-                  <td>
-                    <button
-                      onClick={() => {
-                        if (
-                          !rowsExpands?.includes(equip?.equipment_recipe_id)
-                        ) {
-                          setRowsExpand((prev) => [
-                            ...prev,
-                            equip?.equipment_recipe_id,
-                          ]);
-                        } else {
-                          setRowsExpand((prev) =>
-                            prev.filter(
-                              (row) => row != equip?.equipment_recipe_id
-                            )
-                          );
-                        }
-                      }}
-                    >
-                      <img
-                        src={
-                          rowsExpands?.includes(equip?.equipment_recipe_id)
-                            ? "src/imgs/remove-square.png"
-                            : "src/imgs/add-square.png"
-                        }
-                        className="w-5 h-5"
-                        alt="Toggle"
-                      />
-                    </button>
-                  </td>
+                <tr
+                  className="bg-gray-200 hover:cursor-pointer "
+                  onClick={() => {
+                    if (!rowsExpands?.includes(equip?.equipment_recipe_id)) {
+                      setRowsExpand((prev) => [
+                        ...prev,
+                        equip?.equipment_recipe_id,
+                      ]);
+                    } else {
+                      setRowsExpand((prev) =>
+                        prev.filter((row) => row != equip?.equipment_recipe_id)
+                      );
+                    }
+                  }}
+                >
                   <td>{equip.recipe_name}</td>
                   <td>{formatDate(timeline_proj?.equipment_start_at)}</td>
                   <td>{formatDate(timeline_proj?.equipment_end_at)}</td>
@@ -182,7 +166,7 @@ function BudgetEquipmentTable({
 
                       return (
                         <tr key={comp.component_recipe_id} className={bg_color}>
-                          <td colSpan={2}>{comp.recipe_name}</td>
+                          <td >{comp.recipe_name}</td>
 
                           {/* INPUT DE INÍCIO */}
                           <td>
