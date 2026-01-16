@@ -78,7 +78,7 @@ function NavBar({ select_index }) {
           >
             {select_index === 2 ? (
               <img
-                src="\imgs\blue-calendar-icon.png"
+                src="./imgs/blue-calendar-icon.png"
                 alt="icone de casa"
                 size={15}
               />
