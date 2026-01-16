@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from "react";
 import PropTypes from "prop-types";
 
+import RemoveSquareImg from "../../../imgs/remove-square.png";
+import AddSquareImg from "../../../imgs/add-square.png";
+
 function CascadeTableTwoLevel({ title, data }) {
   const [openGroups, setOpenGroups] = useState({});
 
@@ -26,11 +29,9 @@ function CascadeTableTwoLevel({ title, data }) {
   const getTotals = (items) => {
     const avgDays =
       items.length > 0
-        ? Math.round(
-            items.reduce((acc, i) => acc + i.days_late, 0)
-          )
+        ? Math.round(items.reduce((acc, i) => acc + i.days_late, 0))
         : 0;
-    return avgDays ;
+    return avgDays;
   };
 
   return (
@@ -61,7 +62,7 @@ function CascadeTableTwoLevel({ title, data }) {
             </tr>
           ) : (
             Object.entries(groupedData).map(([department, components]) => {
-              const  avgDays  = getTotals(components);
+              const avgDays = getTotals(components);
               return (
                 <React.Fragment key={department}>
                   {/* 🔹 Departamento */}
@@ -75,17 +76,15 @@ function CascadeTableTwoLevel({ title, data }) {
                           <img
                             src={
                               openGroups[department]
-                                ? "/imgs/remove-square.png"
-                                : "/imgs/add-square.png"
+                                ? RemoveSquareImg
+                                : AddSquareImg
                             }
                             className="h-4 w-4"
                             alt="toggle"
                           />
                           {department}
                         </span>
-                        <span>
-                          {avgDays} dias
-                        </span>
+                        <span>{avgDays} dias</span>
                       </button>
                     </td>
                   </tr>

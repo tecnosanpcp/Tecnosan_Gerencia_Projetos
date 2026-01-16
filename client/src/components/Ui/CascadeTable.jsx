@@ -1,8 +1,13 @@
 import React, { useState, useMemo } from "react";
 import PropTypes from "prop-types";
 
+import RemoveSquareImg from "../../../imgs/remove-square.png";
+import AddSquareImg from "../../../imgs/add-square.png";
+
 function normalize(str) {
-  return String(str ?? "").trim().toLowerCase();
+  return String(str ?? "")
+    .trim()
+    .toLowerCase();
 }
 
 function CascadeTable({ title, headers, values, filter }) {
@@ -19,7 +24,9 @@ function CascadeTable({ title, headers, values, filter }) {
       ? Array.from(new Set(filter.map((f) => normalize(f)).filter(Boolean)))
       : [];
 
-    const base = normalizedPropFilter.length ? normalizedPropFilter : uniqueFromData;
+    const base = normalizedPropFilter.length
+      ? normalizedPropFilter
+      : uniqueFromData;
 
     const readable = base.map((s) => s.charAt(0).toUpperCase() + s.slice(1));
 
@@ -43,7 +50,10 @@ function CascadeTable({ title, headers, values, filter }) {
       if (!grouped[project][equipment][component])
         grouped[project][equipment][component] = [];
 
-      grouped[project][equipment][component].push({ material, total_material_consumed });
+      grouped[project][equipment][component].push({
+        material,
+        total_material_consumed,
+      });
     });
     return grouped;
   }, [values]);
@@ -56,7 +66,8 @@ function CascadeTable({ title, headers, values, filter }) {
     const sel = normalize(selectedFilter);
     return items.reduce((acc, { material, total_material_consumed }) => {
       const matNorm = normalize(material);
-      if (sel === "todos" || matNorm === sel) return acc + total_material_consumed;
+      if (sel === "todos" || matNorm === sel)
+        return acc + total_material_consumed;
       return acc;
     }, 0);
   };
@@ -111,7 +122,9 @@ function CascadeTable({ title, headers, values, filter }) {
             <select
               className="border-none rounded p-1  bg-transparent"
               value={selectedFilterIndex}
-              onChange={(e) => setSelectedFilterIndex(Number(e.target.value) || 0)}
+              onChange={(e) =>
+                setSelectedFilterIndex(Number(e.target.value) || 0)
+              }
             >
               {filters.map((f, i) => (
                 <option key={i} value={i}>
@@ -128,7 +141,10 @@ function CascadeTable({ title, headers, values, filter }) {
         <thead>
           <tr className="bg-sky-200 uppercase font-semibold ">
             {displayedHeaders.map((header, index) => (
-              <th key={index} className="p-2 border-b border-sky-300 text-center">
+              <th
+                key={index}
+                className="p-2 border-b border-sky-300 text-center"
+              >
                 {header}
               </th>
             ))}
@@ -143,8 +159,8 @@ function CascadeTable({ title, headers, values, filter }) {
             </tr>
           ) : (
             Object.entries(filteredProjects).map(([project, equipments]) => {
-              const projectItems = Object.values(equipments).flatMap((components) =>
-                Object.values(components).flat()
+              const projectItems = Object.values(equipments).flatMap(
+                (components) => Object.values(components).flat()
               );
               const projectTotal = calcularTotal(projectItems);
 
@@ -161,8 +177,8 @@ function CascadeTable({ title, headers, values, filter }) {
                           <img
                             src={
                               openGroups[project]
-                                ? "/imgs//remove-square.png"
-                                : "/imgs/add-square.png"
+                                ? RemoveSquareImg
+                                : AddSquareImg
                             }
                             className="h-4 w-4"
                             alt="toggle"
@@ -178,88 +194,95 @@ function CascadeTable({ title, headers, values, filter }) {
 
                   {/* Equipamentos */}
                   {openGroups[project] &&
-                    Object.entries(equipments).map(([equipment, components]) => {
-                      const equipKey = `${project}-${equipment}`;
-                      const equipItems = Object.values(components).flat();
-                      const equipTotal = calcularTotal(equipItems);
+                    Object.entries(equipments).map(
+                      ([equipment, components]) => {
+                        const equipKey = `${project}-${equipment}`;
+                        const equipItems = Object.values(components).flat();
+                        const equipTotal = calcularTotal(equipItems);
 
-                      return (
-                        <React.Fragment key={equipKey}>
-                          <tr className="bg-sky-50 hover:bg-sky-100 ">
-                            <td colSpan={2}>
-                              <button
-                                onClick={() => toggleGroup(equipKey)}
-                                className="flex items-center justify-between w-full p-2 font-medium pl-6"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <img
-                                    src={
-                                      openGroups[equipKey]
-                                        ? "/imgs/remove-square.png"
-                                        : "/imgs/add-square.png"
-                                    }
-                                    className="h-4 w-4"
-                                    alt="toggle"
-                                  />
-                                  {equipment}
-                                </span>
-                                <span>{equipTotal}</span>
-                              </button>
-                            </td>
-                          </tr>
+                        return (
+                          <React.Fragment key={equipKey}>
+                            <tr className="bg-sky-50 hover:bg-sky-100 ">
+                              <td colSpan={2}>
+                                <button
+                                  onClick={() => toggleGroup(equipKey)}
+                                  className="flex items-center justify-between w-full p-2 font-medium pl-6"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <img
+                                      src={
+                                        openGroups[equipKey]
+                                          ? RemoveSquareImg
+                                          : AddSquareImg
+                                      }
+                                      className="h-4 w-4"
+                                      alt="toggle"
+                                    />
+                                    {equipment}
+                                  </span>
+                                  <span>{equipTotal}</span>
+                                </button>
+                              </td>
+                            </tr>
 
-                          {/* Componentes */}
-                          {openGroups[equipKey] &&
-                            Object.entries(components).map(([component, materials]) => {
-                              const compKey = `${equipKey}-${component}`;
-                              const compTotal = calcularTotal(materials);
+                            {/* Componentes */}
+                            {openGroups[equipKey] &&
+                              Object.entries(components).map(
+                                ([component, materials]) => {
+                                  const compKey = `${equipKey}-${component}`;
+                                  const compTotal = calcularTotal(materials);
 
-                              return (
-                                <React.Fragment key={compKey}>
-                                  <tr className="bg-white hover:bg-sky-50 ">
-                                    <td colSpan={2} className="p-2 pl-12 font-semibold">
-                                      <button
-                                        onClick={() => toggleGroup(compKey)}
-                                        className="flex items-center justify-between w-full"
-                                      >
-                                        <span className="flex items-center gap-2">
-                                          <img
-                                            src={
-                                              openGroups[compKey]
-                                                ? "/imgs/remove-square.png"
-                                                : "/imgs/add-square.png"
-                                            }
-                                            className="h-4 w-4"
-                                            alt="toggle"
-                                          />
-                                          {component}
-                                        </span>
-                                        <span>{compTotal}</span>
-                                      </button>
-                                    </td>
-                                  </tr>
-
-                                  {/* Materiais */}
-                                  {openGroups[compKey] &&
-                                    materials.map((m, i) => (
-                                      <tr
-                                        key={i}
-                                        className="bg-white hover:bg-sky-50 "
-                                      >
-                                        <td className="p-2 pl-16 border-b border-sky-100">
-                                          {m.material}
-                                        </td>
-                                        <td className="p-2 border-b border-sky-100 text-center">
-                                          {m.total_material_consumed}
+                                  return (
+                                    <React.Fragment key={compKey}>
+                                      <tr className="bg-white hover:bg-sky-50 ">
+                                        <td
+                                          colSpan={2}
+                                          className="p-2 pl-12 font-semibold"
+                                        >
+                                          <button
+                                            onClick={() => toggleGroup(compKey)}
+                                            className="flex items-center justify-between w-full"
+                                          >
+                                            <span className="flex items-center gap-2">
+                                              <img
+                                                src={
+                                                  openGroups[compKey]
+                                                    ? RemoveSquareImg
+                                                    : AddSquareImg
+                                                }
+                                                className="h-4 w-4"
+                                                alt="toggle"
+                                              />
+                                              {component}
+                                            </span>
+                                            <span>{compTotal}</span>
+                                          </button>
                                         </td>
                                       </tr>
-                                    ))}
-                                </React.Fragment>
-                              );
-                            })}
-                        </React.Fragment>
-                      );
-                    })}
+
+                                      {/* Materiais */}
+                                      {openGroups[compKey] &&
+                                        materials.map((m, i) => (
+                                          <tr
+                                            key={i}
+                                            className="bg-white hover:bg-sky-50 "
+                                          >
+                                            <td className="p-2 pl-16 border-b border-sky-100">
+                                              {m.material}
+                                            </td>
+                                            <td className="p-2 border-b border-sky-100 text-center">
+                                              {m.total_material_consumed}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </React.Fragment>
+                                  );
+                                }
+                              )}
+                          </React.Fragment>
+                        );
+                      }
+                    )}
                 </React.Fragment>
               );
             })

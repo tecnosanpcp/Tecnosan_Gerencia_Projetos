@@ -2,6 +2,19 @@ import PropTypes from "prop-types";
 import { ImExit } from "react-icons/im";
 import { useNavigate } from "react-router-dom";
 
+import BlueHomeImg from "../../../imgs/blue-home-icon.png";
+import HomeImg from "../../../imgs/home-icon.png";
+import BlueGotaImg from "../../../imgs/blue-gota-icon.png";
+import GotaImg from "../../../imgs/gota-icon.png";
+import BlueCalendarImg from "../../../imgs/blue-calendar-icon.png";
+import CalendarImg from "../../../imgs/calendar-icon.png";
+import BlueReportImg from "../../../imgs/blue-report-icon.png";
+import ReportImg from "../../../imgs/report-icon.png";
+import BlueEmployeesImg from "../../../imgs/blue-employees-icon.png";
+import EmployeesImg from "../../../imgs/employees-icon.png";
+import BlueRecipesImg from "../../../imgs/blue-recipe-icon.png";
+import RecipesImg from "../../../imgs/recipe-icon.png";
+
 function NavBar({ select_index }) {
   const navigate = useNavigate();
   const selectStyle = "text-blue-500 ";
@@ -36,13 +49,13 @@ function NavBar({ select_index }) {
           >
             {select_index === 0 ? (
               <img
-                src="\imgs\blue-home-icon.png"
+                src={BlueHomeImg}
                 alt="icone de casa"
                 size={15}
               />
             ) : (
               <img
-                src="\imgs\home-icon.png"
+                src={HomeImg}
                 alt="icone de casa"
                 size={15}
               />
@@ -57,14 +70,14 @@ function NavBar({ select_index }) {
           >
             {select_index === 1 ? (
               <img
-                src="\imgs\blue-gota-icon.png"
-                alt="icone de casa"
+                src={BlueGotaImg}
+                alt="icone de gota"
                 size={15}
               />
             ) : (
               <img
-                src="\imgs\gota-icon.png"
-                alt="icone de casa"
+                src={GotaImg}
+                alt="icone de gota"
                 size={15}
               />
             )}
@@ -78,13 +91,13 @@ function NavBar({ select_index }) {
           >
             {select_index === 2 ? (
               <img
-                src="./imgs/blue-calendar-icon.png"
-                alt="icone de casa"
+                src={BlueCalendarImg}
+                alt="icone de projeto"
                 size={15}
               />
             ) : (
               <img
-                src="\imgs\calendar-icon.png"
+                src={CalendarImg}
                 alt="icone de casa"
                 size={15}
               />
@@ -100,13 +113,13 @@ function NavBar({ select_index }) {
           >
             {select_index === 3 ? (
               <img
-                src="\imgs\blue-report-icon.png"
+                src={BlueReportImg}
                 alt="icone de prancheta"
                 size={15}
               />
             ) : (
               <img
-                src="\imgs\report-icon.png"
+                src={ReportImg}
                 alt="icone de prancheta"
                 sizes={15}
               />
@@ -123,13 +136,13 @@ function NavBar({ select_index }) {
           >
             {select_index === 4 ? (
               <img
-                src="\imgs\blue-employees-icon.png"
+                src={BlueEmployeesImg}
                 alt="icone de grupo de pessoas"
                 size={15}
               />
             ) : (
               <img
-                src="\imgs\employees-icon.png"
+                src={EmployeesImg}
                 alt="icone de grupo de pessoas"
                 size={15}
               />
@@ -145,14 +158,14 @@ function NavBar({ select_index }) {
           >
             {select_index === 5 ? (
               <img
-                src="\imgs\blue-recipe-icon.png"
-                alt="icone de grupo de pessoas"
+                src={BlueRecipesImg}
+                alt="icone de receita"
                 size={15}
               />
             ) : (
               <img
-                src="\imgs\recipe-icon.png"
-                alt="icone de grupo de pessoas"
+                src={RecipesImg}
+                alt="icone de receita"
                 size={15}
               />
             )}
