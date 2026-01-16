@@ -2,6 +2,8 @@ import { useState } from "react";
 import { LoginService } from "@services/AuthService";
 import { useNavigate } from "react-router-dom";
 
+import Logo from "../../../imgs/tecnosan-logo-circular.png"
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ function Login() {
     <div className="w-screen h-screen bg-slate-200 flex items-center justify-center">
       <div className="flex flex-col items-center justify-center bg-white shadow-xl rounded-lg p-6 w-256 h-265">
         <img
-          src="../../../../imgs/tecnosan-logo-circular.png"
+          src={Logo}
           alt="Logo"
           className="mb-4 mx-30"
           width={150}
