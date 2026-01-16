@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import PropTypes from "prop-types";
 
-import RemoveSquareImg from "../../../imgs/remove-square.png";
-import AddSquareImg from "../../../imgs/add-square.png";
+import RemoveSquareImg from "../../imgs/remove-square.png";
+import AddSquareImg from "../../imgs/add-square.png";
 
 function CascadeTableTwoLevel({ title, data }) {
   const [openGroups, setOpenGroups] = useState({});

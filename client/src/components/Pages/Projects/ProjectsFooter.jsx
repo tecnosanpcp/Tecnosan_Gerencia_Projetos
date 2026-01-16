@@ -1,5 +1,5 @@
-import ArchiveImg from "../../../imgs/archive.png";
-import DoubleTick from "../../../imgs/tick-double.png";
+import ArchiveImg from "../../imgs/archive.png";
+import DoubleTick from "../../imgs/tick-double.png";
 
 export default function ProjectsFooter() {
   return (

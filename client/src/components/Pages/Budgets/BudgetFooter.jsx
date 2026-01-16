@@ -7,17 +7,14 @@ import { uploadStatusBudget } from "@services/BudgetService.js";
 
 import AlertModal from "../../Ui/AlertModal";
 
-import ArquiveImg from "../../../imgs/archive.png"
-import DobleTick from "../../../imgs/tick-double.png"
-
 export default function BudgetFooter({ currentBudget }) {
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const handleSubmit = async (project_name, project_local, budget_id) => {
     try {
       const user = await VerifyAuth();
-      
-      const projectData =  await createProject(
+
+      const projectData = await createProject(
         user.user_id,
         project_name,
         "desc",
@@ -29,7 +26,7 @@ export default function BudgetFooter({ currentBudget }) {
         budget_id
       );
 
-      console.log(projectData)
+      console.log(projectData);
 
       await uploadStatusBudget(budget_id, "Aprovado");
       setShowApproveModal(false);
@@ -60,7 +57,7 @@ export default function BudgetFooter({ currentBudget }) {
             className="flex items-center gap-2 bnt"
             onClick={() => setShowArchiveModal(true)}
           >
-            <img src={ArquiveImg} className="h-5 w-5" />
+            <img src="../../imgs/archive.png" className="h-5 w-5" />
             <span className="font-medium text-base">Arquivar Projeto</span>
           </button>
 
@@ -68,7 +65,7 @@ export default function BudgetFooter({ currentBudget }) {
             className="flex items-center gap-2 bnt-add"
             onClick={() => setShowApproveModal(true)}
           >
-            <img src={DobleTick} className="h-5 w-5" />
+            <img src="../../imgs/tick-double.png" className="h-5 w-5" />
             <span className="font-medium text-base">Aprovar Orçamento</span>
           </button>
         </div>

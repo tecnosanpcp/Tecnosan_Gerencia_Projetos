@@ -2,18 +2,18 @@ import PropTypes from "prop-types";
 import { ImExit } from "react-icons/im";
 import { useNavigate } from "react-router-dom";
 
-import BlueHomeImg from "../../../imgs/blue-home-icon.png";
-import HomeImg from "../../../imgs/home-icon.png";
-import BlueGotaImg from "../../../imgs/blue-gota-icon.png";
-import GotaImg from "../../../imgs/gota-icon.png";
-import BlueCalendarImg from "../../../imgs/blue-calendar-icon.png";
-import CalendarImg from "../../../imgs/calendar-icon.png";
-import BlueReportImg from "../../../imgs/blue-report-icon.png";
-import ReportImg from "../../../imgs/report-icon.png";
-import BlueEmployeesImg from "../../../imgs/blue-employees-icon.png";
-import EmployeesImg from "../../../imgs/employees-icon.png";
-import BlueRecipesImg from "../../../imgs/blue-recipe-icon.png";
-import RecipesImg from "../../../imgs/recipe-icon.png";
+import BlueHomeImg from "../../imgs/blue-home-icon.png";
+import HomeImg from "../../imgs/home-icon.png";
+import BlueGotaImg from "../../imgs/blue-gota-icon.png";
+import GotaImg from "../../imgs/gota-icon.png";
+import BlueCalendarImg from "../../imgs/blue-calendar-icon.png";
+import CalendarImg from "../../imgs/calendar-icon.png";
+import BlueReportImg from "../../imgs/blue-report-icon.png";
+import ReportImg from "../../imgs/report-icon.png";
+import BlueEmployeesImg from "../../imgs/blue-employees-icon.png";
+import EmployeesImg from "../../imgs/employees-icon.png";
+import BlueRecipesImg from "../../imgs/blue-recipe-icon.png";
+import RecipesImg from "../../imgs/recipe-icon.png";
 
 function NavBar({ select_index }) {
   const navigate = useNavigate();
