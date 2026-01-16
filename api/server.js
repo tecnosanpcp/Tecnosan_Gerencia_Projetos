@@ -28,17 +28,26 @@ import employeesComponentsRoutes from "./routes/employees_components.routes.js";
 import componentsMaterialsRoutes from "./routes/components.materials.routes.js";
 
 const app = express();
-app.use(cors({
+app.use(
+  cors({
     origin: [
-        "http://localhost:5173",
-        "https://tecnosan-gerencia-projetos.vercel.app" 
+      "http://localhost:5173",
+      "https://tecnosan-gerencia-projetos.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-}));
-app.use(express.json());
+    credentials: true,
+  })
+);
 
 // rotas
+app.get("/", async (req, res) => {
+  try {
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message });
+  }
+});
 
 // Rotas de Comuns
 app.use("/auth", authRoutes);
