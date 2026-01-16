@@ -50,6 +50,12 @@ export const deleteMaterial = async (req, res) => {
   try {
     const { id: material_id } = req.params;
 
+    if (material_id <= 7) {
+      return res
+        .status(401)
+        .json({ message: "Não é possível deletar esse material" });
+    }
+
     const response = await pool.query(
       "DELETE FROM materials WHERE material_id = $1 RETURNING *",
       [material_id]
