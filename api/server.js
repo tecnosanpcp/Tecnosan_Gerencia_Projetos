@@ -28,6 +28,7 @@ import employeesComponentsRoutes from "./routes/employees_components.routes.js";
 import componentsMaterialsRoutes from "./routes/components.materials.routes.js";
 
 const app = express();
+app.use(express.json());
 app.use(
   cors({
     origin: [
