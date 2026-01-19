@@ -34,15 +34,15 @@ export default function AddMaterialModal({ isVisible, setVisible }) {
       if (materialName === "" || materialUni.length <= 0 || materialValue <= 0)
         return null;
 
-      createMaterial(
+      await createMaterial(
         materialName,
         materialDesc,
         materialValue,
         Unis[materialUni].label
       );
-
-      window.location.reload();
+      
       clearStates();
+      window.location.reload();
     } catch (err) {
       console.error("Erro ao salvar material", err);
     }
