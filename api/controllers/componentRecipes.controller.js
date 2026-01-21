@@ -11,16 +11,20 @@ export const getComponentRecipe = async (req, res) => {
 
 export const createComponentRecipe = async (req, res) => {
   try {
-    const { recipe_name, man_hours } = req.body;
+    const { recipe_name, qtd_employees, qtd_hours } = req.body;
+    if (!recipe_name || qtd_employees <= 0 || qtd_hours <= 0) {
+      return res.status(400).json({ message: "Falta dados" });
+    }
     const response = await pool.query(
-      "INSERT INTO component_recipes(recipe_name, man_hours) VALUES ($1, $2) RETURNING *",
-      [recipe_name, man_hours]
+      `INSERT INTO component_recipes
+      (recipe_name,qtd_employees, qtd_hours, man_hours) 
+      VALUES ($1, $2, $3, $4) RETURNING *`,
+      [recipe_name, qtd_employees, qtd_hours, qtd_employees * qtd_hours],
     );
     res.status(200).json(response.rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Erro ao cadastrar nova receita de equipamento" + error });
+    res.status(500).json({ error: error.message });
+    console.error(error);
   }
 };
 
@@ -30,7 +34,7 @@ export const deleteComponentRecipe = async (req, res) => {
 
     const response = await pool.query(
       "DELETE FROM component_recipes WHERE component_recipe_id = $1 RETURNING *",
-      [component_recipe_id]
+      [component_recipe_id],
     );
     response.rowCount > 0
       ? res.status(200).json(response.rows)
@@ -46,19 +50,31 @@ export const deleteComponentRecipe = async (req, res) => {
 
 export const updateComponentRecipe = async (req, res) => {
   try {
-    const { recipe_name, man_hours } = req.body;
     const { id: component_recipe_id } = req.params;
+    const { recipe_name, qtd_employees, qtd_hours } = req.body;
+
+    if (!recipe_name || qtd_employees <= 0 || qtd_hours <= 0) {
+      return res.status(400).json({ message: "Falta dados" });
+    }
 
     const response = await pool.query(
       `
       UPDATE component_recipes
       SET 
         recipe_name = $1,
-        man_hours = $2
-      WHERE component_recipe_id = $3
+        qtd_employees = $2,
+        qtd_hours = $3,
+        man_hours = $4
+      WHERE component_recipe_id = $5
       RETURNING *;
       `,
-      [recipe_name, man_hours, component_recipe_id]
+      [
+        recipe_name,
+        qtd_employees,
+        qtd_hours,
+        qtd_employees * qtd_hours,
+        component_recipe_id,
+      ],
     );
 
     response.rowCount > 0
@@ -67,8 +83,7 @@ export const updateComponentRecipe = async (req, res) => {
           .status(404)
           .json({ error: "Não foi possivel encontrar relação na tabela" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Erro ao atualizar a receita do componente" + error });
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };

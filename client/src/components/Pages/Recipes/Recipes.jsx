@@ -60,6 +60,8 @@ function Recipes() {
         Catalizador: dc.catalizador,
         "Tecido (KG)": dc.tecido_kg,
         "Tecido (CMD)": dc.tecido_cmd,
+        "Total Funcionários" : dc.qtd_employees,
+        "Total Horas" : dc.qtd_hours,
         "Horas-Homens": dc.horas_homem,
         "Valor Total": parseBRL(dc.total_value),
       }));
@@ -87,15 +89,15 @@ function Recipes() {
   }, []);
 
   const filterMaterials = materialsList.filter((m) =>
-    m.Material.includes(searchMaterial)
+    m.Material.includes(searchMaterial),
   );
 
   const filterComponents = componentsList.filter((c) =>
-    c.Componente.includes(searchComponent)
+    c.Componente.includes(searchComponent),
   );
 
   const filterEquipments = equipmentsList.filter((e) =>
-    e.Equipamento.includes(searchEquipment)
+    e.Equipamento.includes(searchEquipment),
   );
 
   return (

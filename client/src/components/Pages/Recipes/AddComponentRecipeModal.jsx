@@ -9,7 +9,11 @@ import { createComponentRecipe } from "@services/ComponentRecipes.js";
 
 export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
   const [componenteRecipeName, setComponentRecipeName] = useState("");
-  const [manHours, setManHours] = useState("");
+
+  // Alteração 1: Substituir manHours por men e hours
+  const [men, setMen] = useState("");
+  const [hours, setHours] = useState("");
+
   const [materials, setMaterials] = useState([]);
   const [materialsList, setMaterialsList] = useState([]);
   const [materialsQuantity, setMaterialsQuantity] = useState([]);
@@ -39,18 +43,22 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
 
   const clearStates = () => {
     setComponentRecipeName("");
-    setManHours("");
+    // Limpar os novos estados
+    setMen("");
+    setHours("");
     setMaterialsList([]);
-    setMaterialsQuantity([])
+    setMaterialsQuantity([]);
     setVisible(false);
   };
 
   const handleSave = async () => {
     try {
+      // Validação atualizada
       if (
         materialsList.length === 0 ||
         componenteRecipeName === "" ||
-        manHours === ""
+        men === "" ||
+        hours === ""
       ) {
         alert("Preencha todos os dados");
         return null;
@@ -58,7 +66,8 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
 
       const recipe_component = await createComponentRecipe(
         componenteRecipeName,
-        manHours
+        Number(men),
+        Number(hours),
       );
 
       const component_recipe_id = recipe_component[0].component_recipe_id;
@@ -67,7 +76,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
         await createCompRecipeMat(
           component_recipe_id,
           m.id,
-          Number(m.quantity)
+          Number(m.quantity),
         );
       }
 
@@ -103,7 +112,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
 
           <div className="flex flex-row w-full justify-between gap-6">
             {/* Nome do componente */}
-            <div className="flex flex-col space-y-2 w-full">
+            <div className="flex flex-col space-y-2 w-1/2">
               <label className="text-gray-700">Nome *</label>
               <input
                 type="text"
@@ -115,19 +124,37 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
               />
             </div>
 
-            {/* Horas Homem */}
-            <div className="flex flex-col space-y-2 w-full">
-              <label className="text-gray-700">Horas Homem *</label>
-              <input
-                type="number"
-                className="p-2 rounded"
-                placeholder="Digite o Tempo que o componente deve ser feito em Horas Homem"
-                value={manHours}
-                onChange={(e) => setManHours(e.target.value)}
-                required
-              />
+            {/* Alteração 2: Novos inputs para Homens e Horas */}
+            <div className="flex flex-row w-1/2 gap-4">
+              <div className="flex flex-col space-y-2 w-1/2">
+                <label className="text-gray-700">Qtd. Homens *</label>
+                <input
+                  type="number"
+                  className="p-2 rounded"
+                  placeholder="Ex: 2"
+                  value={men}
+                  onChange={(e) => setMen(e.target.value)}
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col space-y-2 w-1/2">
+                <label className="text-gray-700">Qtd. Horas *</label>
+                <input
+                  type="number"
+                  className="p-2 rounded"
+                  placeholder="Ex: 1.5"
+                  value={hours}
+                  onChange={(e) => setHours(e.target.value)}
+                  step="0.1" // Permite valor quebrado
+                  min="0"
+                  required
+                />
+              </div>
             </div>
           </div>
+
           <div>
             <label className="text-gray-700">Materiais *</label>
             <SelectMenu
@@ -162,21 +189,21 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                       {Array.isArray(materialsList) && materialsList.length > 0
                         ? (() => {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
-                            return found ? found.material_name ?? "-" : "-";
+                            return found ? (found.material_name ?? "-") : "-";
                           })()
                         : "-"}
                     </td>
 
-                    {/* Descrição: mostra label do material selecionado */}
+                    {/* Descrição */}
                     <td>
                       {Array.isArray(materialsList) && materialsList.length > 0
                         ? (() => {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
-                            return found ? found.material_desc ?? "-" : "-";
+                            return found ? (found.material_desc ?? "-") : "-";
                           })()
                         : "-"}
                     </td>
@@ -186,7 +213,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                       {Array.isArray(materialsList) && materialsList.length > 0
                         ? (() => {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
                             return found
                               ? Number(found.value).toLocaleString("pt-BR", {
@@ -211,8 +238,8 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                           const newValue = Number(e.target.value);
                           setMaterialsQuantity((prev) =>
                             prev.map((m) =>
-                              m.id === id ? { ...m, quantity: newValue } : m
-                            )
+                              m.id === id ? { ...m, quantity: newValue } : m,
+                            ),
                           );
                         }}
                       />
@@ -230,7 +257,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                             materialsList.length > 0
                           ) {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
                             return found ? Number(found.value) : 0;
                           }
@@ -248,7 +275,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                         type="button"
                         onClick={() => {
                           setMaterialsList(
-                            materialsList.filter((i) => i != id)
+                            materialsList.filter((i) => i != id),
                           );
                         }}
                       >

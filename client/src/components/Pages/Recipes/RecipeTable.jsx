@@ -121,7 +121,7 @@ export default function RecipeTable({ i }) {
                         <th key={index} className="py-2 px-3 text-center">
                           {col}
                         </th>
-                      )
+                      ),
                   )}
                   <th className="border-b text-center">Ações</th>
                 </tr>
@@ -137,16 +137,16 @@ export default function RecipeTable({ i }) {
                             <td key={colIndex} className="py-2 px-3">
                               {val}
                             </td>
-                          )
+                          ),
                       )}
 
-                      <td className="space-x-4 py-2 px-3">
+                      <td className="py-2 px-3 flex justify-center items-center gap-2">
                         {i.label !== "Material" && (
                           <button
                             className="bg-gray-100 p-1 rounded hover:bg-gray-200"
                             onClick={() =>
                               setExpandedRow(
-                                expandedRow?.ID === row.ID ? null : row
+                                expandedRow?.ID === row.ID ? null : row,
                               )
                             }
                           >
