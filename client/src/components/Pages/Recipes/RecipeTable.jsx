@@ -92,6 +92,9 @@ export default function RecipeTable({ i }) {
     }
   };
 
+  // Helper para verificar se a linha atual está expandida
+  const isRowExpanded = (row) => expandedRow?.ID === row.ID;
+
   return (
     i.isExpand === true && (
       <>
@@ -130,7 +133,11 @@ export default function RecipeTable({ i }) {
               <tbody>
                 {i.list.map((row, idx) => (
                   <React.Fragment key={idx}>
-                    <tr className="border-b hover:bg-gray-100">
+                    <tr
+                      className={`border-b transition-colors ${
+                        isRowExpanded(row) ? "bg-blue-50" : "hover:bg-gray-100"
+                      }`}
+                    >
                       {Object.values(row).map(
                         (val, colIndex) =>
                           colIndex > 0 && (
@@ -141,16 +148,15 @@ export default function RecipeTable({ i }) {
                       )}
 
                       <td className="py-2 px-3 flex justify-center items-center gap-2">
+                        {/* BOTÃO VISUALIZAR CORRIGIDO */}
                         {i.label !== "Material" && (
                           <button
-                            className="bg-gray-100 p-1 rounded hover:bg-gray-200"
+                            className={`p-1 rounded transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200`}
                             onClick={() =>
-                              setExpandedRow(
-                                expandedRow?.ID === row.ID ? null : row,
-                              )
+                              setExpandedRow(isRowExpanded(row) ? null : row)
                             }
                           >
-                            Visualizar
+                            {isRowExpanded(row) ? "Ocultar" : "Visualizar"}
                           </button>
                         )}
 
@@ -173,6 +179,7 @@ export default function RecipeTable({ i }) {
                       </td>
                     </tr>
 
+                    {/* Renderiza a sub-tabela apenas se o ID bater */}
                     <RenderSubTable row={row} expandedRow={expandedRow} i={i} />
                   </React.Fragment>
                 ))}
