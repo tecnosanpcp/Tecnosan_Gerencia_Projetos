@@ -15,6 +15,7 @@ export default function ProductionBoard({
   selectedDept = [],
   selectedProj = [],
   selectedEmp = [],
+  onFilteredDataChange // <--- NOVA PROP
 }) {
   const [isOpen, setOpen] = useState(false);
   const [selectTask, setSelectTask] = useState(null);
@@ -28,6 +29,7 @@ export default function ProductionBoard({
       // 1. Validações básicas
       if (!tasks || tasks.length === 0) {
         setFilteredTasks([]);
+        if(onFilteredDataChange) onFilteredDataChange([]); // Atualiza Pai
         return;
       }
 
@@ -38,6 +40,7 @@ export default function ProductionBoard({
         selectedProj.length === 0
       ) {
         setFilteredTasks(tasks);
+        if(onFilteredDataChange) onFilteredDataChange(tasks); // Atualiza Pai
         return;
       }
 
@@ -61,10 +64,7 @@ export default function ProductionBoard({
             // Garante array
             const list = Array.isArray(taskEmps) ? taskEmps : [];
 
-            // Procura se ALGUM funcionário da lista tem o ID selecionado
             const hasEmployee = list.some((e) => {
-               // Baseado no seu backend, deve ser user_id. 
-               // Mantive fallbacks para segurança (user_id, id, etc)
                const id = e?.user_id ?? e?.USER_ID ?? e?.id;
                return Number(id) === targetId;
             });
@@ -83,8 +83,6 @@ export default function ProductionBoard({
             const resultProj = await projectTask(task.component_id);
             const targetProjId = Number(selectedProj[0]);
             
-            // SEU LOG MOSTROU: { project_id: 2 }
-            // Então acessamos .project_id com segurança
             const projId = resultProj?.project_id ?? resultProj?.PROJECT_ID ?? resultProj?.id;
 
             if (Number(projId) !== targetProjId) {
@@ -105,6 +103,8 @@ export default function ProductionBoard({
       if (!isCancelled) {
         const finalResults = results.filter((t) => t !== null);
         setFilteredTasks(finalResults);
+        // Atualiza o Pai com a lista filtrada
+        if(onFilteredDataChange) onFilteredDataChange(finalResults);
       }
     };
 
@@ -112,7 +112,7 @@ export default function ProductionBoard({
 
     // Cleanup function para evitar race conditions
     return () => { isCancelled = true; };
-  }, [tasks, selectedDept, selectedEmp, selectedProj]);
+  }, [tasks, selectedDept, selectedEmp, selectedProj, onFilteredDataChange]);
 
   const capitalizeFirst = (text) => {
     if (!text) return "";
@@ -182,7 +182,7 @@ export default function ProductionBoard({
                       />
                     ))
                   ) : (
-                    // Botão de adicionar (aparece quando não há tarefas filtradas para o dia)
+                    // Botão de adicionar
                     <button
                       onClick={() => setIsAddOpen(true)}
                       className="flex flex-col justify-center items-center border-2 border-dashed border-gray-300 rounded-md w-full h-24 mt-2 opacity-50 hover:opacity-100 hover:border-blue-400 hover:text-blue-500 transition-all"

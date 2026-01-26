@@ -3,7 +3,14 @@ import { IoMdAdd } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { TfiReload } from "react-icons/tfi";
 
-export default function ProductionHeader({ weekDays, setIsAddOpen, offset, setOffset }) {
+export default function ProductionHeader({ 
+  weekDays, 
+  setIsAddOpen, 
+  offset, 
+  setOffset,
+  onDownloadPDF, // <--- Prop nova
+  onDownloadExcel // <--- Prop nova
+}) {
   const startDate = weekDays[0]?.formatted.split(" ")[1];
   const endDate = weekDays[6]?.formatted.split(" ")[1];
 
@@ -30,11 +37,19 @@ export default function ProductionHeader({ weekDays, setIsAddOpen, offset, setOf
           <p>Adicionar Componente</p>
         </button>
         
-        <button className="flex flex-row items-center space-x-1 border p-2 rounded-lg hover:bg-gray-200">
+        {/* Botão PDF */}
+        <button 
+          onClick={onDownloadPDF}
+          className="flex flex-row items-center space-x-1 border p-2 rounded-lg hover:bg-gray-200 text-red-600 border-red-200 "
+        >
           <MdOutlineFileDownload /> <p>PDF</p>
         </button>
         
-        <button className="flex flex-row items-center space-x-1 border p-2 rounded-lg hover:bg-gray-200">
+        {/* Botão Excel */}
+        <button 
+          onClick={onDownloadExcel}
+          className="flex flex-row items-center space-x-1 border p-2 rounded-lg hover:bg-gray-200 text-green-600 border-green-200 "
+        >
           <MdOutlineFileDownload /> <p>Excel</p>
         </button>
 

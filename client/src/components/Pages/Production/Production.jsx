@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import NavBar from "../../Ui/NavBar";
 import AddComponent from "../../Ui/AddComponent";
 
+// Bibliotecas de Exportação
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+
 // Componentes
 import ProductionHeader from "./ProductionHeader";
 import ProductionFilters from "./ProductionFilters";
@@ -15,7 +21,7 @@ import { listEquipments } from "@services/EquipmentService.js";
 import { getComponents } from "@services/ComponentsServices.js";
 import { VerifyAuth } from "@services/AuthService.js";
 import { getComponentRecipe } from "@services/ComponentRecipes.js"
-import {getEmployeesComponents} from "@services/EmployeesComponentsServices.js"
+import { getEmployeesComponents } from "@services/EmployeesComponentsServices.js"
 
 /**
  * Gera a semana atual (ou deslocada) sem bugs de timezone
@@ -38,11 +44,8 @@ function generateWeek(weekOffset = 0) {
     day.setHours(0, 0, 0, 0);
 
     week.push({
-      dateObj: day, // Mantenha o objeto Date original se precisar fazer contas depois
-
-      // ESTA É A CHAVE MÁGICA PARA COMPARAÇÃO
-      dateKey: day.toLocaleDateString("pt-BR"), // Retorna "12/01/2025"
-
+      dateObj: day,
+      dateKey: day.toLocaleDateString("pt-BR"),
       formatted: day.toLocaleDateString("pt-BR", {
         weekday: "short",
         day: "numeric",
@@ -73,6 +76,9 @@ export default function Production() {
 
   const [tasks, setTasks] = useState([]);
   const [responsible, setReponsible] = useState([])
+
+  // Estado para armazenar o que o usuário está vendo no Board (filtrado por Depto/Proj/Func)
+  const [currentViewTasks, setCurrentViewTasks] = useState([]);
 
   // --- Semana ---
   const weekDays = generateWeek(offset);
@@ -109,6 +115,105 @@ export default function Production() {
     loadData();
   }, []);
 
+  // --- Helpers para pegar nomes baseados nos IDs ---
+  const findProjectName = (id) => projects.find(p => p.project_id === id)?.project_name || "N/A";
+  const findDeptName = (id) => departments.find(d => d.department_id === id)?.department_name || "N/A";
+
+  // --- PREPARAÇÃO DOS DADOS PARA EXPORTAÇÃO ---
+  const getExportData = () => {
+    // 1. Cria um conjunto com as datas que estão visíveis na tela (a semana atual)
+    const weekDatesSet = new Set(weekDays.map(d => d.dateKey));
+
+    // 2. Filtra a lista de tarefas:
+    //    Mantém apenas tarefas cuja data de início esteja dentro da semana atual
+    const tasksInCurrentWeek = currentViewTasks.filter(task => {
+      if (!task.start_date) return false;
+      
+      const taskDateKey = new Date(task.start_date).toLocaleDateString("pt-BR");
+      return weekDatesSet.has(taskDateKey);
+    });
+
+    // 3. Formata os dados filtrados para ficarem bonitos no Excel/PDF
+    return tasksInCurrentWeek.map(task => {
+        const resp = responsible.find(r => r.component_id === task.component_id);
+        const respName = resp 
+            ? employees.find(e => e.user_id === resp.user_id)?.user_name 
+            : "Sem responsável";
+
+        return {
+            Data: new Date(task.start_date).toLocaleDateString("pt-BR"),
+            Componente: task.component_name || "Sem nome",
+            Projeto: findProjectName(task.project_id),
+            Departamento: findDeptName(task.department_id),
+            Status: task.status || "Pendente",
+            Responsavel: respName
+        };
+    });
+  };
+
+  // --- DOWNLOAD PDF ---
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    const tableData = getExportData();
+    
+    // Se não tiver dados na semana, avisa e para
+    if (tableData.length === 0) {
+      alert("Não há dados para exportar nesta semana.");
+      return;
+    }
+
+    const tableRows = tableData.map(item => [
+      item.Data,
+      item.Componente,
+      item.Projeto,
+      item.Departamento,
+      item.Responsavel,
+      item.Status
+    ]);
+
+    doc.text(`Planejamento Semanal - ${weekDays[0].formatted} a ${weekDays[6].formatted}`, 14, 15);
+    
+    autoTable(doc, {
+      head: [['Data', 'Componente', 'Projeto', 'Depto', 'Responsável', 'Status']],
+      body: tableRows,
+      startY: 20,
+    });
+
+    doc.save(`planejamento_${weekDays[0].dateKey.replace(/\//g, '-')}.pdf`);
+  };
+
+  // --- DOWNLOAD EXCEL (Usando ExcelJS) ---
+  const handleDownloadExcel = async () => {
+    const data = getExportData();
+    
+    if (data.length === 0) {
+      alert("Não há dados para exportar nesta semana.");
+      return;
+    }
+    
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Planejamento");
+
+    worksheet.columns = [
+      { header: "Data", key: "Data", width: 15 },
+      { header: "Componente", key: "Componente", width: 30 },
+      { header: "Projeto", key: "Projeto", width: 25 },
+      { header: "Departamento", key: "Departamento", width: 20 },
+      { header: "Responsável", key: "Responsavel", width: 25 },
+      { header: "Status", key: "Status", width: 15 },
+    ];
+
+    data.forEach((item) => {
+      worksheet.addRow(item);
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, `planejamento_${weekDays[0].dateKey.replace(/\//g, '-')}.xlsx`);
+  };
+
   return (
     <>
       <AddComponent
@@ -129,6 +234,8 @@ export default function Production() {
           setIsAddOpen={setIsAddOpen}
           offset={offset}
           setOffset={setOffset}
+          onDownloadPDF={handleDownloadPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         <ProductionFilters
@@ -153,6 +260,7 @@ export default function Production() {
           selectedDept={selectedDept}
           selectedProj={selectedProj}
           selectedEmp={selectedEmp}
+          onFilteredDataChange={setCurrentViewTasks}
         />
       </div>
     </>
