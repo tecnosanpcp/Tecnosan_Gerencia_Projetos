@@ -66,6 +66,17 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
     }
   };
 
+  // --- ALTERAÇÃO: Cálculo do Valor Total ---
+  const totalValue = componentsRecipeList.reduce((acc, id) => {
+    const item = componentsRecipes.find((m) => m.component_recipe_id === id);
+    const qtyObj = componentsRecipeQuantity.find((q) => q.id === id);
+
+    const price = item ? Number(item.total_value) : 0;
+    const quantity = qtyObj ? Number(qtyObj.quantity) : 0;
+
+    return acc + price * quantity;
+  }, 0);
+
   if (!isVisible) return null;
 
   return (
@@ -136,7 +147,7 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
                     !Array.isArray(componentsRecipeList) ||
                     componentsRecipeList.length <= 0
                   )
-                    return;
+                    return null;
 
                   const found = componentsRecipes.find(
                     (m) => m.component_recipe_id === id
@@ -171,7 +182,7 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
                             setComponentsRecipeQuantity((prev) =>
                               prev.map((m) =>
                                 m.id === id
-                                  ? { ...m, quantity: parseInt(newValue) }
+                                  ? { ...m, quantity: parseInt(newValue) || 0 }
                                   : m
                               )
                             );
@@ -207,6 +218,11 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
 
           {/* Botões */}
           <div className="flex flex-row justify-end items-center space-x-4">
+            
+            <div className="bg-white p-2 rounded">
+              Total: {parseBRL(totalValue)}
+            </div>
+
             <button
               className="p-2 bg-slate-50 hover:bg-gray-300 rounded"
               onClick={() => clearStates()}

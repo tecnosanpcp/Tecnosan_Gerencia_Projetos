@@ -147,6 +147,17 @@ export default function EditEquipmentRecipeModal({
     }
   };
 
+  // --- ALTERAÇÃO: Cálculo do Valor Total ---
+  const totalValue = componentsRecipeList.reduce((acc, id) => {
+    const item = componentsRecipes.find((c) => c.component_recipe_id === id);
+    const qtyObj = componentsRecipeQuantity.find((q) => q.id === id);
+
+    const price = item ? Number(item.total_value) : 0;
+    const quantity = qtyObj ? Number(qtyObj.quantity) : 0;
+
+    return acc + price * quantity;
+  }, 0);
+
   if (!isVisible) return null;
 
   return (
@@ -205,7 +216,7 @@ export default function EditEquipmentRecipeModal({
               </thead>
               <tbody className="font-serif text-center">
                 {componentsRecipeList.map((id) => {
-                   if (!componentsRecipes.length) return null; // Evita erro se a lista ainda não carregou
+                   if (!componentsRecipes.length) return null; 
 
                    const found = componentsRecipes.find(m => m.component_recipe_id === id);
                    const qtd_obj = componentsRecipeQuantity.find(c => c.id === id);
@@ -246,6 +257,11 @@ export default function EditEquipmentRecipeModal({
           </div>
 
           <div className="flex flex-row justify-end items-center space-x-4">
+            
+             <div className="bg-white p-2 rounded">
+              Total: {parseBRL(totalValue)}
+            </div>
+
             <button
               className="p-2 bg-slate-50 hover:bg-gray-300 rounded"
               onClick={() => clearStates()}

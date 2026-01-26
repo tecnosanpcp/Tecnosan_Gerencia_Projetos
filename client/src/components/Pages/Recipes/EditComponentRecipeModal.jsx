@@ -187,6 +187,17 @@ export default function EditComponentRecipeModal({
     }
   };
 
+  // --- NOVA LÓGICA: Calcular o valor total ---
+  const totalValue = materialsList.reduce((acc, id) => {
+    const material = materials.find((m) => m.material_id === id);
+    const itemQty = materialsQuantity.find((q) => q.id === id);
+
+    const price = material ? Number(material.value) : 0;
+    const quantity = itemQty ? Number(itemQty.quantity) : 0;
+
+    return acc + price * quantity;
+  }, 0);
+
   // Se não estiver visível, não renderiza nada
   if (!isVisible) return null;
   // Se estiver visível mas o componente for inválido, evita crash
@@ -330,6 +341,11 @@ export default function EditComponentRecipeModal({
           </div>
 
           <div className="flex flex-row justify-end items-center space-x-4">
+            
+            <div className="bg-white p-2 rounded">
+              Total: {parseBRL(totalValue)}
+            </div>
+
             <button
               className="p-2 bg-slate-50 hover:bg-gray-300 rounded"
               type="button"
