@@ -26,6 +26,7 @@ import budgetsEquipRecipesRouter from "./routes/budgetsEquipRecipes.routes.js";
 import budgetRoutes from "./routes/budget.routes.js";
 import employeesComponentsRoutes from "./routes/employees_components.routes.js";
 import componentsMaterialsRoutes from "./routes/components.materials.routes.js";
+import homeRoutes from "./routes/home.routes.js";
 
 const app = express();
 app.use(express.json());
@@ -58,6 +59,7 @@ app.use("/employees", employeesRoutes);
 app.use("/materials", materialRoutes);
 app.use("/views", viewRoutes);
 app.use("/vwSummary", viewsSummaryRoutes);
+app.use("/home", homeRoutes);
 
 // Rotas para o que é Realmente produzido
 app.use("/components", componentsRoutes);

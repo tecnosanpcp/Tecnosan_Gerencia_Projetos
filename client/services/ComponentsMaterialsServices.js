@@ -4,7 +4,8 @@ export const addMaterialConsumption = async (
   component_id,
   material_id,
   consumed_quantity,
-  user_id
+  user_id,
+  consumption_type = 'consumido'
 ) => {
   try {
     const response = await api.post("/components/materials", {
@@ -12,6 +13,7 @@ export const addMaterialConsumption = async (
       material_id,
       consumed_quantity,
       user_id,
+      consumption_type
     });
     return response.data;
   } catch (error) {

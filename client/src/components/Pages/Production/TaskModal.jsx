@@ -15,8 +15,7 @@ import {
   deleteEmployeesComponents,
 } from "@services/EmployeesComponentsServices.js";
 
-// IMPORTANDO O SERVIÇO REAL
-import { createTimesheet } from "@services/TimesheetServices"; 
+import { createTimesheet } from "@services/TimesheetServices";
 
 function TaskModal({
   isOpen,
@@ -34,14 +33,18 @@ function TaskModal({
 
   // Tempo total
   const [totalTimeSpent, setTotalTimeSpent] = useState("");
-  const [consumedMaterial, setConsumendMaterial] = useState([]);
 
-  // Pessoas e Materiais
-  const [selectEmp, setSelectEmp] = useState([]);
+  // Dados de Visualização
+  const [consumedMaterial, setConsumendMaterial] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-  // Inputs
-  const [inputValues, setInputValues] = useState({});
+  // Pessoas
+  const [selectEmp, setSelectEmp] = useState([]);
+
+  // --- ALTERAÇÃO 1: Adicionado estado para Refugo ---
+  const [inputValues, setInputValues] = useState({}); // Consumo (Normal)
+  const [wasteValues, setWasteValues] = useState({}); // Refugo (Desperdício)
+
   const [timesheetValues, setTimesheetValues] = useState({});
 
   const listStatus = [
@@ -63,10 +66,11 @@ function TaskModal({
 
         // Reseta inputs
         setInputValues({});
+        setWasteValues({}); // <--- Limpa o refugo ao abrir
         setTimesheetValues({});
 
         const materialData = await vwMaterialDetailsComponentsRecipes(
-          taskData.component_recipe_id
+          taskData.component_recipe_id,
         );
 
         const consumedMaterialData = await vwComponentMaterialsSummary();
@@ -109,7 +113,7 @@ function TaskModal({
         fmt(deadline),
         status[0],
         taskData.department_id,
-        parseFloat(totalTimeSpent) || 0
+        parseFloat(totalTimeSpent) || 0,
       );
 
       // 2. Sincronização Funcionários
@@ -120,11 +124,13 @@ function TaskModal({
 
       const toAdd = selectEmp.filter((id) => !dbIds.includes(Number(id)));
       const toRemove = dbIds.filter(
-        (id) => !selectEmp.map(Number).includes(id)
+        (id) => !selectEmp.map(Number).includes(id),
       );
 
-      // 3. Consumo de Materiais
-      const materialPromises = Object.entries(inputValues).map(
+      // --- ALTERAÇÃO 2: Processar Consumo E Refugo ---
+
+      // 3a. Processar Consumo (Normal) - Envia 'consumido'
+      const consumptionPromises = Object.entries(inputValues).map(
         async ([matId, quantity]) => {
           const qtd = parseFloat(quantity);
           if (!qtd) return;
@@ -132,39 +138,51 @@ function TaskModal({
             taskData.component_id,
             parseInt(matId),
             qtd,
-            user?.user_id
+            user?.user_id,
+            "consumido", // <--- IMPORTANTE: Verifique se seu service aceita este parametro extra
           );
-        }
+        },
       );
 
-      // 4. Apontamento de Horas (AGORA COM O SERVIÇO REAL)
+      // 3b. Processar Refugo (Waste) - Envia 'refugo'
+      const wastePromises = Object.entries(wasteValues).map(
+        async ([matId, quantity]) => {
+          const qtd = parseFloat(quantity);
+          if (!qtd) return;
+          return addMaterialConsumption(
+            taskData.component_id,
+            parseInt(matId),
+            qtd,
+            user?.user_id,
+            "refugo", // <--- Envia como tipo Refugo
+          );
+        },
+      );
+
+      // 4. Apontamento de Horas
       const timesheetPromises = Object.entries(timesheetValues).map(
         async ([userId, times]) => {
-          // Só envia se tiver Início E Fim preenchidos
           if (!times.start || !times.end) return;
-
-          // Monta o objeto conforme o Backend espera no req.body
           const payload = {
             component_id: taskData.component_id,
             user_id: parseInt(userId),
             start_time: fmt(times.start),
             end_time: fmt(times.end),
           };
-
-          // Chama a função importada
           return createTimesheet(payload);
-        }
+        },
       );
 
-      // 5. Executa tudo em paralelo
+      // 5. Executa tudo
       await Promise.all([
         ...toAdd.map((id) =>
-          createEmployeesComponents(taskData.component_id, id)
+          createEmployeesComponents(taskData.component_id, id),
         ),
         ...toRemove.map((id) =>
-          deleteEmployeesComponents(taskData.component_id, id)
+          deleteEmployeesComponents(taskData.component_id, id),
         ),
-        ...materialPromises,
+        ...consumptionPromises,
+        ...wastePromises, // <--- Adiciona as promessas de refugo
         ...timesheetPromises,
       ]);
 
@@ -178,16 +196,16 @@ function TaskModal({
   if (!isOpen) return null;
 
   const assignedEmployees = employees.filter((emp) =>
-    selectEmp.map(Number).includes(emp.user_id)
+    selectEmp.map(Number).includes(emp.user_id),
   );
 
   return createPortal(
     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto py-10">
       <form
-        className="bg-gray-200 p-6 rounded-lg shadow-lg w-1/2 flex flex-col space-y-6"
+        className="bg-gray-200 p-6 rounded-lg shadow-lg w-3/4 flex flex-col space-y-6" // Aumentei w-1/2 para w-3/4 para caber a nova coluna
         onSubmit={handleSubmit}
       >
-        {/* --- Header --- */}
+        {/* Header, Nome, Status e Datas mantidos iguais... */}
         <div className="flex flex-row items-center justify-between">
           <p className="text-lg font-semibold">Detalhes da Tarefa</p>
           <button onClick={() => setOpen(false)} type="button">
@@ -195,12 +213,9 @@ function TaskModal({
           </button>
         </div>
 
-        {/* --- Nome da Tarefa --- */}
         <div className="flex flex-row items-center justify-between space-x-8">
           <div className="flex flex-col w-full">
-            <label className="text-gray-700 font-medium">
-              Nome da Tarefa / Peça
-            </label>
+            <label className="text-gray-700 font-medium">Nome da Tarefa</label>
             <p className="p-2 rounded bg-white">
               {taskData.component_name || ""}
             </p>
@@ -216,7 +231,6 @@ function TaskModal({
           </div>
         </div>
 
-        {/* --- Linha de Datas --- */}
         <div className="flex flex-row items-center justify-between space-x-4">
           <div className="flex flex-col w-full">
             <label className="text-gray-700">Data Inicial</label>
@@ -228,7 +242,7 @@ function TaskModal({
             />
           </div>
           <div className="flex flex-col w-full">
-            <label className="text-gray-700">Prazo (Deadline)</label>
+            <label className="text-gray-700">Prazo</label>
             <input
               type="datetime-local"
               className="p-2 rounded bg-gray-50"
@@ -247,7 +261,6 @@ function TaskModal({
           </div>
         </div>
 
-        {/* --- Tempos --- */}
         <div className="flex flex-row items-center justify-between space-x-8">
           <div className="flex flex-col w-full">
             <label className="text-gray-700 font-bold">
@@ -267,7 +280,6 @@ function TaskModal({
           </div>
         </div>
 
-        {/* --- Responsáveis --- */}
         <div className="flex flex-col w-full">
           <label className="text-gray-700 mb-1">Responsáveis </label>
           <SelectMenu
@@ -281,19 +293,19 @@ function TaskModal({
           />
         </div>
 
-        {/* --- Materiais --- */}
         <div className="flex flex-col w-full">
           <label className="text-gray-700 mb-1 font-medium">
-            Consumo de Materiais
+            Consumo e Refugo de Materiais
           </label>
           <div className="bg-white rounded overflow-hidden shadow-sm">
             <table className="min-w-full text-sm text-left">
               <thead className="bg-gray-100 text-gray-700 font-bold">
                 <tr>
                   <th className="px-4 py-2">Material</th>
-                  <th className="px-4 py-2">Qtd. Receita</th>
-                  <th className="px-4 py-2">Qtd. Usada</th>
-                  <th className="px-4 py-2">Adicionar</th>
+                  <th className="px-4 py-2">Planejado</th>
+                  <th className="px-4 py-2">Já Usado</th>
+                  <th className="px-4 py-2 text-green-700">Add Consumo</th>
+                  <th className="px-4 py-2 text-red-700">Add Refugo</th>
                 </tr>
               </thead>
               <tbody>
@@ -301,7 +313,7 @@ function TaskModal({
                   const found = consumedMaterial.find(
                     (aux) =>
                       mat?.material_id == aux?.material_id &&
-                      taskData?.component_id == aux?.component_id
+                      taskData?.component_id == aux?.component_id,
                   );
                   const amount = found?.total_consumed || 0;
 
@@ -317,11 +329,27 @@ function TaskModal({
                       <td className="px-4 py-2">
                         <input
                           type="text"
-                          className="w-20 p-1 border rounded bg-yellow-50 focus:bg-white"
+                          placeholder="Qtd."
+                          className="w-24 p-1 border border-green-200 rounded bg-green-50 focus:bg-white focus:border-green-500"
                           value={inputValues[mat.material_id] || ""}
                           onChange={(e) => {
                             const val = e.target.value;
                             setInputValues((prev) => ({
+                              ...prev,
+                              [mat.material_id]: val,
+                            }));
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          placeholder="Refugo"
+                          className="w-24 p-1 border border-red-200 rounded bg-red-50 focus:bg-white focus:border-red-500"
+                          value={wasteValues[mat.material_id] || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setWasteValues((prev) => ({
                               ...prev,
                               [mat.material_id]: val,
                             }));
@@ -334,7 +362,7 @@ function TaskModal({
                 {materials.length === 0 && (
                   <tr>
                     <td
-                      colSpan="4"
+                      colSpan="5"
                       className="px-4 py-2 text-center text-gray-500"
                     >
                       Nenhum material vinculado à receita.
@@ -346,8 +374,9 @@ function TaskModal({
           </div>
         </div>
 
-        {/* --- Apontamento de Horas --- */}
+        {/* Tabela de Horas e Botões mantidos iguais... */}
         <div className="flex flex-col w-full">
+          {/* ... código da tabela de horas ... */}
           <label className="text-gray-700 mb-1 font-medium">
             Apontamento de Horas
           </label>
@@ -373,7 +402,7 @@ function TaskModal({
                           handleTimesheetChange(
                             emp.user_id,
                             "start",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                       />
@@ -387,7 +416,7 @@ function TaskModal({
                           handleTimesheetChange(
                             emp.user_id,
                             "end",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                       />
@@ -409,7 +438,6 @@ function TaskModal({
           </div>
         </div>
 
-        {/* --- Footer Buttons --- */}
         <div className="flex flex-row justify-end items-center space-x-4 pt-4 border-t border-gray-300">
           <button className="bnt" onClick={() => setOpen(false)} type="button">
             Fechar
@@ -420,7 +448,7 @@ function TaskModal({
         </div>
       </form>
     </div>,
-    document.body
+    document.body,
   );
 }
 
