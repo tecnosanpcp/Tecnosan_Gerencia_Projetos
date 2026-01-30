@@ -38,23 +38,36 @@ export async function Register(req, res) {
 export async function Login(req, res) {
   try {
     const { email, pass } = req.body;
-    const response = await pool.query("SELECT * FROM Users");
 
-    if (response.rowCount == 0) {
-      throw new Error("Nenhum Usuário encontrado");
+    // 1. Busca APENAS o usuário necessário no banco (Mais rápido e seguro)
+    const response = await pool.query("SELECT * FROM Users WHERE email = $1", [email.trim()]);
+
+    // 2. Verifica se o usuário existe
+    if (response.rowCount === 0) {
+      return res.status(401).json({ error: "E-mail ou senha incorretos" });
     }
 
-    const user = response.rows.find(
-      (user) =>
-        email.trim() == user.email && compareSync(pass.trim(), user.password)
-    );
+    const user = response.rows[0];
+
+    // 3. Verifica a senha
+    const passwordMatch = compareSync(pass.trim(), user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "E-mail ou senha incorretos" });
+    }
+
+    // 4. Gera o token (Remova a senha do token por segurança)
+    delete user.password;
     const token = jwt.sign(user, process.env.JWT_SECRET, {
       expiresIn: "12h",
     });
-    res.status(200).json({ token });
+
+    // 5. Retorna sucesso
+    return res.status(200).json({ token });
+
   } catch (error) {
-    console.error("Error: ", error);
-    res.status(500).json({ error: error.message });
+    console.error("Login Error: ", error);
+    // Garante que o erro 500 só ocorra em falhas REAIS de servidor (ex: banco caiu)
+    return res.status(500).json({ error: "Erro interno no servidor" });
   }
 }
 
