@@ -138,7 +138,7 @@ export const getEmployeesAnalytics = async (req, res) => {
           GROUP BY user_id
       )
       SELECT 
-          u.username AS nome_funcionario, -- <--- ADICIONADO (Verifique se é 'username' ou 'name' no seu banco)
+          u.user_name AS nome_funcionario,
           e.user_id,
           e.job_title AS cargo,
           e.salary AS salario_base,
