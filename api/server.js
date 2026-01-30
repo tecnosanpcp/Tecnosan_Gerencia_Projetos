@@ -37,7 +37,8 @@ app.use(
       "http://localhost:5173",
       "https://tecnosan-gerencia-projetos.vercel.app",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Adicione OPTIONS
+    allowedHeaders: ["Content-Type", "Authorization"], // Adicione isso
     credentials: true,
   }),
 );
