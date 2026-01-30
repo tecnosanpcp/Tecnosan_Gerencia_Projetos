@@ -66,11 +66,7 @@ export const updateCompRecipeMat = async (req, res) => {
         RETURNING *`,
       [component_recipe_id, material_id, quantity_plan]
     );
-    response.rowCount > 0
-      ? res.status(200).json(response.rows)
-      : res
-          .status(404)
-          .json({ error: "Não foi possivel encontrar a relação na tebela" });
+    res.status(200).json(response.rows)
   } catch (error) {
     res
       .status(500)
@@ -89,11 +85,7 @@ export const deleteCompRecipeMat = async (req, res) => {
         RETURNING *`,
       [component_recipe_id, material_id]
     );
-    response.rowCount > 0
-      ? res.status(200).json(response.rows)
-      : res
-          .status(404)
-          .json({ error: "Não foi possivel encontrar a relação na tebela" });
+    res.status(200).json(response.rows)
   } catch (error) {
     res
       .status(500)

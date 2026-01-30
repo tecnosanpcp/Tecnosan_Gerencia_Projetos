@@ -3,11 +3,6 @@ import { pool } from "../config/db.js";
 export const getEmployeesComponents = async (req, res) => {
   try {
     const response = await pool.query("SELECT * FROM EMPLOYEES_COMPONENTS;");
-
-    if (response.rowCount == 0) {
-      return res.status(404).json({ menssage: "Nenhum componente encontrado" });
-    }
-
     res.status(200).json(response.rows);
   } catch (error) {
     res.status(500).json({ error: error.menssage });
@@ -49,11 +44,6 @@ export const deleteEmployeesComponents = async (req, res) => {
        WHERE component_id = $1 AND user_id = $2;`,
       [component_id, user_id]
     );
-
-    if (response.rowCount == 0) {
-      return res.status(404).json({ error: "Vínculo não encontrado" });
-    }
-
     res.status(200).json({ message: "Deletado com sucesso" });
   } catch (error) {
     console.error(error);

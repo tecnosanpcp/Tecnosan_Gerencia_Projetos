@@ -41,9 +41,6 @@ export const editDepartment = async (req, res) => {
       " UPDATE DEPARTMENTS SET department_name = $1 WHERE department_id = $2;",
       [department_name, department_id]
     );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Departamento não encontrado." });
-    }
     return res
       .status(200)
       .json({ message: "Departamento atualizado com sucesso!" });
@@ -63,11 +60,6 @@ export const deleteDepartment = async (req, res) => {
       "DELETE FROM DEPARTMENTS WHERE department_id = $1",
       [department_id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Departamento não encontrado." });
-    }
-
     console.log("Operação realizada");
     return res
       .status(200)

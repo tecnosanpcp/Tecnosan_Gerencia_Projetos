@@ -36,11 +36,7 @@ export const deleteComponentRecipe = async (req, res) => {
       "DELETE FROM component_recipes WHERE component_recipe_id = $1 RETURNING *",
       [component_recipe_id],
     );
-    response.rowCount > 0
-      ? res.status(200).json(response.rows)
-      : res
-          .status(404)
-          .json({ error: "Não foi possivel encontrar relação na tabela" });
+    res.status(200).json(response.rows);
   } catch (error) {
     res
       .status(500)
@@ -76,12 +72,7 @@ export const updateComponentRecipe = async (req, res) => {
         component_recipe_id,
       ],
     );
-
-    response.rowCount > 0
-      ? res.status(200).json(response.rows)
-      : res
-          .status(404)
-          .json({ error: "Não foi possivel encontrar relação na tabela" });
+    res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

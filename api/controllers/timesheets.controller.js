@@ -74,11 +74,6 @@ export const updateTimesheet = async (req, res) => {
       RETURNING *;`,
       [start_time, end_time, timesheet_id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Registro não encontrado." });
-    }
-
     res.json(result.rows[0]);
   } catch (error) {
     console.error("Erro ao atualizar timesheet:", error);
@@ -96,9 +91,6 @@ export const deleteTimesheet = async (req, res) => {
       "DELETE FROM components_timesheets WHERE timesheet_id = $1 RETURNING timesheet_id;",
       [timesheet_id]
     );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Registro não encontrado." });
-    }
     res.json({
       message: "Registro excluído com sucesso.",
       id: result.rows[0].timesheet_id,

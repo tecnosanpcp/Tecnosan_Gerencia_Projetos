@@ -30,11 +30,6 @@ export const getComponentStatus = async (req, res) => {
 	      (C.COMPLETION_DATE <= $4 OR C.DEADLINE <= $4)`,
       [projIdParam, equipIdParam, start_date, end_date]
     );
-
-    if (response.rowCount == 0) {
-      return res.status(404).json({ menssage: "Nenhum componente encontrado" });
-    }
-
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
@@ -97,12 +92,6 @@ export const getStatus = async (req, res) => {
       component_id,
       status
     FROM COMPONENTS;`);
-
-    if (response.rowCount == 0) {
-      res.status(404).json({ message: "Nenhum componente cadastrado" });
-      throw new Error("Nehum componente cadastrado");
-    }
-
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
@@ -153,11 +142,6 @@ export const getLeadTimeComparison = async (req, res) => {
 export const getComponents = async (req, res) => {
   try {
     const response = await pool.query("SELECT * FROM components;");
-
-    if (response.rowCount == 0) {
-      return res.status(404).json({ menssage: "Nenhum componente encontrado" });
-    }
-
     res.status(200).json(response.rows);
   } catch (error) {
     res.status(500).json({ error: error.menssage });
@@ -276,10 +260,6 @@ export const deleteComponent = async (req, res) => {
       WHERE component_id = $1;`,
       [equipment_id]
     );
-
-    if (response.rowCount == 0) {
-      return res.status(404).json({ error: "Componente não foi encontrado" });
-    }
     res.status(200).json(response.rows);
   } catch (error) {
     res.status(500).json({ error: error.menssage });

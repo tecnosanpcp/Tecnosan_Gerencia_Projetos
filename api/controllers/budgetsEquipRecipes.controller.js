@@ -41,12 +41,8 @@ export const updateBudgetsEquipRecipes = async (req, res) => {
             equipment_id = $2;`,
       [budget_id, equipment_id, quantity_plan]
     );
-
-    if (response.rowCount === 0) {
-      res.status(404).json({ error: "Nenhuma relação na tabela encontrada" });
-    } else {
       res.status(200).json(response.rows);
-    }
+    
   } catch (error) {
     res
       .status(500)
@@ -65,11 +61,8 @@ export const deleteBudgetsEquipRecipes = async (req, res) => {
       [budget_id, equipment_id]
     );
 
-    if (response.rowCount === 0) {
-      res.status(404).json({ error: "Nenhuma relação na tabela encontrada" });
-    } else {
-      res.status(200).json(response.rows);
-    }
+    res.status(200).json(response.rows);
+    
   } catch (error) {
     res
       .status(500)

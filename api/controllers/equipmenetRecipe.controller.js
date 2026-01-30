@@ -14,7 +14,7 @@ export const createEquipmentRecipe = async (req, res) => {
     const { recipe_name } = req.body;
     const response = await pool.query(
       "INSERT INTO equipment_recipes(recipe_name) VALUES ($1) RETURNING *",
-      [recipe_name]
+      [recipe_name],
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -29,16 +29,10 @@ export const deleteEquipmentRecipe = async (req, res) => {
     const { equipment_recipe_id } = req.params;
     const response = await pool.query(
       "DELETE FROM equipment_recipes WHERE equipment_recipe_id = $1 RETURNING *",
-      [equipment_recipe_id]
+      [equipment_recipe_id],
     );
 
-    if (response.rowCount === 0) {
-      res
-        .status(404)
-        .json({ error: "Não foi possivel encontrar a relação na tebela" });
-    } else {
-      res.status(200).json(response.rows);
-    }
+    res.status(200).json(response.rows);
   } catch (error) {
     res
       .status(500)
@@ -59,15 +53,10 @@ export const updateEquipmentRecipe = async (req, res) => {
       WHERE equipment_recipe_id = $2
       RETURNING *;
       `,
-      [recipe_name, equipment_recipe_id]
+      [recipe_name, equipment_recipe_id],
     );
-    if (response.rowCount === 0) {
-      res
-        .status(404)
-        .json({ error: "Não foi possivel encontrar a relação na tebela" });
-    } else {
-      res.status(200).json(response.rows);
-    }
+
+    res.status(200).json(response.rows);
   } catch (error) {
     res
       .status(500)

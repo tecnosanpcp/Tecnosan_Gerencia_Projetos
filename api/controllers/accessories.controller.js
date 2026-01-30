@@ -163,11 +163,6 @@ export const returnAccessory = async (req, res) => {
        RETURNING *`,
       [received_by_user_id, movement_id, returned_at]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Registro de empréstimo não encontrado." });
-    }
-
     res.status(200).json({
       message: "Acessório devolvido com sucesso!",
       data: result.rows[0],
@@ -249,11 +244,6 @@ export const updateBudgetLoan = async (req, res) => {
        RETURNING *`,
       [accessory_id, taken_by_user_id, taken_at, received_by_user_id, returned_at, id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Registro não encontrado." });
-    }
-
     res.json({ message: "Planejamento atualizado!", loan: result.rows[0] });
   } catch (error) {
     console.error("Erro ao atualizar planejamento:", error);
@@ -270,11 +260,6 @@ export const deleteBudgetLoan = async (req, res) => {
       "DELETE FROM accessories_budgets WHERE movement_id = $1 RETURNING *",
       [id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Registro não encontrado." });
-    }
-
     res.json({ message: "Planejamento removido!", deleted: result.rows[0] });
   } catch (error) {
     console.error("Erro ao deletar planejamento:", error);
