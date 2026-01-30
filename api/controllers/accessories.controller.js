@@ -106,24 +106,37 @@ export const loanToProject = async (req, res) => {
   }
 };
 
+// No arquivo: accessories.controller.js
+
 export const loanToBudget = async (req, res) => {
   try {
-    // Mesma correção para Orçamentos
-    const { budget_id, accessory_id, user_id, taken_at } = req.body;
+    // AGORA RECEBE TODOS OS DADOS DE UMA VEZ
+    const { 
+      budget_id, 
+      accessory_id, 
+      user_id,         // Quem retira (taken_by)
+      taken_at,        // Data retirada
+      received_by_id,  // Quem devolve (recebe de volta)
+      returned_at      // Data devolução
+    } = req.body;
 
+    // A query insere tudo junto. 
+    // Isso satisfaz a constraint do banco (ou tudo NULL ou tudo PREENCHIDO nas colunas de retorno)
+    // E geralmente faz com que a Trigger de status entenda que o ciclo fechou (mantendo 'Available')
     const result = await pool.query(
-      `INSERT INTO accessories_budgets (budget_id, accessory_id, taken_by_user_id, taken_at)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO accessories_budgets 
+       (budget_id, accessory_id, taken_by_user_id, taken_at, received_by_user_id, returned_at)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [budget_id, accessory_id, user_id, taken_at]
+      [budget_id, accessory_id, user_id, taken_at, received_by_id, returned_at]
     );
 
     res.status(200).json({
-      message: "Acessório emprestado para o Orçamento!",
+      message: "Planejamento salvo com sucesso!",
       loan: result.rows[0],
     });
   } catch (error) {
-    console.error("Error loaning to budget:", error);
+    console.error("Error planning budget accessory:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -176,5 +189,95 @@ export const listActiveLoans = async (req, res) => {
   } catch (error) {
     console.error("Error listing loans:", error);
     return res.status(500).json({ error: "Erro ao listar histórico." });
+  }
+};
+
+// ... no final do arquivo accessories.controller.js
+
+export const listBudgetHistory = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        ab.movement_id,
+        ab.budget_id,
+        b.budget_name,
+        ab.accessory_id,
+        a.name as accessory_name,
+        a.serial_number,
+        ab.taken_by_user_id,
+        u1.user_name as taken_by_name,
+        ab.taken_at,
+        ab.received_by_user_id,
+        u2.user_name as received_by_name,
+        ab.returned_at
+      FROM accessories_budgets ab
+      JOIN accessories a ON ab.accessory_id = a.accessory_id
+      JOIN budgets b ON ab.budget_id = b.budget_id
+      LEFT JOIN users u1 ON ab.taken_by_user_id = u1.user_id
+      LEFT JOIN users u2 ON ab.received_by_user_id = u2.user_id
+      ORDER BY ab.taken_at DESC
+    `);
+    return res.json(result.rows);
+  } catch (error) {
+    console.error("Error listing budget history:", error);
+    return res.status(500).json({ error: "Erro ao listar histórico de orçamentos." });
+  }
+};
+
+// accessories.controller.js
+
+// --- ATUALIZAR PLANEJAMENTO ---
+export const updateBudgetLoan = async (req, res) => {
+  try {
+    const { id } = req.params; // movement_id
+    const { 
+      accessory_id, 
+      taken_by_user_id, 
+      taken_at, 
+      received_by_user_id, 
+      returned_at 
+    } = req.body;
+
+    const result = await pool.query(
+      `UPDATE accessories_budgets
+       SET accessory_id = $1,
+           taken_by_user_id = $2,
+           taken_at = $3,
+           received_by_user_id = $4,
+           returned_at = $5
+       WHERE movement_id = $6
+       RETURNING *`,
+      [accessory_id, taken_by_user_id, taken_at, received_by_user_id, returned_at, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Registro não encontrado." });
+    }
+
+    res.json({ message: "Planejamento atualizado!", loan: result.rows[0] });
+  } catch (error) {
+    console.error("Erro ao atualizar planejamento:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// --- DELETAR PLANEJAMENTO ---
+export const deleteBudgetLoan = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM accessories_budgets WHERE movement_id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Registro não encontrado." });
+    }
+
+    res.json({ message: "Planejamento removido!", deleted: result.rows[0] });
+  } catch (error) {
+    console.error("Erro ao deletar planejamento:", error);
+    res.status(500).json({ error: error.message });
   }
 };

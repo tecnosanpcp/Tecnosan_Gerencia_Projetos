@@ -71,12 +71,14 @@ export const loanToProject = async (project_id, accessory_id, user_id, taken_at)
   return response.data;
 };
 
-export const loanToBudget = async (budget_id, accessory_id, user_id, taken_at) => {
+export const loanToBudget = async (budget_id, accessory_id, user_id, taken_at, received_by_id, returned_at) => {
   const response = await api.post("/accessories/loan/budget", { 
     budget_id, 
     accessory_id, 
     user_id, 
-    taken_at 
+    taken_at,
+    received_by_id, // Novo parametro
+    returned_at     // Novo parametro
   });
   return response.data;
 };
@@ -96,4 +98,27 @@ export const returnAccessory = async (movement_id, received_by_user_id, returned
 export const listActiveLoans = async () => {
   const response = await api.get("/accessories/loans/active");
   return Array.isArray(response.data) ? response.data : [];
+};
+
+// Adicione esta nova função
+export const listBudgetHistory = async () => {
+  try {
+    // Certifique-se que a rota no backend corresponda a esta URL
+    const response = await api.get("/accessories/budget/history"); 
+    if (!Array.isArray(response.data)) return [];
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao listar histórico de orçamentos:", error);
+    return [];
+  }
+};
+
+export const updateBudgetLoan = async (movement_id, data) => {
+  const response = await api.put(`/accessories/budget/${movement_id}`, data);
+  return response.data;
+};
+
+export const deleteBudgetLoan = async (movement_id) => {
+  const response = await api.delete(`/accessories/budget/${movement_id}`);
+  return response.data;
 };

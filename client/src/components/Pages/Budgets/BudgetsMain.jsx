@@ -6,6 +6,7 @@ import { FaSearch } from "react-icons/fa";
 import BudgetEquipmentTable from "./BudgetEquipmentsTable";
 import BudgetTimeline from "./BudgetTimeline";
 import NewEquipmentModal from "../../Ui/newEquipmentModal";
+import BudgetAccessories from "./BudgetAccessories";
 
 // Iport Services
 import {
@@ -17,18 +18,17 @@ import { readEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { createRelation } from "@services/BudgetsEquipRecipesServices.js";
 import { VerifyAuth } from "@services/AuthService.js";
 
+// Telas
 const viewLoader = (
   user_id,
   currentBudget,
-  allBudgets, // Novo parametro
+  allBudgets,
   searchTerm,
   view,
   timelineTasks,
   timelineEquipments,
   timelineBudgets
 ) => {
-  // REMOVIDO: if (!currentBudget) return <h1>Escolha um projeto</h1>;
-
   switch (view) {
     case "equipments":
       return (
@@ -51,6 +51,15 @@ const viewLoader = (
           timelineTasks={timelineTasks}
           timelineEquipments={timelineEquipments}
           timelineBudgets={timelineBudgets}
+        />
+      );
+    // --- NOVO CASE ---
+    case "accessories":
+      return (
+        <BudgetAccessories
+          currentBudget={currentBudget}
+          allBudgets={allBudgets}
+          searchTerm={searchTerm}
         />
       );
     default:
