@@ -22,10 +22,7 @@ const router = createBrowserRouter(
     {
       path: "/home",
       element: (
-        // Nível 3 NÃO pode entrar aqui
-        <AuthGuard restrictLevel3={true}>
           <Home />
-        </AuthGuard>
       ),
     },
     {
