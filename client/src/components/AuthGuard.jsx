@@ -9,6 +9,14 @@ const AuthGuard = ({ children, restrictLevel3 = false }) => {
   useEffect(() => {
     const checkUser = async () => {
       const token = localStorage.getItem("loginPermission");
+      const user = await VerifyAuth();
+      console.log("Usuário autenticado:", user);
+
+      if (!user || user.access_type === undefined) {
+        console.error("User sem access_type!");
+        setPermissionStatus("redirect_login");
+        return;
+      }
 
       if (!token) {
         setPermissionStatus("redirect_login");
@@ -37,7 +45,13 @@ const AuthGuard = ({ children, restrictLevel3 = false }) => {
 
   if (permissionStatus === "loading") {
     // Você pode substituir isso pelo seu componente de Spinner/Loading
-    return <div style={{ display: "flex", justifyContent: "center", marginTop: "20%" }}>Verificando permissões...</div>;
+    return (
+      <div
+        style={{ display: "flex", justifyContent: "center", marginTop: "20%" }}
+      >
+        Verificando permissões...
+      </div>
+    );
   }
 
   if (permissionStatus === "redirect_login") {
