@@ -24,7 +24,6 @@ export const editDepartment = async (department_id, department_name) => {
       department_id,
       department_name,
     });
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao editar departamento", error);
@@ -36,7 +35,6 @@ export const deleteDepartment = async (department_id) => {
     const response = await api.delete("/departments", {
       params: { department_id },
     });
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Erro ao excluir departamento", error);

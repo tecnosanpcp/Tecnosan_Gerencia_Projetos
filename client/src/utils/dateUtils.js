@@ -68,7 +68,7 @@ export const formatForInput = (timestamp) => {
   try {
     return new Date(timestamp).toISOString().split("T")[0];
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return "";
   }
 };

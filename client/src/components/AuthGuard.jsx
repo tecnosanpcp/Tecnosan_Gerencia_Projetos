@@ -10,7 +10,6 @@ const AuthGuard = ({ children, restrictLevel3 = false }) => {
     const checkUser = async () => {
       const token = localStorage.getItem("loginPermission");
       const user = await VerifyAuth();
-      console.log("Usuário autenticado:", user);
 
       if (!user || user.access_type === undefined) {
         console.error("User sem access_type!");

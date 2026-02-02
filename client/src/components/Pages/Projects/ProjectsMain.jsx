@@ -66,8 +66,10 @@ export default function ProjectsMain({ times, onRefresh }) {
 
   const handleCreateEquipment = async (recipe, quantity) => {
     try {
-      await createEquipmentRecipe(recipe);
-      console.log({ recipe, quantity });
+      // criando vários equipamentos iguais para o projeto
+      for (let index = 0; index < quantity.length; index++) {
+        await createEquipmentRecipe(recipe);
+      }
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error(error);

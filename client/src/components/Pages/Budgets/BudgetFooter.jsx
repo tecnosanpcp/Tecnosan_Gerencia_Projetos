@@ -2,41 +2,46 @@ import React, { useState } from "react";
 
 import { VerifyAuth } from "@services/AuthService.js";
 import { createProject } from "@services/ProjectService.js";
-// import { createEquipment } from "@services/EquipmentService.js"
 import { uploadStatusBudget } from "@services/BudgetService.js";
 
 import AlertModal from "../../Ui/AlertModal";
 
-import tick_double from "@imgs/tick-double.png"
-import archive from "@imgs/archive.png"
+import tick_double from "@imgs/tick-double.png";
+import archive from "@imgs/archive.png";
 
 export default function BudgetFooter({ currentBudget }) {
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
-  const handleSubmit = async (project_name, project_local, budget_id) => {
-    try {
-      const user = await VerifyAuth();
 
-      const projectData = await createProject(
-        user.user_id,
-        project_name,
-        "desc",
-        project_local,
-        "09-01-2026",
-        "09-01-2026",
-        "09-01-2026",
-        "Peding",
-        budget_id
-      );
-
-      console.log(projectData);
-
-      await uploadStatusBudget(budget_id, "Aprovado");
-      setShowApproveModal(false);
-    } catch (error) {
-      console.error(error);
+  const handleSubmit = async () => {
+  try {
+    if (!currentBudget) {
+      throw new Error("Escolha um projeto!");
     }
-  };
+
+    const user = await VerifyAuth();
+
+    // Organizando os parâmetros na ordem correta da função
+    await createProject(
+      user.user_id,             // 1. user_id
+      currentBudget.name,       // 2. project_name
+      "desc",                   // 3. project_desc
+      currentBudget.local,      // 4. project_local
+      currentBudget.start_date, // 5. start_date
+      currentBudget.deadline,   // 6. completion_date (usando o deadline como previsão)
+      currentBudget.deadline,   // 7. deadline
+      "Pending",                // 8. status (corrigido o erro de digitação)
+      currentBudget.id          // 9. budget_id
+    );
+
+    await uploadStatusBudget(currentBudget.id, "Aprovado");
+    setShowApproveModal(false);
+    
+  } catch (error) {
+    console.error("Erro ao processar aprovação:", error);
+    alert("Erro ao criar projeto. Verifique os logs.");
+  }
+};
 
   const handleConfirmArchive = async (budget_id) => {
     try {
@@ -93,12 +98,8 @@ export default function BudgetFooter({ currentBudget }) {
         pos_opt="Sim, Aprovar"
         func={(e) => {
           e.preventDefault();
-          handleSubmit(
-            currentBudget?.name,
-            currentBudget?.local,
-            currentBudget?.id
-          );
-          window.location.reload();
+          handleSubmit();
+          //window.location.reload();
         }}
         isVisible={showApproveModal}
         setVisible={setShowApproveModal}

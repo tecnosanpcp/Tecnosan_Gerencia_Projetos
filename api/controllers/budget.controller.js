@@ -1,21 +1,21 @@
 import { pool } from "../config/db.js";
 
 export const createBudget = async (req, res) => {
-  const { user_id, budget_name, budget_local } = req.body;
+  const { user_id, budget_name, budget_local, deadline, start_date } = req.body;
   try {
-    console.log(user_id, budget_name, budget_local);
     const client = await pool.connect();
     await client.query("BEGIN");
 
     const budgetResult = await client.query(
-      `INSERT INTO budgets(budget_name, budget_local, status) VALUES ($1, $2, 'Em Planejamento') RETURNING budget_id`,
-      [budget_name, budget_local]
+      `INSERT INTO budgets(budget_name, budget_local, status, start_date, deadline) 
+      VALUES ($1, $2, 'Em Planejamento', $3, $4) RETURNING budget_id`,
+      [budget_name, budget_local, deadline, start_date],
     );
 
     const budget_id = budgetResult.rows[0].budget_id;
     await client.query(
       `INSERT INTO BUDGETS_USERS(user_id, budget_id) VALUES ($1, $2)`,
-      [user_id, budget_id]
+      [user_id, budget_id],
     );
     client.release();
 
@@ -41,7 +41,7 @@ export const listBudget = async (req, res) => {
        FROM budgets b
        JOIN budgets_users bu ON b.budget_id = bu.budget_id
        WHERE bu.user_id = $1`,
-      [user_id]
+      [user_id],
     );
 
     res.json(response.rows);
@@ -60,10 +60,10 @@ export const uploadStatusBudget = async (req, res) => {
       res.status(400).json({ message: "Faltando dados" });
       throw new Error({ message: "Faltando dados" });
     }
-    
+
     const response = await pool.query(
       `UPDATE Budgets SET status = $1 WHERE budget_id = $2`,
-      [status, budget_id]
+      [status, budget_id],
     );
 
     res.status(200).json(response.rows);

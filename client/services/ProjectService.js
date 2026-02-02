@@ -6,15 +6,15 @@ export const createProject = async (
   project_desc,
   project_local,
   start_date,
-  end_date,
+  completion_date,
   deadline,
   status,
   budget_id
 ) => {
   try {
     if (!user_id || !project_name || !budget_id) {
-      console.error("Missing required fields.");
-      return;
+      console.error("Campos obrigatórios faltando: user_id, project_name ou budget_id.");
+      return null;
     }
 
     const response = await api.post("/projects", {
@@ -22,16 +22,13 @@ export const createProject = async (
       project_name,
       project_desc,
       project_local,
-      start_date,
-      end_date,
-      deadline,
       status,
       budget_id,
     });
-
-    return Array.isArray(response.data) ? response.data : [];
+    return response.data; 
   } catch (error) {
-    console.error(error);
+    console.error("Erro na requisição à API:", error);
+    throw error;
   }
 };
 

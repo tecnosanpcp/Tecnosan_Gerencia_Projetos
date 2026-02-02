@@ -178,10 +178,9 @@ export const deleteEmployee = async (req, res) => {
     const response = await pool.query("DELETE FROM users WHERE user_id = $1", [
       user_id,
     ]);
-    console.log("Funcionário deletado com sucesso:", user_id);
     res.json(response.rows());
   } catch (error) {
-    console.log("Erro ao deletar funcionário:", error);
+    console.error("Erro ao deletar funcionário:", error);
     res.status(500).json({ error: "Erro ao deletar funcionário" });
   }
 };

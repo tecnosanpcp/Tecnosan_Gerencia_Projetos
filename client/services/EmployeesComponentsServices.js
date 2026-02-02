@@ -25,7 +25,7 @@ export const createEmployeesComponents = async (component_id, user_id) => {
 
     return response.data;
   } catch (error) {
-    console.log("Erro no service", error);
+    console.error("Erro no service", error);
   }
 };
 
@@ -38,6 +38,6 @@ export const deleteEmployeesComponents = async (component_id, user_id) => {
     const response = await api.delete(`/employees_components/${component_id}/${user_id}`);
     return response.data;
   } catch (error) {
-    console.log("Erro no service", error);
+    console.error("Erro no service", error);
   }
 };

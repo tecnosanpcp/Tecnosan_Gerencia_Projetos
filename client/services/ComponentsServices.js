@@ -109,7 +109,7 @@ export const createComponents = async (
 
     return response.data;
   } catch (error) {
-    console.log("Erro no service", error);
+    console.error("Erro no service", error);
   }
 };
 
@@ -139,7 +139,7 @@ export const updateComponents = async (
 
     return response.data;
   } catch (error) {
-    console.log("Erro no service", error);
+    console.error("Erro no service", error);
   }
 };
 
@@ -198,6 +198,6 @@ export const deleteComponents = async (component_id) => {
     const response = await api.delete(`/components/${component_id}`);
     return response.data;
   } catch (error) {
-    console.log("Erro no service", error);
+    console.error("Erro no service", error);
   }
 };

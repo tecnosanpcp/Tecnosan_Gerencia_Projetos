@@ -48,7 +48,7 @@ export const createEquipment = async (req, res) => {
 
     res.status(200).json(response.rows[0]);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };

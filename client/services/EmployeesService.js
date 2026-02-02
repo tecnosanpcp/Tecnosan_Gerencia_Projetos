@@ -59,7 +59,6 @@ export const editEmployee = async (
       job_title,
       fk_department_id,
     });
-    console.log("Operação realizada!");
     return response.data;
   } catch (error) {
     console.error("Erro ao editar funcionário", error);

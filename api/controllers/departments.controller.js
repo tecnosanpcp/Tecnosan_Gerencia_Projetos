@@ -60,7 +60,6 @@ export const deleteDepartment = async (req, res) => {
       "DELETE FROM DEPARTMENTS WHERE department_id = $1",
       [department_id]
     );
-    console.log("Operação realizada");
     return res
       .status(200)
       .json({ message: "Departamento exluido com sucesso!" });

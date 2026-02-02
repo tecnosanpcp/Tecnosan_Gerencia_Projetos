@@ -8,32 +8,38 @@ export const createProject = async (req, res) => {
       project_name,
       project_desc,
       project_local,
-      budget_id, // Só isso importa agora
+      status,
+      budget_id,
     } = req.body;
 
-    // Apenas inserimos o projeto. O Banco fará o resto.
+    // 1. Inserção do Projeto
     const result = await pool.query(
       `INSERT INTO projects (project_name, project_desc, project_local, status, budget_id)
-       VALUES ($1, $2, $3, 'Pending', $4)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING project_id`,
-      [project_name, project_desc, project_local, budget_id]
+      [
+        project_name,
+        project_desc,
+        project_local,
+        status || "Pending",
+        budget_id,
+      ],
     );
 
     const newProjectId = result.rows[0].project_id;
 
-    // Vincula o usuário
+    // 2. Vincula o usuário na tabela intermediária
     await pool.query(
       "INSERT INTO projects_users (user_id, project_id) VALUES ($1, $2)",
-      [user_id, newProjectId]
+      [user_id, newProjectId],
     );
 
-    res.status(200).json({ 
-        message: "Projeto gerado automaticamente pelo Banco de Dados!", 
-        project_id: newProjectId 
+    res.status(200).json({
+      message: "Projeto criado com sucesso!",
+      project_id: newProjectId,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao criar projeto:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -53,7 +59,7 @@ export const listProject = async (req, res) => {
        INNER JOIN projects_users pu ON p.project_id = pu.project_id
        WHERE pu.user_id = $1
        ORDER BY project_name`,
-      [user_id]
+      [user_id],
     );
 
     return res.json(result.rows);
@@ -97,7 +103,7 @@ export const editProject = async (req, res) => {
         end_date,
         deadline,
         project_id,
-      ]
+      ],
     );
 
     return res.json(result.rows[0]);
@@ -119,7 +125,7 @@ export const deleteProject = async (req, res) => {
       `DELETE FROM projects
        WHERE project_id = $1
        RETURNING *`,
-      [project_id]
+      [project_id],
     );
 
     return res.json(result.rows[0]);

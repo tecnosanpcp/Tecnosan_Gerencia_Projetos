@@ -47,6 +47,8 @@ function Budgets() {
             name: bud.budget_name,
             local: bud.budget_local,
             status: bud.status,
+            start_date: bud.start_date,
+            deadline: bud.deadline
           }))}
           selectedItem={selectedBudget}
           onSelectItem={setSelectedBudget}

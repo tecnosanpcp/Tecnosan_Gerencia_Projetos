@@ -13,8 +13,7 @@ function DepartmentCard({ id, name }) {
       `Tem certeza que quer excluir o departamento ${name}`
     );
     if (CONFIRM) {
-      const data = await deleteDepartment(id);
-      console.log(data);
+      await deleteDepartment(id);
     }
     window.location.reload();
   };
