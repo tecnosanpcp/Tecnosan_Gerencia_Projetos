@@ -99,7 +99,7 @@ export default function BudgetFooter({ currentBudget }) {
         func={(e) => {
           e.preventDefault();
           handleSubmit();
-          //window.location.reload();
+          window.location.reload();
         }}
         isVisible={showApproveModal}
         setVisible={setShowApproveModal}
