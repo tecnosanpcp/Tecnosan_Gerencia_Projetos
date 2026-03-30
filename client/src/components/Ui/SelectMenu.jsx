@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { createPortal } from "react-dom"; // 1. Import do Portal
+import { createPortal } from "react-dom";
 import { FaCheck } from "react-icons/fa6";
 import { IoChevronDownSharp } from "react-icons/io5";
 
@@ -11,14 +11,15 @@ function SelectMenu({
   setSelectedOption,
 }) {
   const [isOpen, setOpen] = useState(false);
-  const containerRef = useRef(null); // 2. Ref para medir a posição do botão
+  const containerRef = useRef(null);
+  const menuRef = useRef(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
   const longestLabel = useMemo(() => {
     const placeholder = "Selecione uma opção";
     const longest = options.reduce(
       (a, b) => (a.label.length > b.label.length ? a : b),
-      { label: "" }
+      { label: "" },
     ).label;
     return longest.length > placeholder.length ? longest : placeholder;
   }, [options]);
@@ -34,29 +35,43 @@ function SelectMenu({
     if (!isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       setCoords({
-        top: rect.bottom + window.scrollY, 
-        left: rect.left + window.scrollX,  
-        width: rect.width,                 
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
       });
     }
     setOpen((prev) => !prev);
   };
 
   useEffect(() => {
-    const handleScroll = () => { if (isOpen) setOpen(false); };
-    window.addEventListener("scroll", handleScroll, true);
-    window.addEventListener("resize", handleScroll);
+    const HandleEvents = (e) => {
+      if (!isOpen) return;
+      if (e.type == "scroll" && menuRef.current?.contains(e.target)) return;
+      if (e.type == "mousedonw") {
+        if (
+          !containerRef.current?.contains(e.target) &&
+          !menuRef.current?.contains(e.target)
+        ) {
+          setOpen(false);
+        }
+        return;
+      }
+      setOpen(false);
+    };
+
+    window.addEventListener("scroll", HandleEvents, true);
+    window.addEventListener("resize", HandleEvents);
+    window.addEventListener("mousedown", HandleEvents);
+
     return () => {
-      window.removeEventListener("scroll", handleScroll, true);
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("scroll", HandleEvents, true);
+      window.removeEventListener("resize", HandleEvents);
+      window.removeEventListener("mousedown", HandleEvents);
     };
   }, [isOpen]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`relative grid ${widthClass}`}
-    >
+    <div ref={containerRef} className={`relative grid ${widthClass}`}>
       {/* Elemento Fantasma (Define a largura) */}
       <div className="invisible col-start-1 row-start-1 flex items-center justify-between p-2 overflow-hidden pointer-events-none">
         <span className="truncate">{longestLabel}</span>
@@ -73,17 +88,16 @@ function SelectMenu({
           {selectedOption.length === 0
             ? "Selecione uma opção"
             : selectedOption.length === 1
-            ? getLabelById(selectedOption[0])
-            : `${selectedOption.length} opções selecionadas`}
+              ? getLabelById(selectedOption[0])
+              : `${selectedOption.length} opções selecionadas`}
         </span>
         <IoChevronDownSharp className="text-gray-500 shrink-0 ml-2" />
       </button>
 
-      {/* 4. Renderização via Portal */}
       {isOpen &&
         createPortal(
           <div
-            // Aplicamos as coordenadas calculadas diretamente no style
+            ref={menuRef}
             style={{
               top: coords.top,
               left: coords.left,
@@ -129,13 +143,17 @@ function SelectMenu({
                   }}
                   type="button"
                 >
-                  {checked ? <FaCheck className="text-green-600 text-xs" /> : <span className="w-3" />}
+                  {checked ? (
+                    <FaCheck className="text-green-600 text-xs" />
+                  ) : (
+                    <span className="w-3" />
+                  )}
                   <span className="truncate">{o.label}</span>
                 </button>
               );
             })}
           </div>,
-          document.body // Renderiza diretamente no Body
+          document.body, // Renderiza diretamente no Body
         )}
     </div>
   );
