@@ -15,12 +15,17 @@ function SelectMenu({
   const menuRef = useRef(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
+  // =========================
+  // MEMO
+  // =========================
+
   const longestLabel = useMemo(() => {
     const placeholder = "Selecione uma opção";
     const longest = options.reduce(
       (a, b) => (a.label.length > b.label.length ? a : b),
-      { label: "" },
+      { label: "" }
     ).label;
+
     return longest.length > placeholder.length ? longest : placeholder;
   }, [options]);
 
@@ -30,6 +35,10 @@ function SelectMenu({
     const found = options.find((o) => o.id === id);
     return found ? found.label : id;
   };
+
+  // =========================
+  // HANDLERS
+  // =========================
 
   const toggleOpen = () => {
     if (!isOpen && containerRef.current) {
@@ -43,42 +52,71 @@ function SelectMenu({
     setOpen((prev) => !prev);
   };
 
-  useEffect(() => {
-    const HandleEvents = (e) => {
-      if (!isOpen) return;
-      if (e.type == "scroll" && menuRef.current?.contains(e.target)) return;
-      if (e.type == "mousedonw") {
-        if (
-          !containerRef.current?.contains(e.target) &&
-          !menuRef.current?.contains(e.target)
-        ) {
-          setOpen(false);
-        }
-        return;
+  const handleSelect = (id) => {
+    let newValue = [];
+
+    if (selectedOption.includes(id)) {
+      newValue = selectedOption.filter((x) => x !== id);
+    } else {
+      if (maxSelections === 1) {
+        newValue = [id];
+      } else if (maxSelections > 1 && selectedOption.length >= maxSelections) {
+        newValue = selectedOption;
+      } else {
+        newValue = [...selectedOption, id];
       }
+    }
+
+    setSelectedOption(newValue);
+
+    // fecha corretamente
+    if (maxSelections === 1 || newValue.length >= maxSelections) {
       setOpen(false);
+    }
+  };
+
+  // =========================
+  // EFFECT (CLICK OUTSIDE)
+  // =========================
+
+  useEffect(() => {
+    const handleEvents = (e) => {
+      if (!isOpen) return;
+
+      if (e.type === "scroll" && menuRef.current?.contains(e.target)) return;
+
+      if (
+        !containerRef.current?.contains(e.target) &&
+        !menuRef.current?.contains(e.target)
+      ) {
+        setOpen(false);
+      }
     };
 
-    window.addEventListener("scroll", HandleEvents, true);
-    window.addEventListener("resize", HandleEvents);
-    window.addEventListener("mousedown", HandleEvents);
+    window.addEventListener("scroll", handleEvents, true);
+    window.addEventListener("resize", handleEvents);
+    window.addEventListener("mousedown", handleEvents); // corrigido
 
     return () => {
-      window.removeEventListener("scroll", HandleEvents, true);
-      window.removeEventListener("resize", HandleEvents);
-      window.removeEventListener("mousedown", HandleEvents);
+      window.removeEventListener("scroll", handleEvents, true);
+      window.removeEventListener("resize", handleEvents);
+      window.removeEventListener("mousedown", handleEvents);
     };
   }, [isOpen]);
 
+  // =========================
+  // RENDER
+  // =========================
+
   return (
     <div ref={containerRef} className={`relative grid ${widthClass}`}>
-      {/* Elemento Fantasma (Define a largura) */}
+      {/* largura fantasma */}
       <div className="invisible col-start-1 row-start-1 flex items-center justify-between p-2 overflow-hidden pointer-events-none">
         <span className="truncate">{longestLabel}</span>
         <span className="w-5 shrink-0 ml-2" />
       </div>
 
-      {/* Botão */}
+      {/* botão */}
       <button
         type="button"
         className="col-start-1 row-start-1 flex items-center justify-between bg-gray-50 p-2 rounded-md w-full text-left border border-transparent focus:border-gray-300"
@@ -88,8 +126,8 @@ function SelectMenu({
           {selectedOption.length === 0
             ? "Selecione uma opção"
             : selectedOption.length === 1
-              ? getLabelById(selectedOption[0])
-              : `${selectedOption.length} opções selecionadas`}
+            ? getLabelById(selectedOption[0])
+            : `${selectedOption.length} opções selecionadas`}
         </span>
         <IoChevronDownSharp className="text-gray-500 shrink-0 ml-2" />
       </button>
@@ -105,7 +143,7 @@ function SelectMenu({
             }}
             className="absolute mt-1 max-h-[40vh] overflow-auto bg-white p-1 shadow-xl rounded-md z-[9999] text-gray-700 whitespace-nowrap border border-gray-100"
           >
-            {selectedOption.length > 1 && (
+            {selectedOption.length > 0 && (
               <button
                 className="w-full text-left hover:bg-slate-200 p-1 rounded-md text-xs border-b mb-1 text-red-500"
                 onClick={() => {
@@ -119,29 +157,13 @@ function SelectMenu({
 
             {options.map((o) => {
               const checked = selectedOption.includes(o.id);
+
               return (
                 <button
                   key={o.id}
-                  className="w-full flex items-center gap-2 text-left hover:bg-slate-200 p-1 rounded-md transition-colors"
-                  onClick={() => {
-                    setSelectedOption((prev) => {
-                      if (prev.includes(o.id))
-                        return prev.filter((x) => x !== o.id);
-
-                      if (maxSelections === 1) return [o.id];
-                      if (maxSelections > 1 && prev.length >= maxSelections)
-                        return prev;
-
-                      return [...prev, o.id];
-                    });
-                    if (
-                      selectedOption.length >= maxSelections &&
-                      maxSelections >= 1
-                    ) {
-                      setOpen(false);
-                    }
-                  }}
                   type="button"
+                  className="w-full flex items-center gap-2 text-left hover:bg-slate-200 p-1 rounded-md transition-colors"
+                  onClick={() => handleSelect(o.id)}
                 >
                   {checked ? (
                     <FaCheck className="text-green-600 text-xs" />
@@ -153,7 +175,7 @@ function SelectMenu({
               );
             })}
           </div>,
-          document.body, // Renderiza diretamente no Body
+          document.body
         )}
     </div>
   );

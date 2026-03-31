@@ -1,7 +1,8 @@
 import { IoMdClose } from "react-icons/io";
 import { useState } from "react";
-import SelectMenu from "../../Ui/SelectMenu";
+import {useQueryClient} from "@tanstack/react-query"
 import { createMaterial } from "@services/MaterialService.js";
+import SelectMenu from "../../Ui/SelectMenu";
 
 export default function AddMaterialModal({ isVisible, setVisible }) {
   const [materialName, setMaterialName] = useState("");
@@ -20,6 +21,8 @@ export default function AddMaterialModal({ isVisible, setVisible }) {
     { id: 6, label: "L" },
     { id: 7, label: "ml" },
   ];
+
+  const queryClient = useQueryClient();
 
   const clearStates = () => {
     setMaterialName("");
@@ -42,7 +45,7 @@ export default function AddMaterialModal({ isVisible, setVisible }) {
       );
       
       clearStates();
-      window.location.reload();
+      queryClient.invalidateQueries(["materials"]);
     } catch (err) {
       console.error("Erro ao salvar material", err);
     }

@@ -9,7 +9,7 @@ import AddAccessoryTypeModal from "./AddAccessoryTypeModal"; // <--- Import Novo
 export default function RecipeHeader({ i }) {
   const [isAddModalVisible, setAddModalVisible] = useState({
     Material: false,
-    Acessório: false, // <--- Novo Estado
+    Acessório: false,
     Componente: false,
     Equipamento: false,
   });
