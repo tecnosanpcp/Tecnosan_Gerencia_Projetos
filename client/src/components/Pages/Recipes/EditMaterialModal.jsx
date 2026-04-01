@@ -1,5 +1,7 @@
 import { IoMdClose } from "react-icons/io";
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import SelectMenu from "../../Ui/SelectMenu";
 
 import { updateMaterial } from "@services/MaterialService.js";
@@ -9,6 +11,7 @@ export default function EditMaterialModal({ isVisible, setVisible, material }) {
   const [materialDesc, setMaterialDesc] = useState("");
   const [materialValue, setMaterialValue] = useState("");
   const [materialUni, setMaterialUni] = useState([]);
+  const queryClient = useQueryClient();
 
   const Unis = useMemo(()=>[
     { id: 0, label: "t" },
@@ -52,7 +55,7 @@ export default function EditMaterialModal({ isVisible, setVisible, material }) {
 
       const uni = Unis.find((unit) => unit.id === materialUni[0]);
 
-      updateMaterial(
+      await updateMaterial(
         materialName,
         materialDesc,
         Number(materialValue),
@@ -60,7 +63,7 @@ export default function EditMaterialModal({ isVisible, setVisible, material }) {
         material.ID
       );
 
-      window.location.reload();
+      queryClient.invalidateQueries(["materials"]);
       clearStates();
     } catch (err) {
       console.error("Erro ao salvar material", err);

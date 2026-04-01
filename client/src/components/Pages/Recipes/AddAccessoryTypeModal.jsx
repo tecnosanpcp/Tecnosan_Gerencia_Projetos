@@ -1,6 +1,7 @@
 import { IoMdClose } from "react-icons/io";
 import { useState } from "react";
-// CORREÇÃO: Importa a função nova que existe no Service
+import {useQueryClient} from "@tanstack/react-query"
+
 import { createAccessory } from "@services/AccessoriesServices.js"; 
 
 export default function AddAccessoryTypeModal({ isVisible, setVisible }) {
@@ -8,6 +9,8 @@ export default function AddAccessoryTypeModal({ isVisible, setVisible }) {
   const [serialNumber, setSerialNumber] = useState("");
   const [value, setValue] = useState(0);
   const [purchaseDate, setPurchaseDate] = useState("");
+
+  const queryClient = useQueryClient();
 
   const clearStates = () => {
     setName("");
@@ -24,11 +27,10 @@ export default function AddAccessoryTypeModal({ isVisible, setVisible }) {
         alert("O nome é obrigatório.");
         return;
       }
-      
-      // Usa a função nova com os 4 parâmetros
+  
       await createAccessory(name, serialNumber, value, purchaseDate);
       
-      window.location.reload();
+      queryClient.invalidateQueries(["accessories"]);
       clearStates();
     } catch (error) {
       console.error("Erro ao criar acessório:", error);

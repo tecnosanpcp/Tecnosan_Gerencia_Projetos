@@ -1,8 +1,7 @@
 import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
-// REMOVI O IMPORT EXTERNO PARA EVITAR ERRO DE CAMINHO
-// import { parseBRL } from "../../../utils/IntUtils"; 
 
 import SelectMenu from "../../Ui/SelectMenu";
 
@@ -15,7 +14,6 @@ import {
   deleteCompRecipeMat,
 } from "@services/ComponentRecipeMaterials.js";
 
-// Função local segura para formatar moeda
 const parseBRL = (value) => {
   if (value === undefined || value === null || isNaN(value)) return "R$ 0,00";
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -36,7 +34,8 @@ export default function EditComponentRecipeModal({
   const [materialsQuantity, setMaterialsQuantity] = useState([]);
   const [materialsQuantityBackUp, setMaterialsQuantityBackUp] = useState([]);
 
-  // 1. Carregar Materiais
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
@@ -54,16 +53,12 @@ export default function EditComponentRecipeModal({
     }
   }, [isVisible]);
 
-  // 2. Carregar Dados do Componente
   useEffect(() => {
     const loadInit = async () => {
-      // Se componente for nulo ou undefined, para aqui
       if (!component) return;
 
       setComponentRecipeName(component.Componente ?? "");
-      
-      // LEITURA SEGURA DOS DADOS (Evita NaN)
-      // Tenta ler as chaves novas, se falhar, tenta as antigas
+
       const rawFunc = component["Total Funcionários"];
       const rawHoras = component["Total Horas"];
       const rawManHours = component["Horas-Homens"] || component["Horas Homem"];
@@ -72,16 +67,13 @@ export default function EditComponentRecipeModal({
       let valHoras = 0;
 
       if (rawFunc !== undefined && rawHoras !== undefined) {
-        // Se tem as colunas separadas
         valFunc = Number(rawFunc);
         valHoras = Number(rawHoras);
       } else {
-        // Se só tem o total (Legado)
         valFunc = 1;
         valHoras = Number(rawManHours);
       }
 
-      // Proteção final contra NaN (se o banco vier vazio ou texto inválido)
       setTotalEmployees(isNaN(valFunc) || valFunc <= 0 ? 1 : valFunc);
       setTotalHours(isNaN(valHoras) ? 0 : valHoras);
 
@@ -115,7 +107,6 @@ export default function EditComponentRecipeModal({
     }
   }, [component, isVisible]);
 
-  // 3. Sincronização
   useEffect(() => {
     setMaterialsQuantity((prev) => {
       const exist = new Set(prev.map((p) => p.id));
@@ -126,7 +117,6 @@ export default function EditComponentRecipeModal({
     });
   }, [materialsList]);
 
-  // Ações
   const clearStates = () => {
     setComponentRecipeName("");
     setTotalEmployees(1);
@@ -149,7 +139,6 @@ export default function EditComponentRecipeModal({
         return;
       }
 
-      // Garante números válidos no cálculo
       const safeEmployees = Number(totalEmployees) || 1;
       const safeHours = Number(totalHours) || 0;
 
@@ -180,7 +169,7 @@ export default function EditComponentRecipeModal({
       }
 
       clearStates();
-      // window.location.reload();
+      queryClient.invalidateQueries(["components"]);
     } catch (err) {
       console.error("Erro ao salvar:", err);
       alert("Erro ao salvar. Verifique o console.");

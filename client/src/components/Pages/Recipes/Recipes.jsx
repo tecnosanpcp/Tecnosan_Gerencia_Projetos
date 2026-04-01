@@ -201,7 +201,7 @@ function Recipes() {
   ];
 
   return (
-    <div className="w-full flex flex-col gap-4 text-xs mb-16 overflow-auto">
+    <div className="w-full flex flex-col gap-4 text-xs pb-16 overflow-auto">
       <NavBar select_index={5} />
 
       {sections.map((i, key) => (

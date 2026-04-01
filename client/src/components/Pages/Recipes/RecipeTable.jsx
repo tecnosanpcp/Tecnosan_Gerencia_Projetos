@@ -9,6 +9,8 @@ import RenderSubTable from "./RenderSubTable.jsx";
 import { deleteMaterial } from "@services/MaterialService.js";
 import { deleteComponentRecipe } from "@services/ComponentRecipes.js";
 import { deleteEquipmentRecipe } from "@services/EquipmentRecipesService.js";
+import { useQueryClient } from "@tanstack/react-query";
+
 // Importa a função CORRETA
 import { deleteAccessory } from "@services/AccessoriesServices.js";
 
@@ -23,6 +25,7 @@ export default function RecipeTable({ i }) {
   const [editType, setEditType] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
+  const queryClient = useQueryClient();
 
   const updateModalDeleteVisible = (key, value) => {
     setModalDeleteVisible((prev) => ({
@@ -37,7 +40,7 @@ export default function RecipeTable({ i }) {
       body: "Tem certeza que quer excluir esse material? A ação não é reversivel",
       deleteFunc: async (id) => {
         await deleteMaterial(id);
-        window.location.reload();
+        queryClient.invalidateQueries(["materials"]);
       },
     },
     Acessório: {
@@ -46,7 +49,7 @@ export default function RecipeTable({ i }) {
       // Função CORRETA
       deleteFunc: async (id) => {
         await deleteAccessory(id);
-        window.location.reload();
+        queryClient.invalidateQueries(["accessories"]);
       },
     },
     Componente: {
@@ -54,7 +57,7 @@ export default function RecipeTable({ i }) {
       body: "Tem certeza que quer excluir esse componente? A ação não é reversivel",
       deleteFunc: async (id) => {
         await deleteComponentRecipe(id);
-        window.location.reload();
+        queryClient.invalidateQueries(["components"]);
       },
     },
     Equipamento: {
@@ -62,12 +65,11 @@ export default function RecipeTable({ i }) {
       body: "Tem certeza que quer excluir esse equipamento? A ação não é reversivel",
       deleteFunc: async (id) => {
         await deleteEquipmentRecipe(id);
-        window.location.reload();
+        queryClient.invalidateQueries(["equipments"]);
       },
     },
   };
 
-  // ... (RESTO DO ARQUIVO PERMANECE IGUAL, POIS É LÓGICA DE UI)
   const openEditModal = (label, row) => {
     setSelectedRow(row);
     setEditType(label);
@@ -127,7 +129,10 @@ export default function RecipeTable({ i }) {
           body={currentModalConfig.body}
           neg_opt="Cancelar"
           pos_opt="Excluir"
-          func={() => currentModalConfig.deleteFunc(selectedRow?.ID)}
+          func={async () => {
+            await currentModalConfig.deleteFunc(selectedRow?.ID);
+            updateModalDeleteVisible(i.label, false); // Fecha o modal após deletar
+          }}
           isVisible={modalDeleteVisible[i.label] || false}
           setVisible={() => updateModalDeleteVisible(i.label, false)}
           style="waring"

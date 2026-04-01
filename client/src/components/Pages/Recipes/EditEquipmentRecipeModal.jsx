@@ -1,5 +1,7 @@
 import { IoMdClose } from "react-icons/io";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";3
+import { useQueryClient } from "@tanstack/react-query";
+
 import { parseBRL } from "../../../utils/IntUtils";
 
 import SelectMenu from "../../Ui/SelectMenu";
@@ -21,12 +23,12 @@ export default function EditEquipmentRecipeModal({
   const [equipmentRecipeName, setEquipmentRecipeName] = useState("");
   const [componentsRecipes, setComponentsRecipes] = useState([]);
 
-  // Listas de controle
   const [componentsRecipeList, setComponentRecipeList] = useState([]);
   const [componentsRecipeQuantity, setComponentsRecipeQuantity] = useState([]);
   const [quantityBackUp, setQuantityBackUp] = useState([]);
 
-  // 1. Carregar Materiais (SelectMenu)
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const fetchComponentsRecipes = async () => {
       try {
@@ -100,7 +102,6 @@ export default function EditEquipmentRecipeModal({
 
   const handleEdit = async () => {
     try {
-      // Verificação extra na hora de salvar
       if (!equipment || !equipment.ID) {
         alert("Erro: Equipamento não identificado.");
         return;
@@ -113,7 +114,6 @@ export default function EditEquipmentRecipeModal({
 
       await updateEquipmentRecipe(equipment?.ID, equipmentRecipeName);
 
-      // Prepara lista para salvar
       const quantities = componentsRecipeList.map((id) => {
         const item = componentsRecipeQuantity.find((q) => q.id === id);
         return {
@@ -122,7 +122,6 @@ export default function EditEquipmentRecipeModal({
         };
       });
 
-      // Salva/Atualiza Itens
       for (const item of quantities) {
         const old = quantityBackUp.find((b) => b.id === item.id);
         if (!old) {
@@ -132,7 +131,6 @@ export default function EditEquipmentRecipeModal({
         }
       }
 
-      // Deleta Itens removidos
       for (const oldItem of quantityBackUp) {
         const stillExists = quantities.some((e) => e.id === oldItem.id);
         if (!stillExists) {
@@ -140,8 +138,8 @@ export default function EditEquipmentRecipeModal({
         }
       }
 
+      queryClient.invalidateQueries(["equipments"]);
       clearStates();
-      window.location.reload();
     } catch (err) {
       console.error("Erro ao salvar:", err);
     }

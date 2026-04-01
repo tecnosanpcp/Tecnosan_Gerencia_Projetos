@@ -1,5 +1,7 @@
 import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { parseBRL } from "../../../utils/IntUtils";
 
 import SelectMenu from "../../Ui/SelectMenu";
@@ -14,6 +16,7 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
   const [componentsRecipes, setComponentsRecipes] = useState([]);
   const [componentsRecipeList, setComponentRecipeList] = useState([]);
   const [componentsRecipeQuantity, setComponentsRecipeQuantity] = useState([]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fletchComponentsRecipes = async () => {
@@ -60,7 +63,8 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
         );
       }
       clearStates();
-      window.location.reload();
+      queryClient.invalidateQueries(["equipments"]);
+
     } catch (err) {
       console.error("Erro ao salvar lista de componentes", err);
     }

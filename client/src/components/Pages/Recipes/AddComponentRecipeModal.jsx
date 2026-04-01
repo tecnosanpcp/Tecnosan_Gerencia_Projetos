@@ -1,5 +1,6 @@
 import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import SelectMenu from "../../Ui/SelectMenu";
 
@@ -9,6 +10,8 @@ import { createComponentRecipe } from "@services/ComponentRecipes.js";
 
 export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
   const [componenteRecipeName, setComponentRecipeName] = useState("");
+
+  const queryClient = useQueryClient();
 
   const [men, setMen] = useState("");
   const [hours, setHours] = useState("");
@@ -64,7 +67,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
       const recipe_component = await createComponentRecipe(
         componenteRecipeName,
         Number(men),
-        Number(hours)
+        Number(hours),
       );
 
       const component_recipe_id = recipe_component[0].component_recipe_id;
@@ -73,12 +76,12 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
         await createCompRecipeMat(
           component_recipe_id,
           m.id,
-          Number(m.quantity)
+          Number(m.quantity),
         );
       }
 
       clearStates();
-      window.location.reload();
+      queryClient.invalidateQueries(["components"]);
     } catch (err) {
       console.error("Erro ao salvar lista de materiais", err);
     }
@@ -197,9 +200,9 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                       {Array.isArray(materialsList) && materialsList.length > 0
                         ? (() => {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
-                            return found ? found.material_name ?? "-" : "-";
+                            return found ? (found.material_name ?? "-") : "-";
                           })()
                         : "-"}
                     </td>
@@ -209,9 +212,9 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                       {Array.isArray(materialsList) && materialsList.length > 0
                         ? (() => {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
-                            return found ? found.material_desc ?? "-" : "-";
+                            return found ? (found.material_desc ?? "-") : "-";
                           })()
                         : "-"}
                     </td>
@@ -221,7 +224,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                       {Array.isArray(materialsList) && materialsList.length > 0
                         ? (() => {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
                             return found
                               ? Number(found.value).toLocaleString("pt-BR", {
@@ -246,8 +249,8 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                           const newValue = Number(e.target.value);
                           setMaterialsQuantity((prev) =>
                             prev.map((m) =>
-                              m.id === id ? { ...m, quantity: newValue } : m
-                            )
+                              m.id === id ? { ...m, quantity: newValue } : m,
+                            ),
                           );
                         }}
                       />
@@ -265,7 +268,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                             materialsList.length > 0
                           ) {
                             const found = materials.find(
-                              (m) => m.material_id === id
+                              (m) => m.material_id === id,
                             );
                             return found ? Number(found.value) : 0;
                           }
@@ -282,7 +285,9 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                         className="bnt font-normal font-sans"
                         type="button"
                         onClick={() => {
-                          setMaterialsList(materialsList.filter((i) => i != id));
+                          setMaterialsList(
+                            materialsList.filter((i) => i != id),
+                          );
                         }}
                       >
                         Excluir
@@ -296,7 +301,6 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
 
           {/* Botões */}
           <div className="flex flex-row justify-end items-center space-x-4">
-            
             <div className="bg-white p-2 rounded">
               Total:{" "}
               {totalValue.toLocaleString("pt-BR", {
