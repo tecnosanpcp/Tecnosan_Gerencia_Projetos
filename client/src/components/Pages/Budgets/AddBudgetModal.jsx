@@ -11,6 +11,7 @@ function AddBudgetModal({ isOpen, setOpen }) {
     try {
       e.preventDefault();
       const user = await VerifyAuth();
+      console.log(user.user_id, budget_name, budget_local)
       await createBudget(user.user_id, budget_name, budget_local);
       window.location.reload();
     } catch (error) {

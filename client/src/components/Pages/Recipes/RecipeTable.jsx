@@ -10,8 +10,6 @@ import { deleteMaterial } from "@services/MaterialService.js";
 import { deleteComponentRecipe } from "@services/ComponentRecipes.js";
 import { deleteEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { useQueryClient } from "@tanstack/react-query";
-
-// Importa a função CORRETA
 import { deleteAccessory } from "@services/AccessoriesServices.js";
 
 export default function RecipeTable({ i }) {

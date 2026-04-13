@@ -1,15 +1,15 @@
 import { pool } from "../config/db.js";
 
 export const createBudget = async (req, res) => {
-  const { user_id, budget_name, budget_local, deadline, start_date } = req.body;
+  const { user_id, budget_name, budget_local } = req.body;
   try {
     const client = await pool.connect();
     await client.query("BEGIN");
 
     const budgetResult = await client.query(
-      `INSERT INTO budgets(budget_name, budget_local, status, start_date, deadline) 
-      VALUES ($1, $2, 'Em Planejamento', $3, $4) RETURNING budget_id`,
-      [budget_name, budget_local, deadline, start_date],
+      `INSERT INTO budgets(budget_name, budget_local, status) 
+      VALUES ($1, $2, 'Em Planejamento') RETURNING budget_id`,
+      [budget_name, budget_local],
     );
 
     const budget_id = budgetResult.rows[0].budget_id;
