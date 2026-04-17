@@ -7,7 +7,6 @@ export default function BudgetHeader({ currentBudget }) {
   useEffect(() => {
     const loadData = async () => {
       const budget_summary_data = await vwBudgetsMaterialsSummary();
-      // Garante que seja um array para evitar erros no reduce
       setBudgetsSummary(
         Array.isArray(budget_summary_data) ? budget_summary_data : [],
       );

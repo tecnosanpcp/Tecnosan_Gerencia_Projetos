@@ -16,3 +16,15 @@ export async function createRelation(budget_id, equipment_id, quantity_plan) {
     throw error;
   }
 }
+
+export async function deleteRelation(budget_id, equipment_id) {
+  try {
+    if (!budget_id || !equipment_id) throw new Error("IDs ausentes para exclusão");
+    
+    const response = await api.delete(`/budgets-equip-recipes/${budget_id}/${equipment_id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Erro no Service:", error);
+    throw error;
+  }
+}

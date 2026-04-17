@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
 // Services
@@ -14,20 +15,24 @@ import BudgetsMain from "./BudgetsMain";
 import BudgetFooter from "./BudgetFooter";
 
 function Budgets() {
-  const [budgets, setBudgets] = useState([]);
+  const { data: budgets, isLoading, isError, error } = useQuery({
+    queryKey: ["budgets"],
+    queryFn: async () => {
+      const user = await VerifyAuth();
+      return await listBudgets(user.user_id);
+    }
+  });
   const [selectedBudget, setSelectedBudget] = useState(null);
   const [isAddBudgetModalOpen, setAddBudgetModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    async function LoadData() {
-      const user = await VerifyAuth();
+  if (isLoading) {
+    return <div>Carregando orçamentos...</div>;
+  }
 
-      const data = await listBudgets(user.user_id);
-      if (data) setBudgets(data);
-    }
-    LoadData();
-  }, []);
+  if (isError) {
+    return <div>Erro ao carregar dados: {error.message}</div>;
+  }
 
   return (
     <DashboardLayout

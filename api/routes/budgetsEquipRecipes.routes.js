@@ -12,5 +12,4 @@ router.post("/", createBudgetsEquipRecipes);
 router.get("/", readBudgetsEquipRecipes);
 router.put("/:budget_id/:equipment_id", updateBudgetsEquipRecipes);
 router.delete("/:budget_id/:equipment_id", deleteBudgetsEquipRecipes);
-
 export default router;

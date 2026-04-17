@@ -2,18 +2,38 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 import { createBudget } from "@services/BudgetService.js";
 import { VerifyAuth } from "@services/AuthService.js";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 function AddBudgetModal({ isOpen, setOpen }) {
   const [budget_name, set_budget_name] = useState("");
   const [budget_local, set_budget_local] = useState("");
 
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({ user_id, name, local }) => {
+      return await createBudget(user_id, name, local);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      setOpen(false);
+      set_budget_name("");
+      set_budget_local("");
+    },
+    onError: (error) => {
+      alert("Erro ao criar orçamento: " + error.message);
+    },
+  });
+
   const handleSubmit = async (e) => {
     try {
       e.preventDefault();
       const user = await VerifyAuth();
-      console.log(user.user_id, budget_name, budget_local)
-      await createBudget(user.user_id, budget_name, budget_local);
-      window.location.reload();
+      mutation.mutate({
+        user_id: user.user_id,
+        name: budget_name,
+        local: budget_local,
+      });
     } catch (error) {
       console.error(error);
     }

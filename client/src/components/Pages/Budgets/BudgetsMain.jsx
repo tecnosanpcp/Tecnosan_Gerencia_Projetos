@@ -1,190 +1,159 @@
-// Import de funções
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Import de componentes especificos a esta página
+// Componentes
 import BudgetEquipmentTable from "./BudgetEquipmentsTable";
 import BudgetTimeline from "./BudgetTimeline";
 import NewEquipmentModal from "../../Ui/newEquipmentModal";
 import BudgetAccessories from "./BudgetAccessories";
 
-// Iport Services
-import {
-  getTasksTimeline,
-  getEquipmentsTimeline,
-  getProjectsTimeline,
-} from "@services/ViewsSummary.js";
+// Services
+import { getTasksTimeline, getEquipmentsTimeline, getProjectsTimeline } from "@services/ViewsSummary.js";
 import { readEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { createRelation } from "@services/BudgetsEquipRecipesServices.js";
 import { VerifyAuth } from "@services/AuthService.js";
-
-// Telas
-const viewLoader = (
-  user_id,
-  currentBudget,
-  allBudgets,
-  searchTerm,
-  view,
-  timelineTasks,
-  timelineEquipments,
-  timelineBudgets
-) => {
-  switch (view) {
-    case "equipments":
-      return (
-        <BudgetEquipmentTable
-          user_id={user_id}
-          currentBudget={currentBudget}
-          allBudgets={allBudgets}
-          searchTerm={searchTerm}
-          timelineTasks={timelineTasks}
-          timelineEquipments={timelineEquipments}
-        />
-      );
-    case "timeline":
-      return (
-        <BudgetTimeline
-          user_id={user_id}
-          currentBudget={currentBudget}
-          allBudgets={allBudgets}
-          searchTerm={searchTerm}
-          timelineTasks={timelineTasks}
-          timelineEquipments={timelineEquipments}
-          timelineBudgets={timelineBudgets}
-        />
-      );
-    // --- NOVO CASE ---
-    case "accessories":
-      return (
-        <BudgetAccessories
-          currentBudget={currentBudget}
-          allBudgets={allBudgets}
-          searchTerm={searchTerm}
-        />
-      );
-    default:
-      return <h1>Escolha uma tela</h1>;
-  }
-};
-
-const btnView = (view, setView, label, text) => {
-  if (view != label) {
-    return (
-      <button className="bnt" onClick={() => setView(label)}>
-        Ir para {text}
-      </button>
-    );
-  }
-};
+import { vwEquipmentRecipesMaterialSummary, vwComponentRecipeMaterialsSummary } from "@services/ViewsService.js";
 
 export default function BudgetsMain({ currentBudget, allBudgets }) {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("equipments");
   const [isVisible, setVisible] = useState(false);
 
-  const [timelineTasks, setTimelineTasks] = useState([]);
-  const [timelineEquipments, setTimelineEquipments] = useState([]);
-  const [timelineBudgets, setTimelineBudgets] = useState([]);
-  const [equipmentsRecipes, setEquipmentsRecipes] = useState([]);
-  const [userId, setUserId] = useState(0);
+  // ==========================================
+  // 1. QUERIES PADRONIZADAS (CACHE GLOBAL)
+  // ==========================================
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [
-          timelineTasksData,
-          timelineEquimentData,
-          timelineBudgetsData,
-          userData,
-          equipmentsData,
-        ] = await Promise.all([
-          getTasksTimeline(),
-          getEquipmentsTimeline(),
-          getProjectsTimeline(),
-          VerifyAuth(),
-          readEquipmentRecipe(),
+  const { data: userData } = useQuery({ 
+    queryKey: ["authUser"], 
+    queryFn: VerifyAuth, 
+    staleTime: Infinity 
+  });
+
+  const tasksQuery = useQuery({ 
+    queryKey: ["timelineTasks"], 
+    queryFn: getTasksTimeline 
+  });
+
+  const equipTimelineQuery = useQuery({ 
+    queryKey: ["timelineEquipments"], 
+    queryFn: getEquipmentsTimeline 
+  });
+
+  const budgetsTimelineQuery = useQuery({ 
+    queryKey: ["timelineBudgets"], 
+    queryFn: getProjectsTimeline 
+  });
+
+  const recipesQuery = useQuery({ 
+    queryKey: ["equipmentRecipes"], 
+    queryFn: readEquipmentRecipe 
+  });
+
+  // Query detalhada dos materiais do orçamento
+  const budgetDetailsQuery = useQuery({
+    queryKey: ["budgetDetails", currentBudget?.id || currentBudget?.budget_id || "all"],
+    queryFn: async () => {
+      const budgetsToProcess = currentBudget ? [currentBudget] : (allBudgets || []);
+      const results = [];
+      for (const bud of budgetsToProcess) {
+        const id = bud.id || bud.budget_id;
+        if (!id) continue;
+        const [equipSummary, compSummary] = await Promise.all([
+          vwEquipmentRecipesMaterialSummary(id),
+          vwComponentRecipeMaterialsSummary(id),
         ]);
-        setTimelineTasks(timelineTasksData);
-        setTimelineEquipments(timelineEquimentData);
-        setTimelineBudgets(timelineBudgetsData);
-        if (userData) setUserId(userData.user_id);
-        setEquipmentsRecipes(equipmentsData);
-      } catch (error) {
-        console.error(error);
+        results.push({
+          budget_id: id,
+          budget_name: bud.name || bud.budget_name,
+          status: bud.status,
+          equipments: equipSummary || [],
+          components: compSummary || []
+        });
       }
+      return results;
+    },
+    enabled: !!currentBudget || (allBudgets?.length > 0),
+  });
+
+  // ==========================================
+  // 2. MUTAÇÃO (CREATE RELATION)
+  // ==========================================
+  const addEquipMutation = useMutation({
+    mutationFn: ({ budgetId, recipeId, qty }) => createRelation(budgetId, recipeId, qty),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budgetDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["timelineTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["timelineEquipments"] });
+      setVisible(false);
+    }
+  });
+
+  const renderView = () => {
+    const commonProps = {
+      user_id: userData?.user_id,
+      currentBudget,
+      allBudgets,
+      searchTerm,
+      groupedData: budgetDetailsQuery.data || [],
+      timelineTasks: tasksQuery.data || [],
+      timelineEquipments: equipTimelineQuery.data || [],
     };
-    loadData();
-  }, []);
+
+    switch (view) {
+      case "equipments": return <BudgetEquipmentTable {...commonProps} />;
+      case "timeline": return <BudgetTimeline {...commonProps} timelineBudgets={budgetsTimelineQuery.data || []} />;
+      case "accessories": return <BudgetAccessories {...commonProps} />;
+      default: return <h1>Escolha uma tela</h1>;
+    }
+  };
 
   return (
     <React.Fragment>
-      <main className="card m-0 p-4 gap-4 overflow-y-auto" key={1}>
-        {/* Barra de Pesquisa */}
+      <main className="card m-0 p-4 gap-4 overflow-y-auto">
         <div className="flex flex-row justify-between w-full">
-          <form
-            className="flex flex-row justify-between space-x-4 p-2 rounded-xl bg-white-gray h-fit"
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <button>
-              <FaSearch />
-            </button>
+          <div className="flex flex-row items-center space-x-4 p-2 rounded-xl bg-gray-100 h-fit">
+            <FaSearch className="text-gray-500" />
             <input
               type="text"
               placeholder="Pesquisar equipamento"
-              className="bg-transparent"
+              className="bg-transparent outline-none"
               value={searchTerm}
-              onChange={(e) => {
-                e.preventDefault();
-                setSearchTerm(e.target.value);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </form>
+          </div>
 
-          {/* Botões de ações */}
-          <div className="flex flex-row justify-center gap-4 h-fit">
+          <div className="flex flex-row gap-4 h-fit">
             {currentBudget && (
-                <button
-                className="bnt-add"
-                onClick={() => {
-                    setVisible(true);
-                }}
-                >
+              <button className="bnt-add" onClick={() => setVisible(true)}>
                 + Novo Equipamento
-                </button>
+              </button>
             )}
-            
-            {btnView(view, setView, "equipments", "Equipamentos")}
-            {btnView(view, setView, "timeline", "Cronograma")}
-            {btnView(view, setView, "accessories", "Acessórios")}
+            <button className={`bnt ${view === 'equipments' ? 'bg-blue-100' : ''}`} onClick={() => setView("equipments")}>Equipamentos</button>
+            <button className={`bnt ${view === 'timeline' ? 'bg-blue-100' : ''}`} onClick={() => setView("timeline")}>Cronograma</button>
+            <button className={`bnt ${view === 'accessories' ? 'bg-blue-100' : ''}`} onClick={() => setView("accessories")}>Acessórios</button>
           </div>
         </div>
 
-        {viewLoader(
-          userId,
-          currentBudget,
-          allBudgets,
-          searchTerm,
-          view,
-          timelineTasks,
-          timelineEquipments,
-          timelineBudgets
+        {budgetDetailsQuery.isLoading ? (
+          <div className="text-center p-10">Sincronizando PCP...</div>
+        ) : (
+          renderView()
         )}
       </main>
 
       <NewEquipmentModal
-        key={2}
         isVisible={isVisible}
         onClose={() => setVisible(false)}
-        onConfirm={async (selectedRecipe, quantity) => {
-          try {
-            await createRelation(currentBudget?.id, selectedRecipe, quantity);
-          } catch (error) {
-            console.error(error);
-          }
+        onConfirm={(selectedRecipe, quantity) => {
+          addEquipMutation.mutate({
+            budgetId: currentBudget?.id || currentBudget?.budget_id,
+            recipeId: selectedRecipe,
+            qty: quantity
+          });
         }}
-        recipesList={equipmentsRecipes}
+        recipesList={recipesQuery.data || []}
       />
     </React.Fragment>
   );

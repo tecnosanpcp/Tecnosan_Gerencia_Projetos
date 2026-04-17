@@ -1,130 +1,120 @@
-// Import de funções
-import React, { useState, useEffect } from "react";
-
-// Import de icones
+import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Import de componentes especificos a esta página
+// Componentes
 import ProjectEquipmentsTable from "./ProjectEquipmentsTable";
-import ProjectAccessoriesTable from "./ProjectAccessoriesTable"; // Importado
+import ProjectAccessoriesTable from "./ProjectAccessoriesTable";
 import ProjectTimeline from "./ProjectTimeline";
 import NewEquipmentModal from "../../Ui/newEquipmentModal";
 
-import {
-  readEquipmentRecipe,
-  createEquipmentRecipe,
-} from "@services/EquipmentRecipesService.js";
+// Services
+import { readEquipmentRecipe, createEquipmentRecipe } from "@services/EquipmentRecipesService.js";
+import { vwProjectMaterialsSummary, vwSummaryStatus } from "@services/ViewsSummary.js";
+import { VerifyAuth } from "@services/AuthService.js";
 
-const viewLoader = (searchTerm, times, view, onRefresh) => {
-  switch (view) {
-    case "equipments":
-      return (
-        <ProjectEquipmentsTable
-          searchTerm={searchTerm}
-          times={times ?? {}}
-          onRefresh={onRefresh}
-        />
-      );
-    case "timeline":
-      return <ProjectTimeline searchTerm={searchTerm} times={times ?? {}} />;
-    case "accessories":
-      return (
-        <ProjectAccessoriesTable
-          searchTerm={searchTerm}
-          onRefresh={onRefresh}
-        />
-      );
-    default:
-      break;
-  }
-};
-
-const btnView = (view, setView, label, text) => {
-  if (view != label) {
-    return (
-      <button className="bnt" onClick={() => setView(label)}>
-        Ir para {text}
-      </button>
-    );
-  }
-};
-
-export default function ProjectsMain({ times, onRefresh }) {
+export default function ProjectsMain({ times }) {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [modalVisible, setModalVible] = useState(false);
-  const [recipes, setRecipes] = useState([]);
-
   const [view, setView] = useState("equipments");
+  const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      const recipe_data = await readEquipmentRecipe();
-      setRecipes(recipe_data);
-    };
-    loadData();
-  }, []);
+  // ==========================================
+  // 1. QUERIES CENTRALIZADAS
+  // ==========================================
+  
+  // Lista de Receitas para o Modal
+  const recipesQuery = useQuery({
+    queryKey: ["equipmentRecipes"],
+    queryFn: readEquipmentRecipe
+  });
 
-  const handleCreateEquipment = async (recipe, quantity) => {
-    try {
-      // criando vários equipamentos iguais para o projeto
-      for (let index = 0; index < quantity.length; index++) {
+  // Resumo de Materiais (Consumo Real)
+  const materialsSummaryQuery = useQuery({
+    queryKey: ["projectMaterialsSummary"],
+    queryFn: async () => {
+      const user = await VerifyAuth();
+      return vwProjectMaterialsSummary(user.user_id);
+    }
+  });
+
+  // Status dos Componentes e Equipamentos
+  const statusSummaryQuery = useQuery({
+    queryKey: ["projectStatusSummary"],
+    queryFn: vwSummaryStatus
+  });
+
+  // ==========================================
+  // 2. MUTAÇÃO PARA NOVO EQUIPAMENTO
+  // ==========================================
+  const addEquipMutation = useMutation({
+    mutationFn: async ({ recipe, quantity }) => {
+      for (let i = 0; i < quantity; i++) {
         await createEquipmentRecipe(recipe);
       }
-      if (onRefresh) onRefresh();
-    } catch (error) {
-      console.error(error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projectMaterialsSummary"] });
+      queryClient.invalidateQueries({ queryKey: ["projectStatusSummary"] });
+      setModalVisible(false);
+    }
+  });
+
+  const renderView = () => {
+    const commonProps = {
+      searchTerm,
+      times: times ?? {},
+      materialsSummary: materialsSummaryQuery.data || [],
+      statusSummary: statusSummaryQuery.data || {},
+    };
+
+    switch (view) {
+      case "equipments": return <ProjectEquipmentsTable {...commonProps} />;
+      case "timeline": return <ProjectTimeline {...commonProps} />;
+      case "accessories": return <ProjectAccessoriesTable {...commonProps} />;
+      default: return null;
     }
   };
 
   return (
     <React.Fragment>
       <main className="card m-0 p-4 gap-4 overflow-y-auto">
-        {/* Barra de Pesquisa */}
         <div className="flex flex-row justify-between w-full">
-          <form
-            className="flex flex-row justify-between space-x-4 p-2 rounded-xl bg-white-gray h-fit w-fit"
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <button>
-              <FaSearch />
-            </button>
+          <div className="flex flex-row items-center space-x-4 p-2 rounded-xl bg-gray-100 h-fit">
+            <FaSearch className="text-gray-400" />
             <input
               type="text"
               placeholder="Pesquisar..."
-              className="bg-transparent"
+              className="bg-transparent outline-none"
               value={searchTerm}
-              onChange={(e) => {
-                e.preventDefault();
-                setSearchTerm(e.target.value);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </form>
+          </div>
 
-          {/* Botões de ações */}
-          <div className="flex flex-row justify-center gap-4 h-fit">
+          <div className="flex flex-row gap-4 h-fit">
             {view === "equipments" && (
-              <button
-                className="bnt-add"
-                onClick={() => setModalVible(!modalVisible)}
-              >
+              <button className="bnt-add" onClick={() => setModalVisible(true)}>
                 + Novo Equipamento
               </button>
             )}
-            {btnView(view, setView, "equipments", "Equipamentos")}
-            {btnView(view, setView, "timeline", "Cronograma")}
-            {btnView(view, setView, "accessories", "Acessórios")}
+            <button className={`bnt ${view === 'equipments' ? 'bg-blue-100' : ''}`} onClick={() => setView("equipments")}>Equipamentos</button>
+            <button className={`bnt ${view === 'timeline' ? 'bg-blue-100' : ''}`} onClick={() => setView("timeline")}>Cronograma</button>
+            <button className={`bnt ${view === 'accessories' ? 'bg-blue-100' : ''}`} onClick={() => setView("accessories")}>Acessórios</button>
           </div>
         </div>
 
-        {viewLoader(searchTerm, times, view, onRefresh)}
+        {materialsSummaryQuery.isLoading ? (
+          <div className="text-center p-10">Carregando execução...</div>
+        ) : (
+          renderView()
+        )}
       </main>
+
       <NewEquipmentModal
         isVisible={modalVisible}
-        onClose={() => setModalVible(false)}
-        onConfirm={handleCreateEquipment}
-        recipesList={recipes}
+        onClose={() => setModalVisible(false)}
+        onConfirm={(recipe, quantity) => addEquipMutation.mutate({ recipe, quantity })}
+        recipesList={recipesQuery.data || []}
       />
     </React.Fragment>
   );

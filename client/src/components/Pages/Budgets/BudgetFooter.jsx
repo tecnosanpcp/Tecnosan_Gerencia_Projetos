@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { VerifyAuth } from "@services/AuthService.js";
 import { createProject } from "@services/ProjectService.js";
 import { uploadStatusBudget } from "@services/BudgetService.js";
@@ -10,52 +11,49 @@ import tick_double from "@imgs/tick-double.png";
 import archive from "@imgs/archive.png";
 
 export default function BudgetFooter({ currentBudget }) {
+  const queryClient = useQueryClient();
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
 
-  const handleSubmit = async () => {
-  try {
-    if (!currentBudget) {
-      throw new Error("Escolha um projeto!");
+  // Mutação para Aprovar e Criar Projeto
+  const approveMutation = useMutation({
+    mutationFn: async () => {
+      const user = await VerifyAuth();
+      // Cria o projeto
+      await createProject(
+        user.user_id,
+        currentBudget.name,
+        "desc",
+        currentBudget.local,
+        currentBudget.start_date,
+        currentBudget.deadline,
+        currentBudget.deadline,
+        "Pending",
+        currentBudget.id
+      );
+      // Atualiza o status do orçamento
+      return await uploadStatusBudget(currentBudget.id, "Aprovado");
+    },
+    onSuccess: () => {
+      // Atualiza os dados de orçamentos e projetos no cache
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setShowApproveModal(false);
     }
+  });
 
-    const user = await VerifyAuth();
-
-    // Organizando os parâmetros na ordem correta da função
-    await createProject(
-      user.user_id,             // 1. user_id
-      currentBudget.name,       // 2. project_name
-      "desc",                   // 3. project_desc
-      currentBudget.local,      // 4. project_local
-      currentBudget.start_date, // 5. start_date
-      currentBudget.deadline,   // 6. completion_date (usando o deadline como previsão)
-      currentBudget.deadline,   // 7. deadline
-      "Pending",                // 8. status (corrigido o erro de digitação)
-      currentBudget.id          // 9. budget_id
-    );
-
-    await uploadStatusBudget(currentBudget.id, "Aprovado");
-    setShowApproveModal(false);
-    
-  } catch (error) {
-    console.error("Erro ao processar aprovação:", error);
-    alert("Erro ao criar projeto. Verifique os logs.");
-  }
-};
-
-  const handleConfirmArchive = async (budget_id) => {
-    try {
-      if (!budget_id) {
-        throw new Error("Faltando dados");
-      }
-      await uploadStatusBudget(budget_id, "Arquivado");
+  // Mutação para Arquivar
+  const archiveMutation = useMutation({
+    mutationFn: (id) => uploadStatusBudget(id, "Arquivado"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
       setShowArchiveModal(false);
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao arquivar orçamento.");
     }
-  };
+  });
+
+  // Substitui o teu handleSubmit antigo
+  const handleApprove = () => approveMutation.mutate();
+  const handleArchive = () => archiveMutation.mutate(currentBudget.id);
 
   return (
     <React.Fragment>
@@ -85,7 +83,7 @@ export default function BudgetFooter({ currentBudget }) {
         body="Tem certeza que deseja arquivar este orçamento? O projeto não poderá ser criado a partir dele se estiver arquivado."
         neg_opt="Cancelar"
         pos_opt="Sim, Arquivar"
-        func={() => handleConfirmArchive(currentBudget.id)}
+        func={handleArchive}
         isVisible={showArchiveModal}
         setVisible={setShowArchiveModal}
         style="waring"
@@ -96,11 +94,7 @@ export default function BudgetFooter({ currentBudget }) {
         body="Deseja aprovar este projeto? Isso mudará o status para 'Em Andamento' e liberará o cadastro de componentes."
         neg_opt="Cancelar"
         pos_opt="Sim, Aprovar"
-        func={(e) => {
-          e.preventDefault();
-          handleSubmit();
-          window.location.reload();
-        }}
+        func={handleApprove}
         isVisible={showApproveModal}
         setVisible={setShowApproveModal}
         style="pop-up"

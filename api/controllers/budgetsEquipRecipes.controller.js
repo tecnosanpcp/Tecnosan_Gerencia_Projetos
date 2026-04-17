@@ -49,23 +49,24 @@ export const updateBudgetsEquipRecipes = async (req, res) => {
       .json({ error: "Error ao atualizar receita do componente a orçamento" });
   }
 };
-
 export const deleteBudgetsEquipRecipes = async (req, res) => {
   try {
     const { budget_id, equipment_id } = req.params;
+
     const response = await pool.query(
       `DELETE FROM budgets_equipments_recipes 
-        WHERE 
-            budget_id = $1 AND equipment_id = $2
-        RETURNING *;`,
+        WHERE budget_id = $1 AND equipment_recipe_id = $2 
+        RETURNING *;`, // MUDADO: de equipment_id para equipment_recipe_id
       [budget_id, equipment_id]
     );
 
+    if (response.rowCount === 0) {
+      return res.status(404).json({ message: "Relação não encontrada no banco." });
+    }
+
     res.status(200).json(response.rows);
-    
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error ao remover receita do componente a orçamento" });
+    console.error("ERRO NO SQL:", error.message);
+    res.status(500).json({ error: "Erro interno ao deletar" });
   }
 };

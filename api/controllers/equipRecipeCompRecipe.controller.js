@@ -115,18 +115,17 @@ export const updateDates = async (req, res) => {
 export const deleteEquipRecipeCompRecipe = async (req, res) => {
   try {
     const { equipment_recipe_id, component_recipe_id } = req.params;
+    
     const response = await pool.query(
-      `
-        DELETE FROM equipment_recipes_component_recipes 
-        WHERE equipment_recipe_id = $1
-        AND component_recipe_id = $2
-        RETURNING *`,
-      [equipment_recipe_id, component_recipe_id],
+      `DELETE FROM equip_recipes_comp_recipes 
+       WHERE equipment_recipe_id = $1 AND component_recipe_id = $2 
+       RETURNING *;`,
+      [equipment_recipe_id, component_recipe_id]
     );
+
     res.status(200).json(response.rows);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error ao atualizar receita do equipamento" + error });
+    console.error(error);
+    res.status(500).json({ error: "Erro ao deletar relação equipamento-componente" });
   }
 };
