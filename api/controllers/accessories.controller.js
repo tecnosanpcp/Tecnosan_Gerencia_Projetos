@@ -86,7 +86,6 @@ export const deleteAccessory = async (req, res) => {
 
 export const loanToProject = async (req, res) => {
   try {
-    // Recebe 'taken_at' (Data) e NÃO recebe mais 'notes'
     const { project_id, accessory_id, user_id, taken_at } = req.body;
 
     const result = await pool.query(
@@ -106,23 +105,17 @@ export const loanToProject = async (req, res) => {
   }
 };
 
-// No arquivo: accessories.controller.js
-
 export const loanToBudget = async (req, res) => {
   try {
-    // AGORA RECEBE TODOS OS DADOS DE UMA VEZ
     const { 
       budget_id, 
       accessory_id, 
-      user_id,         // Quem retira (taken_by)
-      taken_at,        // Data retirada
-      received_by_id,  // Quem devolve (recebe de volta)
-      returned_at      // Data devolução
+      user_id,         
+      taken_at,        
+      received_by_id,  
+      returned_at      
     } = req.body;
 
-    // A query insere tudo junto. 
-    // Isso satisfaz a constraint do banco (ou tudo NULL ou tudo PREENCHIDO nas colunas de retorno)
-    // E geralmente faz com que a Trigger de status entenda que o ciclo fechou (mantendo 'Available')
     const result = await pool.query(
       `INSERT INTO accessories_budgets 
        (budget_id, accessory_id, taken_by_user_id, taken_at, received_by_user_id, returned_at)
@@ -153,8 +146,6 @@ export const returnAccessory = async (req, res) => {
     }
 
     const tableName = type === 'project' ? 'accessories_projects' : 'accessories_budgets';
-
-    // 2. Usei COALESCE: Se vier data, usa ela. Se não vier, usa NOW()
     const result = await pool.query(
       `UPDATE ${tableName}
        SET returned_at = COALESCE($3, NOW()), 
@@ -172,7 +163,6 @@ export const returnAccessory = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-// ... imports
 
 export const listActiveLoans = async (req, res) => {
   try {
@@ -186,8 +176,6 @@ export const listActiveLoans = async (req, res) => {
     return res.status(500).json({ error: "Erro ao listar histórico." });
   }
 };
-
-// ... no final do arquivo accessories.controller.js
 
 export const listBudgetHistory = async (req, res) => {
   try {
@@ -218,8 +206,6 @@ export const listBudgetHistory = async (req, res) => {
     return res.status(500).json({ error: "Erro ao listar histórico de orçamentos." });
   }
 };
-
-// accessories.controller.js
 
 // --- ATUALIZAR PLANEJAMENTO ---
 export const updateBudgetLoan = async (req, res) => {
