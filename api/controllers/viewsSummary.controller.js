@@ -27,9 +27,7 @@ function buildHierarchy(rows) {
       };
     }
 
-    // Se o LEFT JOIN trouxe um projeto sem equipamentos (caso raro, mas possível), paramos aqui
     if (!equipment_id) return;
-
     const proj = projects[project_id];
 
     // --- 2. EQUIPMENT ---
@@ -41,9 +39,7 @@ function buildHierarchy(rows) {
       };
     }
 
-    // Se o componente for null, paramos aqui
     if (!component_id) return;
-
     const equip = proj.equipments[equipment_id];
 
     // --- 3. COMPONENT ---
@@ -57,9 +53,7 @@ function buildHierarchy(rows) {
 
     const comp = equip.components[component_id];
 
-    // --- 4. MATERIAL (A Correção Importante) ---
-    // Só adicionamos no array se o material_id existir. 
-    // Como usamos LEFT JOIN, ele pode vir NULL se for um projeto novo.
+    // --- 4. MATERIAL ---
     if (material_id) {
       comp.materials.push({
         material_id,
@@ -71,14 +65,12 @@ function buildHierarchy(rows) {
     }
   });
 
-  // transformar objetos internos em arrays (Isso mantive igual ao seu)
   return Object.values(projects).map((project) => ({
     ...project,
     equipments: Object.values(project.equipments).map((equip) => ({
       ...equip,
       components: Object.values(equip.components).map((comp) => ({
           ...comp,
-          // Garante array vazio se não tiver materiais
           materials: comp.materials || [] 
       })),
     })),
@@ -90,8 +82,9 @@ export const vwProjectMaterialsSummary = async (req, res) => {
     const { user_id } = req.params;
 
     if (!user_id) {
-      return res.res(500).json("O Usuário está vazio");
+      return res.status(400).json({ error: "O ID do usuário é obrigatório" });
     }
+    
     const response = await pool.query(
       `SELECT *
        FROM vw_project_consumed_materials 
@@ -99,10 +92,10 @@ export const vwProjectMaterialsSummary = async (req, res) => {
       [user_id]
     );
 
-    const rows = response.rows;
-    res.status(200).json(buildHierarchy(rows));
+    res.status(200).json(buildHierarchy(response.rows));
   } catch (error) {
-    res.status(500).json({ error: "Erro ao listar sumário" });
+    console.error(error);
+    res.status(500).json({ error: "Erro interno ao listar sumário" });
   }
 };
 
@@ -110,8 +103,9 @@ export const totalValuesProjects = async (req, res) => {
   try {
     const { user_id } = req.params;
 
-    if (!user_id)
-      return res.status(404).json({ error: "Usuário não encontrado" });
+    if (!user_id) {
+      return res.status(400).json({ error: "O ID do usuário é obrigatório" });
+    }
 
     const response = await pool.query(
       `SELECT 
@@ -130,7 +124,8 @@ export const totalValuesProjects = async (req, res) => {
 
     res.status(200).json(response.rows);
   } catch (error) {
-    res.status(500).json({ error: "Falha no back-end" });
+    console.error(error);
+    res.status(500).json({ error: "Falha interna no servidor" });
   }
 };
 
@@ -138,8 +133,9 @@ export const totalMaterialsProjects = async (req, res) => {
   try {
     const { user_id } = req.params;
 
-    if (!user_id)
-      return res.status(404).json({ error: "Usuário não encontrado" });
+    if (!user_id) {
+      return res.status(400).json({ error: "O ID do usuário é obrigatório" });
+    }
 
     const response = await pool.query(
       `SELECT 
@@ -162,33 +158,34 @@ export const totalMaterialsProjects = async (req, res) => {
 
     res.status(200).json(response.rows);
   } catch (error) {
-    res.status(500).json({ error: "Falha no back-end" });
+    console.error(error);
+    res.status(500).json({ error: "Falha interna no servidor" });
   }
 };
 
-export const vwTotalsMaterialsProjecst = async (req, res) => {
+// Alterado o nome da função corrigindo o typo (lembre de mudar na rota!)
+export const vwTotalsMaterialsProjects = async (req, res) => {
   try {
     const { user_id } = req.params;
 
     if (!user_id) {
-      return res.status(500).json({ error: "Usuário vazio" });
+      return res.status(400).json({ error: "O ID do usuário é obrigatório" });
     }
 
     const response = await pool.query(
-      `
-        SELECT 
+      `SELECT 
           ms.* 
         FROM vw_projects_materials_summary ms 
         JOIN projects_users pu ON pu.project_id = ms.project_id 
         WHERE pu.user_id = $1
-        ORDER BY ms.project_id, ms.material_id;;
-        `,
+        ORDER BY ms.project_id, ms.material_id;`,
       [user_id]
     );
 
     res.status(200).json(response.rows);
   } catch (error) {
-    res.status(500).json({ error: "Erro na requisição" });
+    console.error(error);
+    res.status(500).json({ error: "Erro interno na requisição" });
   }
 };
 
@@ -197,7 +194,8 @@ export const vwStatusEquipments = async (req, res) => {
     const response = await pool.query("SELECT * FROM vw_status_equipments;");
     res.status(200).json(response.rows);
   } catch (error) {
-    res.status(500).json({ error: "Erro na requisição" });
+    console.error(error);
+    res.status(500).json({ error: "Erro interno na requisição" });
   }
 };
 
@@ -206,7 +204,8 @@ export const vwStatusProjects = async (req, res) => {
     const response = await pool.query("SELECT * FROM vw_status_projects;");
     res.status(200).json(response.rows);
   } catch (error) {
-    res.status(500).json({ error: "Erro na requisição" });
+    console.error(error);
+    res.status(500).json({ error: "Erro interno na requisição" });
   }
 };
 
@@ -215,10 +214,8 @@ export const getTimelineProjects = async (req, res) => {
     const response = await pool.query("SELECT * FROM vw_timeline_projects;");
     res.status(200).json(response.rows);
   } catch (error) {
-    console.error(error); // Bom para debugar no terminal
-    res
-      .status(500)
-      .json({ error: "Erro na requisição ao buscar cronograma de projetos" });
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar cronograma de projetos" });
   }
 };
 
@@ -228,9 +225,7 @@ export const getTimelineEquipments = async (req, res) => {
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      error: "Erro na requisição ao buscar cronograma de equipamentos",
-    });
+    res.status(500).json({ error: "Erro ao buscar cronograma de equipamentos" });
   }
 };
 
@@ -239,21 +234,20 @@ export const getTimelineEquipmentsByBudget = async (req, res) => {
     const { budget_id } = req.params;
 
     if (!budget_id) {
-      return res.status(505).json({ error: "Orçamento não existe" });
+      return res.status(400).json({ error: "O ID do orçamento é obrigatório" });
     }
+    
     const response = await pool.query(
       `SELECT vw.* FROM vw_timeline_equipments vw
-      JOIN budgets_equipments_recipes ber
-        ON ber.equipment_recipe_id = vw.equipment_recipe_id
-      WHERE ber.budget_id = $1`,
+       JOIN budgets_equipments_recipes ber
+         ON ber.equipment_recipe_id = vw.equipment_recipe_id
+       WHERE ber.budget_id = $1;`,
       [budget_id]
     );
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      error: "Erro na requisição ao buscar cronograma de equipamentos",
-    });
+    res.status(500).json({ error: "Erro ao buscar cronograma de equipamentos" });
   }
 };
 
@@ -263,18 +257,16 @@ export const getTimelineTasks = async (req, res) => {
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro na requisição ao buscar tarefas" });
+    res.status(500).json({ error: "Erro ao buscar tarefas do cronograma" });
   }
 };
 
 export const vwComponentMaterialsSummary = async (req, res) => {
   try {
-    const response = await pool.query(
-      "SELECT * FROM vw_component_materials_summary;"
-    );
+    const response = await pool.query("SELECT * FROM vw_component_materials_summary;");
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ menssage: error.menssage });
+    res.status(500).json({ error: "Erro interno no servidor", details: error.message });
   }
 };
