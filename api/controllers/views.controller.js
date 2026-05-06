@@ -5,12 +5,12 @@ export const vwProjectConsumedMaterials = async (req, res) => {
     const user_id = req.params.user_id;
 
     if (!user_id) {
-      res.status(500).json("O usuário está vazio!");
+      return res.status(400).json("O usuário está vazio!");
     }
 
     const response = await pool.query(
       "SELECT * FROM vw_project_consumed_materials WHERE user_id = $1",
-      [user_id]
+      [user_id],
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -22,7 +22,7 @@ export const vwProjectConsumedMaterials = async (req, res) => {
 export const vwProjectDepartmentDelays = async (req, res) => {
   try {
     const response = await pool.query(
-      "SELECT * FROM vw_project_department_delays"
+      "SELECT * FROM vw_project_department_delays",
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -37,8 +37,9 @@ export const vwComponentRecipeMaterialsSummary = async (req, res) => {
   try {
     const { budget_id } = req.params;
 
-    if (!budget_id)
-      return res.start_date(505).json({ error: "Dados faltantes" });
+    if (!budget_id) {
+      return res.start_date(400).json({ error: "Dados faltantes" });
+    }
 
     const response = await pool.query(
       `SELECT
@@ -56,7 +57,7 @@ export const vwComponentRecipeMaterialsSummary = async (req, res) => {
         ON vwcrms.component_recipe_id = er_cr.component_recipe_id
       WHERE 
         b.budget_id = $1`,
-      [budget_id]
+      [budget_id],
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -71,7 +72,9 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
   try {
     const { budget_id } = req.params;
 
-    if (!budget_id) return res.status(505).json({ error: "Dados faltantes" });
+    if (!budget_id) {
+      return res.status(400).json({ error: "Dados faltantes" });
+    }
 
     const response = await pool.query(
       `SELECT
@@ -84,13 +87,13 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
         ON vwrms.equipment_recipe_id = b_er.equipment_recipe_id
       WHERE 
         b.budget_id = $1`,
-      [budget_id]
+      [budget_id],
     );
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(
       "Erro ao listar o sumario de materiais do equipamento",
-      error
+      error,
     );
     res.status(500).json({
       error: "Erro ao listar o sumario de materiais do equipamento" + error,
@@ -101,7 +104,7 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
 export const vwBudgetsMaterialsSummary = async (req, res) => {
   try {
     const response = await pool.query(
-      "SELECT * FROM vw_budgets_materials_summary"
+      "SELECT * FROM vw_budgets_materials_summary",
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -122,7 +125,7 @@ export const vwMaterialDetailsComponentsRecipes = async (req, res) => {
 
     const response = await pool.query(
       "SELECT * FROM Vw_Material_Details_Components_Recipes WHERE component_recipe_id = $1",
-      [component_recipe_id]
+      [component_recipe_id],
     );
 
     return res.status(200).json(response.rows);
@@ -142,7 +145,7 @@ export const vwMaterialDetailsEquipmentsRecipes = async (req, res) => {
 
     const response = await pool.query(
       "SELECT * FROM Vw_Material_Details_Equipment_Recipes WHERE equipment_recipe_id = $1",
-      [equipment_recipe_id]
+      [equipment_recipe_id],
     );
 
     return res.status(200).json(response.rows);
@@ -156,8 +159,12 @@ export const getTimesCascade = async (req, res) => {
   try {
     // 1. Buscando dados (O SQL já traz os nomes das colunas corretos)
     const projectQuery = await pool.query("SELECT * FROM vw_project_hours;");
-    const equipmentQuery = await pool.query("SELECT * FROM vw_equipment_hours;");
-    const componentQuery = await pool.query("SELECT * FROM vw_component_hours;");
+    const equipmentQuery = await pool.query(
+      "SELECT * FROM vw_equipment_hours;",
+    );
+    const componentQuery = await pool.query(
+      "SELECT * FROM vw_component_hours;",
+    );
 
     const result = {
       projects: {},
@@ -177,9 +184,9 @@ export const getTimesCascade = async (req, res) => {
       });
     };
 
-    mapRowsToId(projectQuery.rows, 'project_id', result.projects);
-    mapRowsToId(equipmentQuery.rows, 'equipment_id', result.equipments);
-    mapRowsToId(componentQuery.rows, 'component_id', result.components);
+    mapRowsToId(projectQuery.rows, "project_id", result.projects);
+    mapRowsToId(equipmentQuery.rows, "equipment_id", result.equipments);
+    mapRowsToId(componentQuery.rows, "component_id", result.components);
 
     res.json(result);
   } catch (error) {
@@ -191,7 +198,7 @@ export const getTimesCascade = async (req, res) => {
 export const vwComponentRecipeMaterials = async (req, res) => {
   try {
     const response = await pool.query(
-      "SELECT * FROM vw_components_recipes_materials_summary"
+      "SELECT * FROM vw_components_recipes_materials_summary",
     );
 
     res.status(200).json(response.rows);
@@ -204,7 +211,7 @@ export const vwComponentRecipeMaterials = async (req, res) => {
 export const vwEquipmentMaterialsSummary = async (req, res) => {
   try {
     const response = await pool.query(
-      "SELECT * FROM vw_equipments_recipes_materials_summary"
+      "SELECT * FROM vw_equipments_recipes_materials_summary",
     );
 
     res.status(200).json(response.rows);
@@ -218,8 +225,9 @@ export const projectTask = async (req, res) => {
   try {
     const { component_id } = req.params;
 
-    if (!component_id)
+    if (!component_id) {
       return res.status(400).json({ error: "Dados insuficientes" });
+    }
 
     const response = await pool.query(
       `SELECT 
@@ -229,13 +237,13 @@ export const projectTask = async (req, res) => {
 	        EQUIPMENTS E ON E.EQUIPMENT_ID = C.EQUIPMENT_ID
         WHERE 
 	        C.COMPONENT_ID = $1;`,
-      [component_id]
+      [component_id],
     );
 
     res.status(200).json(response.rows[0]);
   } catch (error) {
     console.error(error);
-    res.json(500).json({ error: "Erro no servidor interno" });
+    res.status(500).json({ error: "Erro no servidor interno" });
   }
 };
 
@@ -243,8 +251,9 @@ export const employeesTask = async (req, res) => {
   try {
     const { component_id } = req.params;
 
-    if (!component_id)
+    if (!component_id) {
       return res.status(400).json({ error: "Dados insuficientes" });
+    }
 
     const response = await pool.query(
       `SELECT 
@@ -253,12 +262,12 @@ export const employeesTask = async (req, res) => {
       LEFT JOIN 
         COMPONENTS C ON C.COMPONENT_ID = EC.COMPONENT_ID
       WHERE C.COMPONENT_ID = $1;`,
-      [component_id]
+      [component_id],
     );
 
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
-    res.json(500).json({ error: "Erro no servidor interno" });
+    res.status(500).json({ error: "Erro no servidor interno" });
   }
 };
