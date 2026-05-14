@@ -56,7 +56,7 @@ export const deleteBudgetsEquipRecipes = async (req, res) => {
     const response = await pool.query(
       `DELETE FROM budgets_equipments_recipes 
         WHERE budget_id = $1 AND equipment_recipe_id = $2 
-        RETURNING *;`, // MUDADO: de equipment_id para equipment_recipe_id
+        RETURNING *;`,
       [budget_id, equipment_id]
     );
 
