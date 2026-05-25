@@ -1,3 +1,4 @@
+import bodyParser from "body-parser";
 import api from "./api.js";
 
 export const createProject = async (
@@ -42,3 +43,44 @@ export const listProjects = async (user_id) => {
     return [];
   }
 };
+
+export const getProject = async (user_id, project_id) => {
+  try {
+    if(!user_id || !project_id) return [];
+    const response = await api.get(`/projects/${user_id}/${project_id}`)
+    return Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}
+
+export const updateProject = async (
+      project_id, 
+      project_name,
+      project_desc,
+      project_local,
+      begin_date,
+      end_date,
+      deadline,
+      status // <--- ADICIONE AQUI
+) => {
+  try {
+    if(!project_id) return [];
+    const response = await api.put(`/projects/${project_id}`, {
+      project_name,
+      project_desc,
+      project_local,
+      begin_date,
+      end_date,
+      deadline,
+      status,
+    })
+
+    return Array.isArray(response.data) ? response.data : []
+    
+  } catch (error) {
+    console.error(error)
+    return []
+  }
+}

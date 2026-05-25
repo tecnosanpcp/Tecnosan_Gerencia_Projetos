@@ -69,17 +69,41 @@ export const listProject = async (req, res) => {
   }
 };
 
+export const getProject = async (req, res) => {
+  try {
+    const { user_id, project_id } = req.params;
+
+    if (!user_id || !project_id){ 
+      return res.status(400).json({ message: "Faltando dados"})
+    }
+
+    const result = await pool.query(
+      `SELECT p.* FROM projects p
+        INNER JOIN projects_ussers pu ON p.project_id = pu.project_id
+        WHERE pu.user_id = $1 AND p.project_id = $2`,
+      [user_id, project_id]
+    );
+    return res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    return res.status(500).json({ error: "Error fetching project." });
+  }
+};
+
+
 export const editProject = async (req, res) => {
   try {
     const {
-      project_id,
       project_name,
       project_desc,
       project_local,
       begin_date,
       end_date,
       deadline,
+      status,
     } = req.body;
+
+    const { project_id } = req.params;
 
     if (!project_id) {
       return res.status(400).json({ error: "project_id is required." });
@@ -90,10 +114,11 @@ export const editProject = async (req, res) => {
        SET project_name = $1,
            project_desc = $2,
            project_local = $3,
-           begin_date = $4,
-           end_date = $5,
-           deadline = $6
-       WHERE project_id = $7
+           start_date = $4,
+           completion_date = $5,
+           deadline = $6,
+           status = $7
+       WHERE project_id = $8
        RETURNING *`,
       [
         project_name,
@@ -102,6 +127,7 @@ export const editProject = async (req, res) => {
         begin_date,
         end_date,
         deadline,
+        status,
         project_id,
       ],
     );

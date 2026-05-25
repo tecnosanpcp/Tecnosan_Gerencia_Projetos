@@ -1,8 +1,12 @@
+import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+
 // Imports de componentes gerais
 import SidebarList from "../../Ui/SlideBarList";
 import DashboardLayout from "../../Ui/DashboardLayout";
 
-// Import de componentes de especifícos a outro componente
+// Import de componentes de específicos a outro componente
 import AddBudgetModal from "../Budgets/AddBudgetModal";
 
 // Import de componentes especificos a esta página
@@ -12,8 +16,6 @@ import ProjectsFooter from "./ProjectsFooter";
 
 // Import de funções
 import { selectedProjectContext } from "@content/SeletedProject.jsx";
-import { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router";
 
 // Import de Services
 import { listProjects } from "@services/ProjectService";
@@ -21,33 +23,36 @@ import { getTimesCascade } from "@services/ViewsService";
 import { VerifyAuth } from "@services/AuthService";
 
 function Projects() {
-  const [projects, setProjects] = useState([]); // inicial vazio
   const [isAddBudgetModalOpen, setAddBudgetModalOpen] = useState(false);
-  const { currentProject, setCurrentProject } = useContext(
-    selectedProjectContext
-  );
-  const [times, setTimes] = useState({});
-
+  const { currentProject, setCurrentProject } = useContext(selectedProjectContext);
   const navigate = useNavigate();
-  
-  async function loadData() {
-    const user = await VerifyAuth();
-    const [project_data, hours_data] = await Promise.all([
-      listProjects(user.user_id),
-      await getTimesCascade(),
-    ]);
-    if (project_data) setProjects(project_data);
-    if (hours_data) setTimes(hours_data);
-  }
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // ==========================================
+  // QUERIES CENTRALIZADAS NO PAI
+  // ==========================================
+
+  // Query para buscar as horas (Times)
+  const timesQuery = useQuery({
+    queryKey: ["projectTimesCascade"],
+    queryFn: getTimesCascade,
+  });
+
+  // Query para buscar os Projetos (depende da autenticação)
+  const projectsQuery = useQuery({
+    queryKey: ["projectsList"],
+    queryFn: async () => {
+      const user = await VerifyAuth();
+      return listProjects(user.user_id);
+    },
+  });
+
+  // Facilita o acesso aos dados ou define um fallback vazio
+  const projects = projectsQuery.data || [];
+  const times = timesQuery.data || {};
 
   return (
     <DashboardLayout
       title="Projetos"
-      // O botão de navegação entra aqui
       actions={
         <button
           className="px-4 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm"
@@ -56,7 +61,6 @@ function Projects() {
           Ir para Orçamento
         </button>
       }
-      // A Sidebar inteira entra aqui
       sidebar={
         <SidebarList
           items={projects.map((project) => ({
@@ -79,17 +83,21 @@ function Projects() {
           ]}
         />
       }
-      // O Header de métricas (resinas, horas) entra aqui
-      header={<ProjectsHeader times={times} />}
+      header={
+        projectsQuery.isLoading || timesQuery.isLoading ? (
+          <div className="p-4 text-sm text-gray-500">Carregando métricas...</div>
+        ) : (
+          <ProjectsHeader times={times} />
+        )
+      }
     >
-      {/* O conteúdo principal (que estava dentro de ProjectsMain e Footer) */}
       <div className="flex flex-col gap-4">
-        <ProjectsMain times={times} onRefresh={loadData} />
+        {/* Passamos o estado de carregamento global para o Main, se necessário */}
+        <ProjectsMain times={times} />
 
         <ProjectsFooter />
       </div>
 
-      {/* Seus Modais continuam aqui, fora do visual, mas dentro da lógica */}
       {isAddBudgetModalOpen && (
         <AddBudgetModal
           isOpen={isAddBudgetModalOpen}
