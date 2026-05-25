@@ -80,7 +80,10 @@ function Projects() {
           filterOptions={[
             { value: "Running", label: "Executando" },
             { value: "Pending", label: "Pendente" },
+            { value: "Archived", label: "Arquivado"},
+            { value: "completed", label: "Completo"}
           ]}
+          defaultFilter = "Running"
         />
       }
       header={
