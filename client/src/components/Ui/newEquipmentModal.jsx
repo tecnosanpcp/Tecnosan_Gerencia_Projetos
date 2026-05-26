@@ -9,7 +9,7 @@ export default function NewEquipmentModal({
   recipesList,
 }) {
   const [selectedRecipe, setSelectedRecipe] = useState([]);
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState(1);
 
   const handleSubmit = () => {
     if (!selectedRecipe || !quantity || parseInt(quantity) <= 0) {

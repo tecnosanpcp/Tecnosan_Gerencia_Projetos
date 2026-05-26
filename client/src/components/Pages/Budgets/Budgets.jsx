@@ -63,7 +63,6 @@ function Budgets() {
           defaultFilter="Em Planejamento"
           filterOptions={[
             { value: "Em Planejamento", label: "Em Planejamento" },
-            { value: "Aprovado", label: "Aprovado" },
             { value: "Arquivado", label: "Arquivado" },
           ]}
         />
