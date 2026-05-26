@@ -57,13 +57,7 @@ export default function ProjectsFooter() {
     setAlertVisible(false);
   };
 
-  if (!currentProject?.id) {
-    return (
-      <footer className="flex justify-center text-sm text-gray-400 italic p-2">
-        Selecione um projeto para ver as opções de gerenciamento.
-      </footer>
-    );
-  }
+  if (!currentProject?.id) return
 
   return (
     <React.Fragment>
