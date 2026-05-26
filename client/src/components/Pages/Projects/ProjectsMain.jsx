@@ -45,17 +45,21 @@ export default function ProjectsMain({ times }) {
   });
 
   // ==========================================
-  // 2. MUTAÇÃO PARA NOVO EQUIPAMENTO
+  // 2. MUTAÇÃO PARA NOVO EQUIPAMENTO (OTIMIZADA)
   // ==========================================
   const addEquipMutation = useMutation({
     mutationFn: async ({ recipe, quantity }) => {
-      for (let i = 0; i < quantity; i++) {
-        await createEquipmentRecipe(recipe);
-      }
+      // Cria todas as requisições em paralelo em vez de travar o loop com await ordenado
+      const promises = Array.from({ length: quantity }, () => createEquipmentRecipe(recipe));
+      await Promise.all(promises);
     },
     onSuccess: () => {
+      // Invalida absolutamente tudo relacionado a projetos para sincronizar o painel inteiro
+      queryClient.invalidateQueries({ queryKey: ["projectsList"] });
+      queryClient.invalidateQueries({ queryKey: ["projectTimesCascade"] });
       queryClient.invalidateQueries({ queryKey: ["projectMaterialsSummary"] });
       queryClient.invalidateQueries({ queryKey: ["projectStatusSummary"] });
+      
       setModalVisible(false);
     }
   });

@@ -11,10 +11,11 @@ function SidebarList({
   addLabel,
   filterOptions,
   titleAll = "Todos",
-  idPrefix = "sidebar", // para nomes únicos de radios
+  idPrefix = "sidebar",
+  defaultFilter = null,
 }) {
   const [isExtend, setIsExtend] = useState(false);
-  const [filter, setFilter] = useState(null);
+  const [filter, setFilter] = useState(defaultFilter);
 
   const matchesFilter = (item) => {
     if (!filter) return true;
@@ -23,9 +24,11 @@ function SidebarList({
   };
 
   const filteredItems = useMemo(() => {
-    return isExtend ? items.filter(matchesFilter) : items;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, isExtend, filter]);
+    if (filter) {
+      return items.filter(matchesFilter);
+    }
+    return items;
+  }, [items, filter]);
 
   return (
     <div className="flex flex-col bg-white-blue shadow-sm rounded w-40 h-full items-center space-y-2 p-1">
@@ -119,6 +122,7 @@ SidebarList.propTypes = {
   filterOptions: PropTypes.array,
   titleAll: PropTypes.string,
   idPrefix: PropTypes.string,
+  defaultFilter: PropTypes.string,
 };
 
 export default SidebarList;

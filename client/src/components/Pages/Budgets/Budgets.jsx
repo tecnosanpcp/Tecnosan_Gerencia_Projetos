@@ -60,6 +60,7 @@ function Budgets() {
           onAdd={() => setAddBudgetModalOpen(true)}
           addLabel="+ Novo Orçamento"
           titleAll="Todos os Orçamentos"
+          defaultFilter="Em Planejamento"
           filterOptions={[
             { value: "Em Planejamento", label: "Em Planejamento" },
             { value: "Aprovado", label: "Aprovado" },
