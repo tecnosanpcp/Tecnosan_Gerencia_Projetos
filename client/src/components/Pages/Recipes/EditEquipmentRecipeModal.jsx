@@ -13,7 +13,7 @@ import {
   createEquipRecipeCompRecipe,
   updateEquipRecipeCompRecipe,
   deleteEquipRecipeCompRecipe,
-} from "@services/EquipRecipeCompRecipe.js";
+} from "@services/EquipRecipeCompRecipeService.js";
 
 export default function EditEquipmentRecipeModal({
   isVisible,

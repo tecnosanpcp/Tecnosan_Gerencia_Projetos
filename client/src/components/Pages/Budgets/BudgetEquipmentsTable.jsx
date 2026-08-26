@@ -3,7 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FaTrash } from "react-icons/fa";
 
 // Serviços
-import { updateDates } from "@services/EquipRecipeCompRecipe";
+// Antes: updateDates(equip.equipment_recipe_id, comp.component_recipe_id, ...)
+// alterava a RECEITA inteira em EquipRecipeCompRecipeService.js — ou seja,
+// mudar a data aqui afetava TODOS os orçamentos que usassem aquele
+// equipamento. Agora a data é por orçamento: grava em
+// budgets_components_schedule via budget_equipment_id.
+import { upsertBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js";
 import { deleteRelation } from "@services/BudgetsEquipRecipesServices.js";
 
 // Utilitários
@@ -33,8 +38,8 @@ function BudgetEquipmentTable({
   });
 
   const dateMutation = useMutation({
-    mutationFn: ({ equipId, compId, start, end }) =>
-      updateDates(equipId, compId, start, end),
+    mutationFn: ({ budgetEquipmentId, compId, start, end }) =>
+      upsertBudgetComponentSchedule(budgetEquipmentId, compId, start, end),
     onSuccess: invalidateAll,
   });
 
@@ -46,11 +51,11 @@ function BudgetEquipmentTable({
     }));
   };
 
-  const handleDateSave = (equipId, compId, type) => {
+  const handleDateSave = (budgetEquipmentId, compId, type) => {
     const newValue = modifiedData[compId]?.[type];
     if (!newValue) return;
     dateMutation.mutate({
-      equipId,
+      budgetEquipmentId,
       compId,
       start: type === "start" ? newValue : null,
       end: type === "end" ? newValue : null,
@@ -209,7 +214,12 @@ function BudgetEquipmentTable({
                                       }
                                       onBlur={() =>
                                         handleDateSave(
-                                          equip.equipment_recipe_id,
+                                          // antes: equip.equipment_recipe_id
+                                          // (id da receita — errado, mudava
+                                          // o template global). Agora usamos
+                                          // a instância do equipamento
+                                          // DENTRO desse orçamento.
+                                          equip.budget_equipment_id,
                                           comp.component_recipe_id,
                                           "start",
                                         )
@@ -235,7 +245,7 @@ function BudgetEquipmentTable({
                                       }
                                       onBlur={() =>
                                         handleDateSave(
-                                          equip.equipment_recipe_id,
+                                          equip.budget_equipment_id,
                                           comp.component_recipe_id,
                                           "end",
                                         )

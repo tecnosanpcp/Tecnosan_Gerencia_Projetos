@@ -25,7 +25,8 @@ export const createEquipment = async (
   start_date,
   deadline,
   project_id,
-  equipment_recipe_id
+  equipment_recipe_id,
+  budget_equipment_id
 ) => {
   try {
     if (
@@ -33,7 +34,9 @@ export const createEquipment = async (
       !start_date ||
       !deadline ||
       !project_id ||
-      equipment_recipe_id
+      // bug corrigido: faltava "!" aqui, então a validação passava
+      // exatamente quando equipment_recipe_id estava faltando
+      !equipment_recipe_id
     ) {
       throw new Error("Faltando dados");
     }
@@ -44,6 +47,8 @@ export const createEquipment = async (
       deadline,
       project_id,
       equipment_recipe_id,
+      // opcional: liga o equipamento a uma instância de orçamento
+      budget_equipment_id,
     });
 
     return response.data;

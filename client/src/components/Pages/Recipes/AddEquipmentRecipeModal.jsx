@@ -9,7 +9,11 @@ import SelectMenu from "../../Ui/SelectMenu";
 import { VerifyAuth } from "@services/AuthService.js";
 import { vwComponentRecipeMaterials } from "@services/ViewsService.js";
 import { createEquipmentRecipe } from "@services/EquipmentRecipesService.js";
-import { createEquipRecipeCompRecipe } from "@services/EquipRecipeCompRecipe.js";
+// bug corrigido: estava importando "createEquipmentRecipe" duas vezes
+// (de dois arquivos diferentes), o que quebra o build. O correto aqui é
+// createEquipRecipeCompRecipe, que liga a receita do equipamento aos
+// componentes.
+import { createEquipRecipeCompRecipe } from "@services/EquipRecipeCompRecipeService.js";
 
 export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
   const [equipmentRecipeName, setEquipmentRecipeName] = useState("");
@@ -60,6 +64,9 @@ export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
           equipment_recipe_id,
           er_cr.id,
           er_cr.quantity
+          // offset_start_hours / duration_hours ficam de fora por enquanto:
+          // esse modal não coleta cronograma, só quantidade. Se quiser
+          // capturar isso já na criação, dá pra adicionar os campos aqui.
         );
       }
       clearStates();

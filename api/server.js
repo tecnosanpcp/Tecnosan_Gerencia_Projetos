@@ -29,6 +29,10 @@ import employeesComponentsRoutes from "./routes/employees_components.routes.js";
 import componentsMaterialsRoutes from "./routes/components.materials.routes.js";
 import homeRoutes from "./routes/home.routes.js";
 
+// Rotas do novo fluxo de orçamento (data real por orçamento)
+import budgetsEquipmentsRoutes from "./routes/budgetsEquipments.routes.js";
+import budgetsComponentsScheduleRoutes from "./routes/budgetsComponentsSchedule.routes.js";
+
 const app = express();
 app.use(express.json());
 app.use(
@@ -76,8 +80,16 @@ app.use("/comp-recipe-mat", componentRecipeMaterialsRouter);
 app.use("/component-recipes", componentRecipeRoutes);
 app.use("/equip-recipe-comp-recipe", equipRecipeCompRecipeRoutes);
 app.use("/equip-recipe", equipmentRecipeRouter);
+// legado: budgets_equipments_recipes não é mais lido pelas triggers do banco
+// (fn_auto_create_equipments/components e fn_calc_project_dates agora usam
+// budgets_equipments + budgets_components_schedule). Mantido montado por
+// compatibilidade até o front parar de chamar; considere remover depois.
 app.use("/budgets-equip-recipes", budgetsEquipRecipesRouter);
 app.use("/budgets", budgetRoutes);
+
+// Novo fluxo: data real calculada por orçamento
+app.use("/budgets-equipments", budgetsEquipmentsRoutes);
+app.use("/budgets-components-schedule", budgetsComponentsScheduleRoutes);
 
 const port = process.env.PORT || 3001;
 

@@ -1,3 +1,5 @@
+// Obsoleta, remover quando possível
+
 import { pool } from "../config/db.js";
 
 export const createBudgetsEquipRecipes = async (req, res) => {

@@ -7,7 +7,7 @@ import {
 } from "@services/ViewsService.js";
 
 // Serviço para buscar os vínculos do equipamento
-import { readEquipRecipeCompRecipeById } from "@services/EquipRecipeCompRecipe.js";
+import { readEquipRecipeCompRecipeById } from "@services/EquipRecipeCompRecipeService.js";
 
 const formatMoney = (val) => {
   const num = Number(val) || 0;
