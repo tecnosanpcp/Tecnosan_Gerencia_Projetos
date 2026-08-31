@@ -1,14 +1,149 @@
-# Aplicativo de Gerência de Projetos
+# Sistema de Gerencia de Projetos
 
-Este projeto é um aplicativo desenvolvido para facilitar o gerenciamento de projetos dentro da Tecnosan. Ele permite o acompanhamento de tarefas, prazos, equipes e progresso dos projetos em tempo real.
+Guia para executar o sistema localmente. O projeto possui um frontend React,
+uma API Node.js e um banco PostgreSQL.
 
-## Funcionalidades
+## Pre-requisitos
 
-- **Cadastro de Projetos:** Crie e gerencie múltiplos projetos simultaneamente.
-- **Gestão de Tarefas:** Adicione, edite e acompanhe tarefas de cada projeto.
-- **Atribuição de Equipes:** Defina membros responsáveis por tarefas e projetos.
-- **Controle de Prazos:** Estabeleça datas de início e término para cada tarefa e projeto.
-- **Monitoramento de Progresso:** Visualize o andamento dos projetos por meio de gráficos e relatórios.
-- **Relatórios:** Gere relatórios detalhados sobre o desempenho dos projetos e equipes.
+Instale ou tenha acesso a:
 
-O objetivo principal é otimizar o fluxo de trabalho, aumentar a produtividade e garantir o cumprimento dos prazos estabelecidos.
+- Node.js com npm;
+- PostgreSQL;
+- o banco Tecnosan ja criado;
+- as tabelas e views esperadas pela API.
+
+Este repositorio nao possui migration, seed, dump ou script para criar o banco.
+Em um ambiente novo, solicite o schema ou dump correto antes de iniciar a
+aplicacao.
+
+## 1. Configurar a API
+
+Na raiz do projeto, crie o arquivo `api/.env`:
+
+```env
+NODE_ENV=development
+PORT=3001
+DB_USER=postgres
+DB_HOST=localhost
+TECNOSAN=nome_do_banco
+POSTGRE=senha_do_postgres
+DB_PORT=5432
+JWT_SECRET=uma_chave_secreta_de_desenvolvimento
+```
+
+Substitua `nome_do_banco` e `senha_do_postgres` pelos dados do seu PostgreSQL.
+Nao versione esse arquivo.
+
+Tambem e possivel usar uma unica conexao com `DATABASE_URL`. Quando ela existe,
+tem prioridade sobre as variaveis individuais:
+
+```env
+DATABASE_URL=postgresql://usuario:senha@host:5432/banco
+JWT_SECRET=uma_chave_secreta_de_desenvolvimento
+PORT=3001
+```
+
+## 2. Iniciar a API
+
+Abra o PowerShell na raiz do projeto e execute:
+
+```powershell
+cd api
+npm install
+npm run dev
+```
+
+A API ficara disponivel em `http://localhost:3001`. O comando `npm run dev`
+usa o Nodemon e reinicia a API quando os arquivos do backend sao alterados.
+
+Mantenha esse terminal aberto.
+
+## 3. Configurar e iniciar o frontend
+
+Abra um segundo PowerShell na raiz do projeto e execute:
+
+```powershell
+cd client
+npm install
+npm run dev
+```
+
+O frontend ficara disponivel em:
+
+```text
+http://localhost:5173
+```
+
+Por padrao, o frontend chama a API em `http://localhost:3001`. Para usar outra
+URL, crie `client/.env.local` antes de executar o Vite:
+
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+Depois de alterar uma variavel `VITE_*`, reinicie o frontend.
+
+## 4. Verificar se a API esta funcionando
+
+Com a API em execucao, abra um terceiro terminal e execute:
+
+```powershell
+Invoke-RestMethod http://localhost:3001/
+```
+
+O resultado esperado e:
+
+```json
+{"status":"ok"}
+```
+
+Se aparecer erro de conexao com o banco no terminal da API, confira o arquivo
+`api/.env`, o servico do PostgreSQL, a porta `5432` e a existencia do banco.
+
+## Acesso ao sistema
+
+Abra `http://localhost:5173` no navegador. A tela inicial e a tela de login.
+As credenciais dependem dos usuarios existentes no banco Tecnosan; este
+repositorio nao possui usuario inicial ou seed documentado.
+
+Rotas principais do frontend:
+
+| Rota | Tela |
+| --- | --- |
+| `/` | Login |
+| `/home` | Painel inicial |
+| `/production` | Producao |
+| `/projects` | Projetos |
+| `/employees` | Funcionarios e departamentos |
+| `/budgets` | Orcamentos |
+| `/recipes` | Receitas |
+| `/reports` | Relatorios |
+
+## Verificacoes opcionais
+
+Para validar o frontend:
+
+```powershell
+cd client
+npm run lint
+npm run build
+```
+
+No backend, `npm test` ainda e um script placeholder e termina com erro; nao
+existem testes automatizados configurados para a API.
+
+## Solucao rapida de problemas
+
+**A porta `3001` esta ocupada**
+
+Altere `PORT` no `api/.env` e use a mesma URL em `client/.env.local`.
+
+**O frontend abre, mas mostra erros de rede**
+
+Confirme que a API esta rodando, que `VITE_API_URL` aponta para a porta correta
+e que o frontend foi reiniciado depois da alteracao.
+
+**O login falha ou uma tela nao carrega**
+
+Confirme se o PostgreSQL esta acessivel, se o banco possui o schema esperado e
+se existe um usuario cadastrado.
