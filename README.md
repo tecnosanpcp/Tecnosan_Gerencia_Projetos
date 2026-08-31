@@ -1,595 +1,232 @@
-# Tecnosan Gerência de Projetos
+﻿# Tecnosan - Gerência de Projetos
 
-Aplicação web para gerenciamento de projetos, orçamentos, equipes, materiais, equipamentos, receitas e apontamentos de horas da Tecnosan.
+Aplicação web para gestão de projetos, materiais, receitas, equipamentos, acessórios, funcionários e apontamentos de horas.
 
-Este guia mostra como preparar o projeto do zero, executar a aplicação e fazer o primeiro login.
+## Requisitos do projeto
 
-## Visão rápida
+Para rodar este sistema localmente ou em ambiente de testes, são necessários:
 
-O projeto possui duas partes:
+- Node.js 18+ (recomendado 20+)
+- npm
+- PostgreSQL
+- Git
+- Banco PostgreSQL criado com o nome `tecnosan`
+- Arquivo `api/.env` com as credenciais do banco e segredo JWT
+- Acesso ao dump SQL do projeto em `api/database/pcp_postgres.sql`
 
-- **Frontend:** tela da aplicação, construída com React e Vite.
-- **API:** servidor responsável pelas regras do sistema e pelo acesso ao PostgreSQL.
+### Requisitos funcionais do sistema
 
-Para funcionar localmente, as duas partes precisam estar em execução e a API precisa conseguir acessar o banco.
+- Frontend em React + Vite
+- API em Express.js
+- Banco relacional PostgreSQL
+- Autenticação via JWT
+- CORS configurado para localhost e frontend publicado
+- API acessível na porta `3001`
+- Frontend acessível na porta `5173`
+
+## Visão geral
+
+O projeto é composto por:
+
+- Frontend React + Vite
+- API Express.js
+- Banco PostgreSQL
+
+A estrutura está dividida em duas partes principais:
+
+- `client/` : interface web
+- `api/` : backend e regras de negócio
 
 ## Onde cada parte está hospedada
 
-| Parte | Hospedagem atual | Endereço ou configuração |
-| --- | --- | --- |
-| Frontend | Vercel | https://tecnosan-gerencia-projetos.vercel.app |
-| API | Não definido neste repositório | Informe aqui a URL pública da API quando ela estiver publicada |
-| PostgreSQL | Não definido neste repositório | A API usa `DATABASE_URL` ou as variáveis `DB_*` |
+### Frontend
 
-O endereço do frontend acima aparece na configuração de CORS da API e no arquivo `client/vercel.json`. O projeto não contém uma configuração de hospedagem da API ou do banco, portanto esses dois endereços precisam ser confirmados com o responsável pela infraestrutura antes de um deploy.
+O frontend está publicado na Vercel:
 
-Para o frontend publicado funcionar, a variável `VITE_API_URL` deve estar configurada no projeto da Vercel com o endereço público da API. Sem essa variável, o frontend tenta usar `http://localhost:3001`, que só funciona na máquina local.
+- https://tecnosan-gerencia-projetos.vercel.app
 
-## Cópia local para testes
+Esse endereço aparece no CORS da API e também foi usado na configuração do projeto frontend.
 
-É possível manter uma cópia completa do sistema no computador sem alterar a versão publicada. A cópia local usa um banco separado, a API em `localhost:3001` e o frontend em `localhost:5173`.
+### API
 
-O fluxo é:
+A API não possui um endpoint público definido dentro deste repositório. O endereço real precisa ser informado pela infraestrutura responsável ou configurado em ambiente de homologação/produção.
 
-1. Instalar Node.js, npm e PostgreSQL.
-2. Criar o banco local `tecnosan`.
-3. Executar `api/database/schema.sql` nesse banco.
-4. Configurar `api/.env` com as credenciais locais.
-5. Executar `npm install` na raiz.
-6. Executar `npm run seed` para criar dados de teste.
-7. Executar `npm run dev` na raiz.
-8. Acessar http://localhost:5173.
+No código atual, a API local padrão é:
 
-Essa cópia local não utiliza automaticamente os dados da produção. Para evitar alterações acidentais, use credenciais e um banco de testes diferentes dos recursos hospedados.
+- http://localhost:3001
 
-# Tecnosan Gerência de Projetos
+### Banco PostgreSQL
 
-  
+O banco também não está definido como serviço público neste repositório. Para ambiente local e testes, a abordagem correta é criar um banco PostgreSQL local e apontar a API para ele via variáveis de ambiente.
 
-Aplicação web para gerenciamento de projetos, orçamentos, equipes, materiais, equipamentos, receitas e apontamentos de horas da Tecnosan.
+## Variáveis de ambiente esperadas pela API
 
-  
+O arquivo `api/config/db.js` usa estas variáveis em ordem de prioridade:
 
-Este guia mostra como preparar o projeto do zero, executar a aplicação e fazer o primeiro login.
+- `DATABASE_URL` : conexão completa do PostgreSQL
+- ou, em ambiente local:
+  - `DB_USER`
+  - `DB_HOST`
+  - `TECNOSAN`
+  - `POSTGRE`
+  - `DB_PORT`
 
-  
+O arquivo `api/server.js` também usa:
 
-## Visão rápida
+- `PORT` : porta da API, padrão `3001`
+- `JWT_SECRET` : chave para autenticação JWT
 
-  
-
-O projeto possui duas partes:
-
-  
-
-- **Frontend:** tela da aplicação, construída com React e Vite.
-
-- **API:** servidor responsável pelas regras do sistema e pelo acesso ao PostgreSQL.
-
-  
-
-Para funcionar localmente, as duas partes precisam estar em execução e a API precisa conseguir acessar o banco.
-
-  
-## Onde cada parte está hospedada
-
-  
-
-| Parte | Hospedagem atual | Endereço ou configuração |
-
-| --- | --- | --- |
-
-| Frontend | Vercel | https://tecnosan-gerencia-projetos.vercel.app |
-
-| API | Não definido neste repositório | Informe aqui a URL pública da API quando ela estiver publicada |
-
-| PostgreSQL | Não definido neste repositório | A API usa `DATABASE_URL` ou as variáveis `DB_*` |
-
-  
-
-O endereço do frontend acima aparece na configuração de CORS da API e no arquivo `client/vercel.json`. O projeto não contém uma configuração de hospedagem da API ou do banco, portanto esses dois endereços precisam ser confirmados com o responsável pela infraestrutura antes de um deploy.
-
-  
-
-Para o frontend publicado funcionar, a variável `VITE_API_URL` deve estar configurada no projeto da Vercel com o endereço público da API. Sem essa variável, o frontend tenta usar `http://localhost:3001`, que só funciona na máquina local.
-
-  
-
-## Cópia local para testes
-
-  
-
-É possível manter uma cópia completa do sistema no computador sem alterar a versão publicada. A cópia local usa um banco separado, a API em `localhost:3001` e o frontend em `localhost:5173`.
-
-  
-
-O fluxo é:
-
-  
-
-1. Instalar Node.js, npm e PostgreSQL.
-
-2. Criar o banco local `tecnosan`.
-
-3. Executar `api/database/schema.sql` nesse banco.
-
-4. Configurar `api/.env` com as credenciais locais.
-
-5. Executar `npm install` na raiz.
-
-6. Executar `npm run seed` para criar dados de teste.
-
-7. Executar `npm run dev` na raiz.
-
-8. Acessar http://localhost:5173.
-
-  
-
-Essa cópia local não utiliza automaticamente os dados da produção. Para evitar alterações acidentais, use credenciais e um banco de testes diferentes dos recursos hospedados.
-
-
-## 1. Instale os requisitos
-
-  
-
-Instale os programas abaixo antes de começar:
-
-  
-
-- [Node.js](https://nodejs.org/) 20 ou superior, que já inclui o npm.
-
-- [PostgreSQL](https://www.postgresql.org/download/) 14 ou superior.
-
-- [Git](https://git-scm.com/downloads), caso ainda não tenha o projeto na sua máquina.
-
-  
-
-Durante a instalação do PostgreSQL, anote a senha definida para o usuário `postgres`. Ela será usada na configuração da API.
-
-  
-
-## 2. Abra o projeto
-
-  
-
-Se o projeto estiver em um repositório Git, clone-o e entre na pasta:
-
-  
-
-```bash
-
-git clone URL_DO_REPOSITORIO
-
-cd Tecnosan_Gerencia_Projetos
-
-```
-
-  
-
-Caso já tenha recebido a pasta do projeto, apenas abra um terminal dentro dela. Essa é a **pasta raiz**, onde ficam `package.json`, `api/` e `client/`.
-
-  
-
-## 3. Instale as dependências
-
-  
-
-No terminal aberto na pasta raiz, execute:
-
-  
-
-```bash
-
-npm install
-
-```
-
-  
-
-Esse comando instala as dependências usadas pelo frontend, pela API e pelo script que inicia os dois serviços.
-
-  
-
-## 4. Crie o banco de dados
-
-  
-
-Crie um banco PostgreSQL com o nome `tecnosan`.
-
-  
-
-### Opção A: usando o pgAdmin
-
-  
-
-1. Abra o pgAdmin e conecte-se ao servidor PostgreSQL.
-
-2. Clique com o botão direito em **Databases** e escolha **Create > Database**.
-
-3. Informe `tecnosan` no campo **Database**.
-
-4. Salve.
-
-5. Abra o **Query Tool** do banco `tecnosan`.
-
-6. Abra o arquivo `api/database/schema.sql`, cole o conteúdo no Query Tool e execute.
-
-  
-
-### Opção B: usando o terminal
-
-  
-
-```bash
-
-createdb -U postgres tecnosan
-
-psql -U postgres -d tecnosan -f api/database/schema.sql
-
-```
-
-  
-
-O arquivo `schema.sql` cria as tabelas, relacionamentos, views e triggers necessários para a aplicação.
-
-  
-
-## 5. Configure a API
-
-  
-
-Crie ou edite o arquivo `api/.env` com os dados da sua instalação do PostgreSQL:
-
-  
-
-```env
-
-DB_USER=postgres
-
-DB_HOST=localhost
-
-DB_NAME=tecnosan
-
-DB_PASSWORD=sua_senha_do_postgres
-
-DB_PORT=5432
-
-JWT_SECRET=troque-por-uma-chave-secreta
-
-NODE_ENV=development
-
-```
-
-  
-
-Substitua `sua_senha_do_postgres` pela senha real do PostgreSQL. O `JWT_SECRET` deve ser uma chave própria, usada para assinar as sessões de login.
-
-  
-
-Não compartilhe o arquivo `.env` nem coloque senhas reais no repositório.
-
-  
-
-## 6. Adicione dados de demonstração
-
-  
-
-Ainda na pasta raiz, execute:
-
-  
-
-```bash
-
-npm run seed
-
-```
-
-  
-
-Esse comando cria registros iniciais de departamentos, usuários, materiais, orçamento, projeto, receitas e outros dados relacionados. Ele pode ser executado novamente sem duplicar os principais registros.
-
-  
-
-Se aparecer um erro de conexão, volte ao passo 5 e confira a senha, o nome do banco e se o serviço do PostgreSQL está ligado.
-
-  
-
-## 7. Inicie a aplicação
-
-  
-
-Na pasta raiz, execute:
-
-  
-
-```bash
-
-npm run dev
-
-```
-
-  
-
-O comando inicia o frontend e a API ao mesmo tempo. Mantenha esse terminal aberto enquanto estiver usando o sistema.
-
-  
-
-Abra no navegador:
-
-  
-
-- Aplicação: http://localhost:5173
-
-- Status da API: http://localhost:3001/
-
-  
-
-Se o status da API mostrar `{"status":"ok"}`, o servidor está respondendo corretamente.
-
-  
-
-## 8. Faça o primeiro login
-
-  
-
-Use uma das contas criadas pelo seed:
-
-  
-
-| Perfil | E-mail | Senha |
-
-| --- | --- | --- |
-
-| Gestor | `gestor.demo@tecnosan.com.br` | `Tecnosan123!` |
-
-| Técnico | `tecnico.demo@tecnosan.com.br` | `Tecnosan123!` |
-
-  
-
-Essas contas são apenas para desenvolvimento. Altere ou remova os usuários de demonstração antes de disponibilizar o sistema em produção.
-
-  
-
-## Se precisar iniciar separadamente
-
-  
-
-Normalmente `npm run dev` é suficiente. Para executar cada parte em um terminal diferente:
-
-  
-
-**Terminal 1, API:**
-
-  
-
-```bash
-
-cd api
-
-npm install
-
-npm run dev
-
-```
-
-  
-
-**Terminal 2, frontend:**
-
-  
-
-```bash
-
-cd client
-
-npm install
-
-npm run dev
-
-```
-
-  
-
-## Usar outra URL para a API
-
-  
-
-Em desenvolvimento, o frontend usa automaticamente `http://localhost:3001`. Para apontar para uma API diferente, crie `client/.env`:
-
-  
-
-```env
-
-VITE_API_URL=https://seu-endereco-da-api
-
-```
-
-  
-
-Depois de alterar esse arquivo, pare e inicie novamente o frontend.
-
-  
-
-## Comandos úteis
-
-  
-
-Execute os comandos abaixo a partir da pasta indicada:
-
-  
-
-| Pasta | Comando | Para que serve |
-
-| --- | --- | --- |
-
-| raiz | `npm run dev` | Inicia frontend e API juntos |
-
-| raiz | `npm run seed` | Insere dados de demonstração |
-
-| `client/` | `npm run build` | Gera o build de produção do frontend |
-
-| `client/` | `npm run lint` | Verifica problemas de código no frontend |
-
-  
-
-## Problemas comuns
-
-  
-
-**A aplicação abre, mas não carrega dados**
-
-  
-
-Confirme se a API está rodando e se `http://localhost:3001/` responde `{"status":"ok"}`. Se necessário, confira `VITE_API_URL` em `client/.env`.
-
-  
-
-**Erro ao conectar com o PostgreSQL**
-
-  
-
-Confirme se o PostgreSQL está em execução e se `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST` e `DB_PORT` no `api/.env` correspondem à sua instalação.
-
-  
-
-**Erro informando que uma tabela não existe**
-
-  
-
-Execute o arquivo `api/database/schema.sql` no banco `tecnosan` e depois rode novamente `npm run seed`.
-
-  
-
-**Uma porta já está em uso**
-
-  
-
-O frontend usa a porta `5173` e a API usa a porta `3001` por padrão. A porta da API pode ser alterada com `PORT` no `api/.env`; nesse caso, atualize também `VITE_API_URL`.
-
-  
-
-## Para produção
-
-  
-
-Em um ambiente hospedado, configure `DATABASE_URL` na API em vez das variáveis `DB_*`. A conexão com `DATABASE_URL` utiliza SSL. No frontend, configure `VITE_API_URL` com o endereço público da API antes de executar o build.
-
-## 1. Instale os requisitos
-
-Instale os programas abaixo antes de começar:
-
-- [Node.js](https://nodejs.org/) 20 ou superior, que já inclui o npm.
-- [PostgreSQL](https://www.postgresql.org/download/) 14 ou superior.
-- [Git](https://git-scm.com/downloads), caso ainda não tenha o projeto na sua máquina.
-
-Durante a instalação do PostgreSQL, anote a senha definida para o usuário `postgres`. Ela será usada na configuração da API.
-
-## 2. Abra o projeto
-
-Se o projeto estiver em um repositório Git, clone-o e entre na pasta:
-
-```bash
-git clone URL_DO_REPOSITORIO
-cd Tecnosan_Gerencia_Projetos
-```
-
-Caso já tenha recebido a pasta do projeto, apenas abra um terminal dentro dela. Essa é a **pasta raiz**, onde ficam `package.json`, `api/` e `client/`.
-
-## 3. Instale as dependências
-
-No terminal aberto na pasta raiz, execute:
-
-```bash
-npm install
-```
-
-Esse comando instala as dependências usadas pelo frontend, pela API e pelo script que inicia os dois serviços.
-
-## 4. Crie o banco de dados
-
-Crie um banco PostgreSQL com o nome `tecnosan`.
-
-### Opção A: usando o pgAdmin
-
-1. Abra o pgAdmin e conecte-se ao servidor PostgreSQL.
-2. Clique com o botão direito em **Databases** e escolha **Create > Database**.
-3. Informe `tecnosan` no campo **Database**.
-4. Salve.
-5. Abra o **Query Tool** do banco `tecnosan`.
-6. Abra o arquivo `api/database/schema.sql`, cole o conteúdo no Query Tool e execute.
-
-### Opção B: usando o terminal
-
-```bash
-createdb -U postgres tecnosan
-psql -U postgres -d tecnosan -f api/database/schema.sql
-```
-
-O arquivo `schema.sql` cria as tabelas, relacionamentos, views e triggers necessários para a aplicação.
-
-## 5. Configure a API
-
-Crie ou edite o arquivo `api/.env` com os dados da sua instalação do PostgreSQL:
+Exemplo de `api/.env` local:
 
 ```env
 DB_USER=postgres
 DB_HOST=localhost
-DB_NAME=tecnosan
-DB_PASSWORD=sua_senha_do_postgres
 DB_PORT=5432
-JWT_SECRET=troque-por-uma-chave-secreta
-NODE_ENV=development
+TECNOSAN=tecnosan
+POSTGRE=sua_senha_do_postgres
+JWT_SECRET=sua_chave_secreta
+PORT=3001
 ```
 
-Substitua `sua_senha_do_postgres` pela senha real do PostgreSQL. O `JWT_SECRET` deve ser uma chave própria, usada para assinar as sessões de login.
+Se `DATABASE_URL` existir, ela tem prioridade sobre as variáveis separadas.
 
-Não compartilhe o arquivo `.env` nem coloque senhas reais no repositório.
+## Como rodar uma cópia local para testes
 
-## 6. Adicione dados de demonstração
+### 1. Instale os requisitos
 
-Ainda na pasta raiz, execute:
+- Node.js 18 ou superior (recomendado 20)
+- npm
+- PostgreSQL
+- Git
+
+### 2. Clone o projeto
 
 ```bash
-npm run seed
+git clone <url-do-repositorio>
+cd Tecnosan_Gerencia_Projetos
 ```
 
-Esse comando cria registros iniciais de departamentos, usuários, materiais, orçamento, projeto, receitas e outros dados relacionados. Ele pode ser executado novamente sem duplicar os principais registros.
+### 3. Instale as dependências
 
-Se aparecer um erro de conexão, volte ao passo 5 e confira a senha, o nome do banco e se o serviço do PostgreSQL está ligado.
+No diretório raiz:
 
-## 7. Inicie a aplicação local
+```bash
+npm install
+```
 
-Na pasta raiz, execute:
+Também vale instalar as dependências do backend e do frontend, porque cada pasta tem seu próprio `package.json`:
+
+```bash
+npm install --prefix api
+npm install --prefix client
+```
+
+### 4. Crie o banco local
+
+Crie um banco PostgreSQL chamado `tecnosan`.
+
+Via terminal:
+
+```bash
+createdb -U postgres tecnosan
+```
+
+Depois importe o dump SQL do projeto:
+
+```bash
+psql -U postgres -d tecnosan -f api/database/pcp_postgres.sql
+```
+
+> O projeto inclui os arquivos `api/database/pcp_postgres.sql` e `api/database/pcp.sql`. Para ambiente local de testes, use `pcp_postgres.sql`.
+
+### 5. Configure a API
+
+Crie o arquivo `api/.env` com os dados do seu PostgreSQL local:
+
+```env
+DB_USER=postgres
+DB_HOST=localhost
+DB_PORT=5432
+TECNOSAN=tecnosan
+POSTGRE=sua_senha_do_postgres
+JWT_SECRET=sua_chave_secreta
+PORT=3001
+```
+
+Se quiser usar conexão direta:
+
+```env
+DATABASE_URL=postgresql://postgres:sua_senha_do_postgres@localhost:5432/tecnosan
+JWT_SECRET=sua_chave_secreta
+PORT=3001
+```
+
+### 6. Inicie os serviços
+
+Na raiz do projeto:
 
 ```bash
 npm run dev
 ```
 
-O comando inicia o frontend e a API ao mesmo tempo. Mantenha esse terminal aberto enquanto estiver usando o sistema. Se você fechar o terminal, os dois servidores serão encerrados.
+Esse comando usa `concurrently` para levantar ao mesmo tempo:
 
-Abra no navegador:
+- Frontend em http://localhost:5173
+- API em http://localhost:3001
 
-- Aplicação: http://localhost:5173
-- Status da API: http://localhost:3001/
+### 7. Verifique se a API está respondendo
 
-Se o status da API mostrar `{"status":"ok"}`, o servidor está respondendo corretamente.
+Abra um terminal e execute:
 
-## 8. Faça o primeiro login
+```bash
+curl http://localhost:3001/
+```
 
-Use uma das contas criadas pelo seed:
+Resposta esperada:
 
-| Perfil | E-mail | Senha |
-| --- | --- | --- |
-| Gestor | `gestor.demo@tecnosan.com.br` | `Tecnosan123!` |
-| Técnico | `tecnico.demo@tecnosan.com.br` | `Tecnosan123!` |
+```json
+{"status":"ok"}
+```
 
-Essas contas são apenas para desenvolvimento. Altere ou remova os usuários de demonstração antes de disponibilizar o sistema em produção.
+Se a API não iniciar, verifique:
 
-## Se precisar iniciar separadamente
+- PostgreSQL ativo
+- Banco `tecnosan` existe
+- `api/.env` correto
+- porta `3001` livre
 
-Normalmente `npm run dev` é suficiente. Para executar cada parte em um terminal diferente:
+## Configuração do frontend
 
-**Terminal 1, API:**
+O frontend usa o valor abaixo em `client/services/api.js`:
+
+```js
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+```
+
+Ou seja, por padrão ele aponta para a API local. Caso a API fique em outra URL, crie `client/.env`:
+
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+Para produção, use a URL pública da API:
+
+```env
+VITE_API_URL=https://sua-api.com
+```
+
+## CORS e acesso local
+
+A API permite acesso de:
+
+- http://localhost:5173
+- https://tecnosan-gerencia-projetos.vercel.app
+
+Isso explica por que a aplicação local funciona em desenvolvimento e a versão publicada funciona no Vercel.
+
+## Como rodar cada parte separadamente
+
+### API
 
 ```bash
 cd api
@@ -597,7 +234,7 @@ npm install
 npm run dev
 ```
 
-**Terminal 2, frontend:**
+### Frontend
 
 ```bash
 cd client
@@ -605,45 +242,83 @@ npm install
 npm run dev
 ```
 
-## Usar outra URL para a API
+## Usuários e login
 
-Em desenvolvimento, o frontend usa automaticamente `http://localhost:3001`. Para apontar para uma API diferente, crie `client/.env`:
+A autenticação do sistema usa JWT e as rotas de login estão na API em `/auth`.
 
-```env
-VITE_API_URL=https://seu-endereco-da-api
-```
+Como este repositório não contém um seed de usuários documentado no README, o procedimento recomendado é:
 
-Depois de alterar esse arquivo, pare e inicie novamente o frontend.
+- importar o banco do dump SQL;
+- verificar se os registros de `users` já existem no banco;
+- ou criar o usuário necessário diretamente no PostgreSQL ou pela tela de cadastro da aplicação.
 
 ## Comandos úteis
 
-Execute os comandos abaixo a partir da pasta indicada:
+### Na raiz
 
-| Pasta | Comando | Para que serve |
-| --- | --- | --- |
-| raiz | `npm run dev` | Inicia frontend e API juntos |
-| raiz | `npm run seed` | Insere dados de demonstração |
-| `client/` | `npm run build` | Gera o build de produção do frontend |
-| `client/` | `npm run lint` | Verifica problemas de código no frontend |
+```bash
+npm run dev
+```
+
+### No backend
+
+```bash
+cd api
+npm run dev
+```
+
+### No frontend
+
+```bash
+cd client
+npm run dev
+npm run build
+npm run lint
+```
 
 ## Problemas comuns
 
-**A aplicação abre, mas não carrega dados**
+### API não conecta no PostgreSQL
 
-Confirme se a API está rodando e se `http://localhost:3001/` responde `{"status":"ok"}`. Se necessário, confira `VITE_API_URL` em `client/.env`.
+Verifique:
 
-**Erro ao conectar com o PostgreSQL**
+- se o PostgreSQL está rodando
+- se o banco `tecnosan` foi criado
+- se os campos de conexão em `api/.env` estão corretos
 
-Confirme se o PostgreSQL está em execução e se `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST` e `DB_PORT` no `api/.env` correspondem à sua instalação.
+### Frontend abre, mas mostra erro de rede
 
-**Erro informando que uma tabela não existe**
+Verifique:
 
-Execute o arquivo `api/database/schema.sql` no banco `tecnosan` e depois rode novamente `npm run seed`.
+- se a API está respondendo em http://localhost:3001/
+- se `VITE_API_URL` aponta para a porta correta
+- se o frontend foi reiniciado depois da alteração
 
-**Uma porta já está em uso**
+### Porta em uso
 
-O frontend usa a porta `5173` e a API usa a porta `3001` por padrão. A porta da API pode ser alterada com `PORT` no `api/.env`; nesse caso, atualize também `VITE_API_URL`.
+Se a porta `3001` estiver ocupada:
 
-## Para produção
+- altere `PORT` no `api/.env`
+- ajuste o valor de `VITE_API_URL` no frontend
 
-Em um ambiente hospedado, configure `DATABASE_URL` na API em vez das variáveis `DB_*`. A conexão com `DATABASE_URL` utiliza SSL. No frontend, configure `VITE_API_URL` com o endereço público da API antes de executar o build.
+## Resumo rápido
+
+```bash
+# instalar dependências
+npm install
+npm install --prefix api
+npm install --prefix client
+
+# criar o banco local
+createdb -U postgres tecnosan
+psql -U postgres -d tecnosan -f api/database/pcp_postgres.sql
+
+# configurar api/.env
+# iniciar tudo
+npm run dev
+```
+
+Acesso local esperado:
+
+- Frontend: http://localhost:5173
+- API: http://localhost:3001
