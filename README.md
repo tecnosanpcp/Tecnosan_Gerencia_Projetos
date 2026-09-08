@@ -49,9 +49,11 @@ Esse endereço aparece no CORS da API e também foi usado na configuração do p
 
 ### API
 
-A API não possui um endpoint público definido dentro deste repositório. O endereço real precisa ser informado pela infraestrutura responsável ou configurado em ambiente de homologação/produção.
+O backend está no Render
 
-No código atual, a API local padrão é:
+- https://dashboard.render.com/web/srv-d60du7fgi27c73c85ag0
+
+API local padrão é:
 
 - http://localhost:3001
 
