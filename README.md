@@ -274,8 +274,6 @@ npm run dev
 ```bash
 cd client
 npm run dev
-npm run build
-npm run lint
 ```
 
 ## Problemas comuns
