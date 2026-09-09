@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-atlassian-blue: #0052CC;
+  --color-atlassian-blue-hover: #0065FF;
+  --color-atlassian-green: #00875A;
+  --color-atlassian-red: #DE350B;
+  --color-atlassian-yellow: #FF991F;
+  --color-surface: #F4F5F7;
+  --color-card: #FFFFFF;
+  --color-border: #DFE1E6;
+  --color-text-primary: #172B4D;
+  --color-text-secondary: #5E6C84;
+  --color-text-muted: #97A0AF;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DFE1E6;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #97A0AF;
+}
