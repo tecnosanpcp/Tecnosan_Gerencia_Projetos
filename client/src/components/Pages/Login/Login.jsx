@@ -11,13 +11,25 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await LoginService(email, password);
-    if (response) {
-      sessionStorage.setItem("loginPermission", response);
-      navigate("/home");
-      window.location.reload();
-    } else {
-      alert("Login failed. Please check your credentials.");
+
+    try {
+      const response = await LoginService(email, password);
+
+      if (response) {
+        localStorage.setItem("token", response);
+        localStorage.setItem("loginPermission", "true");
+        sessionStorage.setItem("loginPermission", "true");
+        navigate("/home");
+        window.location.reload();
+      } else {
+        alert("Login failed. Please check your credentials.");
+      }
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert(
+        error?.response?.data?.error ||
+          "Não foi possível realizar o login. Verifique as credenciais e o servidor."
+      );
     }
   };
 

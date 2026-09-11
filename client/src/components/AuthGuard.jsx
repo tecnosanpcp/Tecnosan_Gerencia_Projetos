@@ -8,14 +8,10 @@ const AuthGuard = ({ children, restrictLevel3 = false }) => {
 
   useEffect(() => {
     const checkUser = async () => {
-      const token = localStorage.getItem("loginPermission");
-      const user = await VerifyAuth();
-
-      if (!user || user.access_type === undefined) {
-        console.error("User sem access_type!");
-        setPermissionStatus("redirect_login");
-        return;
-      }
+      const token =
+        localStorage.getItem("token") ||
+        localStorage.getItem("loginPermission") ||
+        sessionStorage.getItem("loginPermission");
 
       if (!token) {
         setPermissionStatus("redirect_login");
@@ -25,9 +21,12 @@ const AuthGuard = ({ children, restrictLevel3 = false }) => {
       try {
         const user = await VerifyAuth();
 
-        // LÓGICA PRINCIPAL:
-        // Se o usuário é nível 3 (user.access_type >= 3)
-        // E a rota atual restringe nível 3 (restrictLevel3 === true)
+        if (!user || user.access_type === undefined) {
+          console.error("User sem access_type!");
+          setPermissionStatus("redirect_login");
+          return;
+        }
+
         if (user.access_type >= 3 && restrictLevel3) {
           setPermissionStatus("redirect_production");
         } else {
