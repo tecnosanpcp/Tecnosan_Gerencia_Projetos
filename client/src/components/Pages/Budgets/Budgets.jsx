@@ -58,7 +58,7 @@ function Budgets() {
           selectedItem={selectedBudget}
           onSelectItem={setSelectedBudget}
           onAdd={() => setAddBudgetModalOpen(true)}
-          addLabel="+ Novo Orçamento"
+          addLabel="Novo Orçamento"
           titleAll="Todos os Orçamentos"
           defaultFilter="Em Planejamento"
           filterOptions={[

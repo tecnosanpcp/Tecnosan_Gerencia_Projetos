@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const items = [
@@ -5,11 +6,6 @@ const items = [
     label: "Página Inicial",
     path: "/home",
     icon: <HomeIcon />,
-  },
-  {
-    label: "Projetos",
-    path: "/projects",
-    icon: <ProjectsIcon />,
   },
   {
     label: "Produção",
@@ -40,6 +36,11 @@ export default function Sidebar({
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [projectsOpen, setProjectsOpen] = useState(
+    location.pathname.startsWith("/projects") ||
+      location.pathname.startsWith("/budgets"),
+  );
+
   const logout = () => {
     sessionStorage.removeItem("loginPermission");
     localStorage.removeItem("token");
@@ -50,6 +51,29 @@ export default function Sidebar({
 
   const toggleSidebar = () => {
     onCollapsedChange(!collapsed);
+  };
+
+  const isProjectsActive =
+    location.pathname === "/projects" ||
+    location.pathname.startsWith("/projects/") ||
+    location.pathname === "/budgets" ||
+    location.pathname.startsWith("/budgets/");
+
+  const isProjectPage =
+    location.pathname === "/projects" ||
+    location.pathname.startsWith("/projects/");
+
+  const isBudgetPage =
+    location.pathname === "/budgets" ||
+    location.pathname.startsWith("/budgets/");
+
+  const handleProjectsClick = () => {
+    if (collapsed) {
+      navigate("/projects");
+      return;
+    }
+
+    setProjectsOpen((current) => !current);
   };
 
   return (
@@ -74,7 +98,9 @@ export default function Sidebar({
         width: collapsed ? 56 : 220,
       }}
     >
-      {/* LOGO */}
+      {/* =========================
+          LOGO
+      ========================== */}
       <div
         className="
           h-14
@@ -122,7 +148,9 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* NAVEGAÇÃO */}
+      {/* =========================
+          NAVEGAÇÃO
+      ========================== */}
       <nav
         className="
           flex-1
@@ -131,78 +159,219 @@ export default function Sidebar({
           overflow-x-hidden
           px-2
           py-3
-          space-y-0.5
         "
       >
-        {items.map((item) => {
+        {/* =========================
+            PÁGINA INICIAL
+        ========================== */}
+        <SidebarItem
+          label="Página Inicial"
+          icon={<HomeIcon />}
+          active={
+            location.pathname === "/home" ||
+            location.pathname.startsWith("/home/")
+          }
+          collapsed={collapsed}
+          onClick={() => navigate("/home")}
+        />
+
+        {/* =========================
+            PROJETOS
+        ========================== */}
+        <div className="mb-0.5">
+          <button
+            type="button"
+            title={collapsed ? "Projetos" : undefined}
+            onClick={handleProjectsClick}
+            className={`
+              relative
+              w-full
+              h-10
+              flex
+              items-center
+              gap-2.5
+              rounded-md
+              border-0
+              font-sans
+              text-[13px]
+              whitespace-nowrap
+              overflow-hidden
+              transition-colors
+
+              ${
+                collapsed
+                  ? "justify-center px-0"
+                  : "justify-start px-3"
+              }
+
+              ${
+                isProjectsActive
+                  ? "bg-white/20 text-white font-semibold"
+                  : "bg-transparent text-white/75 hover:bg-white/10 hover:text-white"
+              }
+            `}
+          >
+            {isProjectsActive && (
+              <span
+                className="
+                  absolute
+                  left-0
+                  top-1/2
+                  -translate-y-1/2
+                  w-[3px]
+                  h-5
+                  rounded-r
+                  bg-white
+                "
+              />
+            )}
+
+            <span className="shrink-0 flex">
+              <ProjectsIcon />
+            </span>
+
+            {!collapsed && (
+              <>
+                <span className="flex-1 truncate text-left">
+                  Projetos
+                </span>
+
+                <span
+                  className={`
+                    shrink-0
+                    transition-transform
+                    duration-200
+                    ${
+                      projectsOpen
+                        ? "rotate-180"
+                        : "rotate-0"
+                    }
+                  `}
+                >
+                  <ChevronIcon />
+                </span>
+              </>
+            )}
+          </button>
+
+          {/* =========================
+              SUBMENU
+          ========================== */}
+          {!collapsed && projectsOpen && (
+            <div className="mt-0.5 mb-1 ml-3 border-l border-white/20 pl-2">
+              <button
+                type="button"
+                onClick={() => navigate("/projects")}
+                className={`
+                  relative
+                  w-full
+                  h-9
+                  flex
+                  items-center
+                  rounded-md
+                  border-0
+                  px-3
+                  text-left
+                  text-[12px]
+                  transition-colors
+
+                  ${
+                    isProjectPage
+                      ? "bg-white/15 text-white font-semibold"
+                      : "text-white/65 hover:bg-white/10 hover:text-white"
+                  }
+                `}
+              >
+                {isProjectPage && (
+                  <span
+                    className="
+                      absolute
+                      left-0
+                      top-1/2
+                      -translate-y-1/2
+                      w-[2px]
+                      h-4
+                      rounded-r
+                      bg-white
+                    "
+                  />
+                )}
+
+                <span className="truncate">
+                  Projetos
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/budgets")}
+                className={`
+                  relative
+                  w-full
+                  h-9
+                  flex
+                  items-center
+                  rounded-md
+                  border-0
+                  px-3
+                  text-left
+                  text-[12px]
+                  transition-colors
+
+                  ${
+                    isBudgetPage
+                      ? "bg-white/15 text-white font-semibold"
+                      : "text-white/65 hover:bg-white/10 hover:text-white"
+                  }
+                `}
+              >
+                {isBudgetPage && (
+                  <span
+                    className="
+                      absolute
+                      left-0
+                      top-1/2
+                      -translate-y-1/2
+                      w-[2px]
+                      h-4
+                      rounded-r
+                      bg-white
+                    "
+                  />
+                )}
+
+                <span className="truncate">
+                  Orçamentos
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* =========================
+            DEMAIS ITENS
+        ========================== */}
+        {items.slice(1).map((item) => {
           const active =
             location.pathname === item.path ||
             location.pathname.startsWith(`${item.path}/`);
 
           return (
-            <button
+            <SidebarItem
               key={item.path}
-              type="button"
-              title={collapsed ? item.label : undefined}
+              label={item.label}
+              icon={item.icon}
+              active={active}
+              collapsed={collapsed}
               onClick={() => navigate(item.path)}
-              className={`
-                relative
-                w-full
-                h-10
-                flex
-                items-center
-                gap-2.5
-                rounded-md
-                border-0
-                font-sans
-                text-[13px]
-                whitespace-nowrap
-                overflow-hidden
-                transition-colors
-
-                ${
-                  collapsed
-                    ? "justify-center px-0"
-                    : "justify-start px-3"
-                }
-
-                ${
-                  active
-                    ? "bg-white/20 text-white font-semibold"
-                    : "bg-transparent text-white/75 hover:bg-white/10 hover:text-white"
-                }
-              `}
-            >
-              {active && (
-                <span
-                  className="
-                    absolute
-                    left-0
-                    top-1/2
-                    -translate-y-1/2
-                    w-[3px]
-                    h-5
-                    rounded-r
-                    bg-white
-                  "
-                />
-              )}
-
-              <span className="shrink-0 flex">
-                {item.icon}
-              </span>
-
-              {!collapsed && (
-                <span className="truncate">
-                  {item.label}
-                </span>
-              )}
-            </button>
+            />
           );
         })}
       </nav>
 
-      {/* USUÁRIO + AÇÕES */}
+      {/* =========================
+          USUÁRIO + AÇÕES
+      ========================== */}
       <div
         className="
           shrink-0
@@ -213,6 +382,7 @@ export default function Sidebar({
           space-y-1.5
         "
       >
+        {/* Usuário */}
         <div
           className={`
             h-12
@@ -221,6 +391,7 @@ export default function Sidebar({
             gap-2.5
             rounded-md
             overflow-hidden
+
             ${
               collapsed
                 ? "justify-center px-0"
@@ -260,7 +431,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* SAIR */}
+        {/* Sair */}
         <button
           type="button"
           onClick={logout}
@@ -279,6 +450,7 @@ export default function Sidebar({
             hover:text-white
             text-[13px]
             transition-colors
+
             ${
               collapsed
                 ? "justify-center px-0"
@@ -293,7 +465,7 @@ export default function Sidebar({
           )}
         </button>
 
-        {/* RECOLHER */}
+        {/* Recolher */}
         <button
           type="button"
           onClick={toggleSidebar}
@@ -316,6 +488,7 @@ export default function Sidebar({
             hover:text-white
             text-[12px]
             transition-colors
+
             ${
               collapsed
                 ? "justify-center px-0"
@@ -333,6 +506,79 @@ export default function Sidebar({
         </button>
       </div>
     </aside>
+  );
+}
+
+/* =========================
+   ITEM DA SIDEBAR
+========================= */
+
+function SidebarItem({
+  label,
+  icon,
+  active,
+  collapsed,
+  onClick,
+}) {
+  return (
+    <button
+      type="button"
+      title={collapsed ? label : undefined}
+      onClick={onClick}
+      className={`
+        relative
+        w-full
+        h-10
+        flex
+        items-center
+        gap-2.5
+        rounded-md
+        border-0
+        font-sans
+        text-[13px]
+        whitespace-nowrap
+        overflow-hidden
+        transition-colors
+        mb-0.5
+
+        ${
+          collapsed
+            ? "justify-center px-0"
+            : "justify-start px-3"
+        }
+
+        ${
+          active
+            ? "bg-white/20 text-white font-semibold"
+            : "bg-transparent text-white/75 hover:bg-white/10 hover:text-white"
+        }
+      `}
+    >
+      {active && (
+        <span
+          className="
+            absolute
+            left-0
+            top-1/2
+            -translate-y-1/2
+            w-[3px]
+            h-5
+            rounded-r
+            bg-white
+          "
+        />
+      )}
+
+      <span className="shrink-0 flex">
+        {icon}
+      </span>
+
+      {!collapsed && (
+        <span className="truncate">
+          {label}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -526,6 +772,26 @@ function CollapseIcon({ collapsed }) {
         strokeLinejoin="round"
       />
     </Svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 5.25L7 8.25L10 5.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

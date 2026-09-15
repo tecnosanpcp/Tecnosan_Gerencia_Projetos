@@ -398,7 +398,7 @@ export default function DashboardChartGrid({ charts }) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3.5 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 items-start">
           {activeCharts.map((def) => (
             <ChartCard
               key={def.id}
@@ -615,7 +615,7 @@ function ChartCard({
             onChartDragStart(event, def.id)
           }
           onDragEnd={onDragEnd}
-          className={`relative p-2.5 min-h-[280px] ${
+          className={`relative p-2 min-h-[220px] ${
             def.comparables?.length > 0
               ? "cursor-grab active:cursor-grabbing"
               : ""
