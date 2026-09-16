@@ -20,6 +20,7 @@ const CHARTS = [
     category: "Produção",
     comparables: ["waste"],
   },
+
   {
     id: "waste",
     title: "Desperdício de Materiais",
@@ -27,6 +28,7 @@ const CHARTS = [
     category: "Qualidade",
     comparables: ["materials"],
   },
+
   {
     id: "projects",
     title: "Projetos",
@@ -34,11 +36,42 @@ const CHARTS = [
     category: "Projetos",
     comparables: [],
   },
+
   {
     id: "employees",
     title: "Colaboradores",
     subtitle: "Distribuição por colaboradores",
     category: "RH",
+    comparables: [],
+  },
+
+  /*
+   * ==========================================================
+   * GRÁFICOS VINDOS DE RELATÓRIOS
+   * ==========================================================
+   */
+
+  {
+    id: "report-evolution",
+    title: "Evolução por Equipamento",
+    subtitle: "Entregues e pendentes por equipamento",
+    category: "Produção",
+    comparables: [],
+  },
+
+  {
+    id: "report-consumption",
+    title: "Consumo por Projeto",
+    subtitle: "Consumo de materiais por projeto",
+    category: "Produção",
+    comparables: [],
+  },
+
+  {
+    id: "report-leadtime",
+    title: "Lead Time",
+    subtitle: "Tempo real comparado à meta",
+    category: "Produção",
     comparables: [],
   },
 ];

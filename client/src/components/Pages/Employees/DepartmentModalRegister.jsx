@@ -1,66 +1,123 @@
 import { IoMdClose } from "react-icons/io";
+import { FiPlus, FiBriefcase } from "react-icons/fi";
 import PropTypes from "prop-types";
 import { useState } from "react";
+
 import { createDeparment } from "@services/DepartmentService";
+
 function DepartmentModalRegister({ visible, setVisible }) {
   const [departmentName, setDepartmentName] = useState("");
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      await createDeparment(departmentName);
+    } catch (error) {
+      console.error("Erro ao cadastrar departamento:", error);
+    }
+  };
+
+  if (!visible) return null;
+
   return (
-    <>
-      {visible ? (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto w-screen h-screen">
-          <div className="bg-gray-200 p-6 rounded-lg shadow-lg w-fit flex flex-col space-y-8">
-            <form
-              className="flex flex-col space-y-8"
-              onSubmit={async () => {
-                await createDeparment(departmentName);
-              }}
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/55 px-4 backdrop-blur-[2px]"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          setVisible(false);
+        }
+      }}
+    >
+      <div className="w-full max-w-[460px] overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-2xl">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.requestSubmit();
+            }
+          }}
+        >
+          {/* HEADER */}
+          <div className="flex items-center justify-between border-b border-[#DFE1E6] px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EAE6FF] text-[#6554C0]">
+                <FiPlus size={18} />
+              </div>
+
+              <div>
+                <h2 className="text-[16px] font-semibold text-[#172B4D]">
+                  Novo departamento
+                </h2>
+
+                <p className="mt-0.5 text-[11px] text-[#6B778C]">
+                  Cadastre uma nova área da empresa.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setVisible(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B778C] transition hover:bg-[#F4F5F7] hover:text-[#172B4D]"
+              aria-label="Fechar"
             >
-              <div className="flex flex-row items-center justify-between">
-                <p className="text-lg font-semibold">Novo Departamento</p>
-                <button
-                  onClick={() => {
-                    setVisible(false);
-                  }}
-                  type="button"
-                >
-                  <IoMdClose className="text-gray-600 hover:text-gray-700 hover:bg-gray-300 rounded" />
-                </button>
-              </div>
-              <div className="flex flex-col space-y-4">
-                <label htmlFor="department_name" className="text-gray-700">
-                  Nome do Departamento
-                </label>
-                <input
-                  type="text"
-                  name="department_name"
-                  className="p-2 rounded"
-                  placeholder="Digite o nome do novo departamento"
-                  value={departmentName}
-                  onChange={(e) => setDepartmentName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="flex flex-row justify-end items-center gap-4">
-                <button
-                  type="button"
-                  className="p-4 bg-slate-50 hover:bg-gray-300 rounded"
-                  onClick={() => setVisible(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="p-4 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Cadastrar Departamento
-                </button>
-              </div>
-            </form>
+              <IoMdClose size={19} />
+            </button>
           </div>
-        </div>
-      ) : null}
-    </>
+
+          {/* CONTENT */}
+          <div className="px-5 py-5">
+            <label
+              htmlFor="department_name"
+              className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[#172B4D]"
+            >
+              <FiBriefcase
+                size={14}
+                className="text-[#6B778C]"
+              />
+
+              Nome do departamento
+
+              <span className="text-[#DE350B]">*</span>
+            </label>
+
+            <input
+              autoFocus
+              type="text"
+              id="department_name"
+              name="department_name"
+              placeholder="Digite o nome do novo departamento"
+              value={departmentName}
+              onChange={(event) =>
+                setDepartmentName(event.target.value)
+              }
+              required
+              className="h-10 w-full rounded-md border border-[#DFE1E6] bg-white px-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
+            />
+          </div>
+
+          {/* FOOTER */}
+          <div className="flex flex-col-reverse gap-2 border-t border-[#DFE1E6] bg-[#FAFBFC] px-5 py-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setVisible(false)}
+              className="h-9 rounded-md border border-[#DFE1E6] bg-white px-4 text-[12px] font-semibold text-[#172B4D] transition hover:bg-[#F4F5F7]"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="h-9 rounded-md bg-[#0052CC] px-5 text-[12px] font-semibold text-white transition hover:bg-[#0065FF] active:scale-[0.98]"
+            >
+              Cadastrar departamento
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 

@@ -2,7 +2,6 @@ import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-
 import SelectMenu from "../../Ui/SelectMenu";
 
 import { listMaterials } from "@services/MaterialService.js";
@@ -15,8 +14,14 @@ import {
 } from "@services/ComponentRecipeMaterials.js";
 
 const parseBRL = (value) => {
-  if (value === undefined || value === null || isNaN(value)) return "R$ 0,00";
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  if (value === undefined || value === null || isNaN(value)) {
+    return "R$ 0,00";
+  }
+
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 };
 
 export default function EditComponentRecipeModal({
@@ -25,7 +30,6 @@ export default function EditComponentRecipeModal({
   component,
 }) {
   const [componenteRecipeName, setComponentRecipeName] = useState("");
-  
   const [totalEmployees, setTotalEmployees] = useState(1);
   const [totalHours, setTotalHours] = useState(0);
 
@@ -40,6 +44,7 @@ export default function EditComponentRecipeModal({
     const fetchMaterials = async () => {
       try {
         const data = await listMaterials();
+
         if (Array.isArray(data)) {
           setMaterials(data);
         }
@@ -61,7 +66,8 @@ export default function EditComponentRecipeModal({
 
       const rawFunc = component["Total Funcionários"];
       const rawHoras = component["Total Horas"];
-      const rawManHours = component["Horas-Homens"] || component["Horas Homem"];
+      const rawManHours =
+        component["Horas-Homens"] || component["Horas Homem"];
 
       let valFunc = 1;
       let valHoras = 0;
@@ -74,25 +80,30 @@ export default function EditComponentRecipeModal({
         valHoras = Number(rawManHours);
       }
 
-      setTotalEmployees(isNaN(valFunc) || valFunc <= 0 ? 1 : valFunc);
+      setTotalEmployees(
+        isNaN(valFunc) || valFunc <= 0 ? 1 : valFunc
+      );
+
       setTotalHours(isNaN(valHoras) ? 0 : valHoras);
 
       if (!component?.ID) return;
 
       try {
         const data = await readCompRecipeMatByComp(component.ID);
-        
+
         let ids = [];
         let qty = [];
 
         if (Array.isArray(data)) {
           for (const element of data) {
             ids.push(element.material_id);
+
             qty.push({
               id: element.material_id,
               quantity: Number(element.quantity_plan) || 0,
             });
           }
+
           setMaterialsList(ids);
           setMaterialsQuantityBackUp(qty);
           setMaterialsQuantity(qty);
@@ -110,9 +121,14 @@ export default function EditComponentRecipeModal({
   useEffect(() => {
     setMaterialsQuantity((prev) => {
       const exist = new Set(prev.map((p) => p.id));
+
       const newItems = materialsList
         .filter((id) => !exist.has(id))
-        .map((id) => ({ id, quantity: 1 }));
+        .map((id) => ({
+          id,
+          quantity: 1,
+        }));
+
       return [...prev, ...newItems];
     });
   }, [materialsList]);
@@ -134,7 +150,11 @@ export default function EditComponentRecipeModal({
         return;
       }
 
-      if (!componenteRecipeName || totalEmployees <= 0 || materialsList.length <= 0) {
+      if (
+        !componenteRecipeName ||
+        totalEmployees <= 0 ||
+        materialsList.length <= 0
+      ) {
         alert("Preencha todos os dados obrigatórios corretamente.");
         return;
       }
@@ -142,29 +162,52 @@ export default function EditComponentRecipeModal({
       const safeEmployees = Number(totalEmployees) || 1;
       const safeHours = Number(totalHours) || 0;
 
-      await updateComponentRecipe(component.ID, componenteRecipeName, safeEmployees, safeHours);
+      await updateComponentRecipe(
+        component.ID,
+        componenteRecipeName,
+        safeEmployees,
+        safeHours
+      );
 
       const quantities = materialsList.map((id) => {
         const item = materialsQuantity.find((q) => q.id === id);
+
         return {
-          id: id,
+          id,
           quantity: item ? Number(item.quantity) : 1,
         };
       });
 
       for (const item of quantities) {
-        const old = materialsQuantityBackUp.find((x) => x.id === item.id);
+        const old = materialsQuantityBackUp.find(
+          (x) => x.id === item.id
+        );
+
         if (!old) {
-          await createCompRecipeMat(component.ID, item.id, item.quantity);
+          await createCompRecipeMat(
+            component.ID,
+            item.id,
+            item.quantity
+          );
         } else if (old.quantity !== item.quantity) {
-          await updateCompRecipeMat(component.ID, item.id, item.quantity);
+          await updateCompRecipeMat(
+            component.ID,
+            item.id,
+            item.quantity
+          );
         }
       }
 
       for (const oldItem of materialsQuantityBackUp) {
-        const stillExists = quantities.some((x) => x.id === oldItem.id);
+        const stillExists = quantities.some(
+          (x) => x.id === oldItem.id
+        );
+
         if (!stillExists) {
-          await deleteCompRecipeMat(component.ID, oldItem.id);
+          await deleteCompRecipeMat(
+            component.ID,
+            oldItem.id
+          );
         }
       }
 
@@ -176,173 +219,324 @@ export default function EditComponentRecipeModal({
     }
   };
 
-  // --- NOVA LÓGICA: Calcular o valor total ---
   const totalValue = materialsList.reduce((acc, id) => {
-    const material = materials.find((m) => m.material_id === id);
-    const itemQty = materialsQuantity.find((q) => q.id === id);
+    const material = materials.find(
+      (m) => m.material_id === id
+    );
+
+    const itemQty = materialsQuantity.find(
+      (q) => q.id === id
+    );
 
     const price = material ? Number(material.value) : 0;
-    const quantity = itemQty ? Number(itemQty.quantity) : 0;
+    const quantity = itemQty
+      ? Number(itemQty.quantity)
+      : 0;
 
     return acc + price * quantity;
   }, 0);
 
-  // Se não estiver visível, não renderiza nada
-  if (!isVisible) return null;
-  // Se estiver visível mas o componente for inválido, evita crash
-  if (!component && isVisible) return null;
+  if (!isVisible || !component) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 w-screen min-h-screen overflow-auto">
-      <div className="bg-gray-200 p-6 rounded-lg shadow-lg w-[70vw] max-w-[120vw] h-[70vh] max-h-[90vh] flex flex-col space-y-8 overflow-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
+      <div className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
         <form
-          className="flex flex-col space-y-8"
+          className="flex min-h-0 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
           }}
         >
-          <div className="flex flex-row items-center justify-between space-x-2">
-            <p className="text-lg font-semibold">Editar Receita do Componente</p>
-            <button onClick={() => clearStates()} type="button">
-              <IoMdClose className="text-gray-600 hover:text-gray-700 hover:bg-gray-300 rounded" />
+          {/* HEADER */}
+          <div className="flex shrink-0 items-center justify-between border-b border-[#DFE1E6] px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[#172B4D]">
+                Editar Receita do Componente
+              </h2>
+
+              <p className="mt-0.5 text-[11px] text-[#6B778C]">
+                Configure os materiais e informações da receita.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={clearStates}
+              className="
+                flex h-7 w-7 items-center justify-center
+                rounded-md
+                text-[#5E6C84]
+                hover:bg-[#F4F5F7]
+              "
+            >
+              <IoMdClose size={18} />
             </button>
           </div>
 
-          <div className="grid grid-cols-12 gap-6 w-full">
-            <div className="col-span-6 flex flex-col space-y-2">
-              <label className="text-gray-700">Nome *</label>
-              <input
-                type="text"
-                className="p-1 rounded"
-                placeholder="Nome do componente"
-                value={componenteRecipeName}
-                onChange={(e) => setComponentRecipeName(e.target.value)}
-                required
+          {/* BODY */}
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+            {/* DADOS PRINCIPAIS */}
+            <div className="grid grid-cols-12 gap-3">
+              <div className="col-span-6">
+                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                  Nome <span className="text-[#DE350B]">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Nome do componente"
+                  value={componenteRecipeName}
+                  onChange={(e) =>
+                    setComponentRecipeName(e.target.value)
+                  }
+                  required
+                  className="
+                    h-9 w-full rounded-md
+                    border border-[#DFE1E6]
+                    px-3 text-xs
+                    outline-none
+                    focus:border-[#4C9AFF]
+                    focus:ring-2
+                    focus:ring-[#DEEBFF]
+                  "
+                />
+              </div>
+
+              <div className="col-span-3">
+                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                  Funcionários <span className="text-[#DE350B]">*</span>
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={totalEmployees}
+                  onChange={(e) =>
+                    setTotalEmployees(e.target.value)
+                  }
+                  required
+                  className="
+                    h-9 w-full rounded-md
+                    border border-[#DFE1E6]
+                    px-3 text-xs text-center
+                    outline-none
+                    focus:border-[#4C9AFF]
+                    focus:ring-2
+                    focus:ring-[#DEEBFF]
+                  "
+                />
+              </div>
+
+              <div className="col-span-3">
+                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                  Total de Horas <span className="text-[#DE350B]">*</span>
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={totalHours}
+                  onChange={(e) =>
+                    setTotalHours(e.target.value)
+                  }
+                  required
+                  className="
+                    h-9 w-full rounded-md
+                    border border-[#DFE1E6]
+                    px-3 text-xs text-center
+                    outline-none
+                    focus:border-[#4C9AFF]
+                    focus:ring-2
+                    focus:ring-[#DEEBFF]
+                  "
+                />
+              </div>
+            </div>
+
+            {/* MATERIAIS */}
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                Materiais <span className="text-[#DE350B]">*</span>
+              </label>
+
+              <SelectMenu
+                options={(materials || []).map((m) => ({
+                  id: m.material_id,
+                  label: m.material_name,
+                }))}
+                selectedOption={materialsList}
+                setSelectedOption={setMaterialsList}
               />
             </div>
 
-            <div className="col-span-3 flex flex-col space-y-2">
-              <label className="text-gray-700">Total Funcionários *</label>
-              <input
-                type="number"
-                min="1"
-                className="p-1 rounded text-center"
-                value={totalEmployees}
-                // Previne input vazio ou inválido visualmente
-                onChange={(e) => setTotalEmployees(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="col-span-3 flex flex-col space-y-2">
-              <label className="text-gray-700">Total de Horas *</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="p-1 rounded text-center"
-                value={totalHours}
-                onChange={(e) => setTotalHours(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col space-y-2 w-full">
-            <label className="text-gray-700">Materiais *</label>
-            <SelectMenu
-              // Proteção caso materials seja null/undefined
-              options={(materials || []).map((m) => ({
-                id: m.material_id,
-                label: m.material_name,
-              }))}
-              selectedOption={materialsList}
-              setSelectedOption={setMaterialsList}
-            />
-          </div>
-
-          <div className="flex flex-col justify-center bg-white p-2 rounded w-full">
-            <table className="space-y-2 w-full">
-              <thead>
-                <tr className="grid grid-cols-6 gap-6">
-                  <th className="font-normal">Material</th>
-                  <th className="font-normal">Descrição</th>
-                  <th className="font-normal">Valor Unitário</th>
-                  <th className="font-normal">Quantidade</th>
-                  <th className="font-normal">Valor Total</th>
-                  <th className="font-normal">Ação</th>
-                </tr>
-              </thead>
-              <tbody className="font-serif text-center">
-                {materialsList.map((id) => {
-                  if (!materials || !materials.length) return null;
-
-                  const mat = materials.find((m) => m.material_id === id);
-                  const objQty = materialsQuantity.find((m) => m.id === id);
-                  const currentQtd = objQty ? objQty.quantity : 0;
-                  
-                  // Proteção para o cálculo de valor
-                  const unitValue = Number(mat?.value) || 0;
-
-                  return (
-                    <tr key={id} className="grid grid-cols-6 gap-6">
-                      <td>{mat?.material_name ?? "-"}</td>
-                      <td>{mat?.material_desc ?? "-"}</td>
-                      {/* Usando o parseBRL local */}
-                      <td>{parseBRL(unitValue)}</td>
-                      <td>
-                        <input
-                          type="number"
-                          className="border p-1 w-20 text-center"
-                          value={currentQtd}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const newValue = val === "" ? 0 : Number(val);
-                            setMaterialsQuantity((prev) =>
-                              prev.map((m) =>
-                                m.id === id ? { ...m, quantity: newValue } : m
-                              )
-                            );
-                          }}
-                        />
-                      </td>
-                      <td>
-                        {parseBRL(currentQtd * unitValue)}
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="text-red-600 hover:text-red-800"
-                          onClick={() => {
-                            setMaterialsList((list) => list.filter((x) => x !== id));
-                            setMaterialsQuantity((prev) => prev.filter((x) => x.id !== id));
-                          }}
-                        >
-                          Excluir
-                        </button>
-                      </td>
+            {/* TABELA */}
+            <div className="overflow-hidden rounded-lg border border-[#DFE1E6]">
+              <div className="max-h-[330px] overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="sticky top-0 z-10 bg-[#F4F5F7]">
+                    <tr className="border-b border-[#DFE1E6]">
+                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                        Material
+                      </th>
+                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                        Descrição
+                      </th>
+                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                        Valor Unitário
+                      </th>
+                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                        Quantidade
+                      </th>
+                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                        Total
+                      </th>
+                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                        Ação
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+
+                  <tbody>
+                    {materialsList.map((id) => {
+                      if (!materials?.length) return null;
+
+                      const mat = materials.find(
+                        (m) => m.material_id === id
+                      );
+
+                      const objQty = materialsQuantity.find(
+                        (m) => m.id === id
+                      );
+
+                      const currentQtd = objQty
+                        ? objQty.quantity
+                        : 0;
+
+                      const unitValue =
+                        Number(mat?.value) || 0;
+
+                      return (
+                        <tr
+                          key={id}
+                          className="border-b border-[#F0F1F3] last:border-b-0 hover:bg-[#FAFBFC]"
+                        >
+                          <td className="px-3 py-2 text-[11px] font-medium text-[#172B4D]">
+                            {mat?.material_name ?? "-"}
+                          </td>
+
+                          <td className="px-3 py-2 text-[10px] text-[#6B778C]">
+                            {mat?.material_desc ?? "-"}
+                          </td>
+
+                          <td className="px-3 py-2 text-[10px] text-[#42526E]">
+                            {parseBRL(unitValue)}
+                          </td>
+
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={currentQtd}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const newValue =
+                                  val === ""
+                                    ? 0
+                                    : Number(val);
+
+                                setMaterialsQuantity(
+                                  (prev) =>
+                                    prev.map((m) =>
+                                      m.id === id
+                                        ? {
+                                            ...m,
+                                            quantity:
+                                              newValue,
+                                          }
+                                        : m
+                                    )
+                                );
+                              }}
+                              className="
+                                h-7 w-16 rounded
+                                border border-[#DFE1E6]
+                                text-center text-[10px]
+                                outline-none
+                                focus:border-[#4C9AFF]
+                              "
+                            />
+                          </td>
+
+                          <td className="px-3 py-2 text-[10px] font-medium text-[#172B4D]">
+                            {parseBRL(
+                              currentQtd * unitValue
+                            )}
+                          </td>
+
+                          <td className="px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMaterialsList((list) =>
+                                  list.filter(
+                                    (x) => x !== id
+                                  )
+                                );
+
+                                setMaterialsQuantity(
+                                  (prev) =>
+                                    prev.filter(
+                                      (x) => x.id !== id
+                                    )
+                                );
+                              }}
+                              className="text-[10px] font-medium text-[#DE350B] hover:underline"
+                            >
+                              Excluir
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-row justify-end items-center space-x-4">
-            
-            <div className="bg-white p-2 rounded">
+          {/* FOOTER */}
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[#DFE1E6] bg-[#FAFBFC] px-5 py-3">
+            <div className="mr-auto rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-[#172B4D]">
               Total: {parseBRL(totalValue)}
             </div>
 
             <button
-              className="p-2 bg-slate-50 hover:bg-gray-300 rounded"
               type="button"
-              onClick={() => clearStates()}
+              onClick={clearStates}
+              className="
+                h-8 rounded-md
+                border border-[#DFE1E6]
+                bg-white px-3
+                text-[11px] font-medium
+                text-[#42526E]
+                hover:bg-[#F4F5F7]
+              "
             >
               Cancelar
             </button>
-            <button className="bnt-add" type="submit">
+
+            <button
+              type="submit"
+              className="
+                h-8 rounded-md
+                bg-[#0052CC] px-3.5
+                text-[11px] font-semibold
+                text-white
+                hover:bg-[#0065FF]
+              "
+            >
               Salvar Receita
             </button>
           </div>

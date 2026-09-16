@@ -1,13 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import DataPanel from "./DataPanel.jsx";
 import MaterialsChart from "./MaterialsChart.jsx";
 import MaterialsWasteChart from "./MaterialsWasteChart.jsx";
 import ProjectsChart from "./ProjectsChart.jsx";
 import EmployeesChart from "./EmployeesChart.jsx";
+
+import ProjectEvolutionGraph from "../Reports/ProjectEvolutionGraph.jsx";
+import TotalConsumptionGraph from "../Reports/TotalConsumptionGraph.jsx";
+import LeadTimeGraph from "../Reports/LeadTimeGraph.jsx";
+
 import DashboardChartGrid from "./DashboardChartGrid.jsx";
 
 import { getHomeKPIs } from "@services/HomeServices.js";
+
+import { VerifyAuth } from "@services/AuthService.js";
+import {
+  countStatusComponentsByProj,
+  getLeadTimeVsReal,
+} from "@services/ComponentsServices.js";
+
+import { vwProjectConsumedMaterials } from "@services/ViewsService.js";
+
+import {
+  getDefaultDateRange,
+  formatDateForApi,
+} from "../../../utils/dateUtils";
 
 function Home() {
   const [kpiData, setKpiData] = useState({
@@ -16,12 +34,40 @@ function Home() {
     refugo_kg: 0,
   });
 
+  /*
+   * ============================================================
+   * DADOS DOS GRÁFICOS DE RELATÓRIOS
+   * ============================================================
+   */
+
+  const defaultDates = useMemo(
+    () => getDefaultDateRange(3),
+    []
+  );
+
+  const [reportData, setReportData] = useState({
+    evolution: {
+      categories: [],
+      series: [],
+    },
+    consumption: [],
+    leadTime: [],
+  });
+
+  /*
+   * ============================================================
+   * KPIs DA HOME
+   * ============================================================
+   */
+
   useEffect(() => {
+    let mounted = true;
+
     const fetchKpis = async () => {
       try {
         const data = await getHomeKPIs();
 
-        if (data) {
+        if (mounted && data) {
           setKpiData(data);
         }
       } catch (error) {
@@ -33,33 +79,274 @@ function Home() {
     };
 
     fetchKpis();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  /*
+   * ============================================================
+   * GRÁFICOS VINDOS DE RELATÓRIOS
+   *
+   * Mantém as mesmas APIs já utilizadas pela página
+   * Relatórios.
+   *
+   * Não cria nenhuma API nova.
+   * ============================================================
+   */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchReportCharts = async () => {
+      try {
+        const user = await VerifyAuth();
+
+        if (!user || !mounted) {
+          return;
+        }
+
+        const start = formatDateForApi(
+          defaultDates.start
+        );
+
+        const end = formatDateForApi(
+          defaultDates.end
+        );
+
+        const [evolutionRes, leadTimeRes, consumptionRes] =
+          await Promise.all([
+            countStatusComponentsByProj(
+              null,
+              null,
+              start,
+              end
+            ),
+
+            getLeadTimeVsReal(
+              null,
+              null,
+              start,
+              end
+            ),
+
+            vwProjectConsumedMaterials(
+              user.user_id,
+              null,
+              start,
+              end
+            ),
+          ]);
+
+        if (!mounted) {
+          return;
+        }
+
+        /*
+         * ======================================================
+         * EVOLUÇÃO POR EQUIPAMENTO
+         *
+         * Mesma transformação existente em Reports.jsx
+         * ======================================================
+         */
+
+        const equipmentMap = new Map();
+
+        (evolutionRes || []).forEach((item) => {
+          const equipmentName =
+            item.equipment_name || "Sem equipamento";
+
+          const quantity =
+            Number(item.numero_pecas) || 0;
+
+          const status =
+            (item.status || "").trim();
+
+          if (!equipmentMap.has(equipmentName)) {
+            equipmentMap.set(equipmentName, {
+              entregues: 0,
+              pendentes: 0,
+            });
+          }
+
+          const entry =
+            equipmentMap.get(equipmentName);
+
+          if (status === "Completed") {
+            entry.entregues += quantity;
+          } else {
+            entry.pendentes += quantity;
+          }
+        });
+
+        const categories =
+          Array.from(equipmentMap.keys());
+
+        const series = [
+          {
+            name: "Entregues",
+            data: categories.map(
+              (category) =>
+                equipmentMap.get(category).entregues
+            ),
+          },
+          {
+            name: "Pendentes",
+            data: categories.map(
+              (category) =>
+                equipmentMap.get(category).pendentes
+            ),
+          },
+        ];
+
+        /*
+         * ======================================================
+         * ATUALIZA HOME
+         * ======================================================
+         */
+
+        setReportData({
+          evolution: {
+            categories,
+            series,
+          },
+
+          consumption:
+            Array.isArray(consumptionRes)
+              ? consumptionRes
+              : [],
+
+          leadTime:
+            Array.isArray(leadTimeRes)
+              ? leadTimeRes
+              : [],
+        });
+      } catch (error) {
+        console.error(
+          "Erro ao carregar gráficos de Relatórios na Home:",
+          error
+        );
+      }
+    };
+
+    fetchReportCharts();
+
+    return () => {
+      mounted = false;
+    };
+  }, [defaultDates]);
+
+  /*
+   * ============================================================
+   * GRÁFICOS
+   * ============================================================
+   */
+
   const charts = [
+    /*
+     * ----------------------------------------------------------
+     * 1 — HOME
+     * ----------------------------------------------------------
+     */
+
     {
       id: "materials",
       element: <MaterialsChart />,
     },
+
+    /*
+     * ----------------------------------------------------------
+     * 2 — HOME
+     * ----------------------------------------------------------
+     */
+
     {
       id: "waste",
       element: <MaterialsWasteChart />,
     },
+
+    /*
+     * ----------------------------------------------------------
+     * 3 — HOME
+     * ----------------------------------------------------------
+     */
+
     {
       id: "projects",
       element: <ProjectsChart />,
     },
+
+    /*
+     * ----------------------------------------------------------
+     * 4 — HOME
+     * ----------------------------------------------------------
+     */
+
     {
       id: "employees",
       element: <EmployeesChart />,
+    },
+
+    /*
+     * ----------------------------------------------------------
+     * 5 — RELATÓRIOS
+     * ----------------------------------------------------------
+     */
+
+    {
+      id: "report-evolution",
+      element: (
+        <ProjectEvolutionGraph
+          categories={
+            reportData.evolution.categories
+          }
+          series={
+            reportData.evolution.series
+          }
+        />
+      ),
+    },
+
+    /*
+     * ----------------------------------------------------------
+     * 6 — RELATÓRIOS
+     * ----------------------------------------------------------
+     */
+
+    {
+      id: "report-consumption",
+      element: (
+        <TotalConsumptionGraph
+          data={reportData.consumption}
+        />
+      ),
+    },
+
+    /*
+     * ----------------------------------------------------------
+     * 7 — RELATÓRIOS
+     * ----------------------------------------------------------
+     */
+
+    {
+      id: "report-leadtime",
+      element: (
+        <LeadTimeGraph
+          data={reportData.leadTime}
+        />
+      ),
     },
   ];
 
   return (
     <div className="min-h-screen w-full bg-[#F4F5F7] font-sans">
       <div className="px-6 md:px-8 py-6">
+
         {/* =================================================
             TÍTULO
         ================================================== */}
+
         <div className="mb-5">
           <h1 className="m-0 text-[22px] font-bold text-[#172B4D]">
             Sistema de Controle de Produção
@@ -73,6 +360,7 @@ function Home() {
         {/* =================================================
             KPIs
         ================================================== */}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <DataPanel
             title="Planejado"
@@ -94,8 +382,9 @@ function Home() {
         </div>
 
         {/* =================================================
-            GRÁFICOS
+            7 GRÁFICOS
         ================================================== */}
+
         <DashboardChartGrid charts={charts} />
       </div>
     </div>
@@ -103,4 +392,3 @@ function Home() {
 }
 
 export default Home;
-
