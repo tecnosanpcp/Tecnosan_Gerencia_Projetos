@@ -230,17 +230,9 @@ export default function TotalConsumptionGraph({ data = [] }) {
   };
 
   return (
-    <div className="h-full min-h-0 w-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
+    <div className="h-full min-h-0 w-full">
       <div className="mb-2 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-[14px] font-semibold text-[#172B4D]">
-            Consumo Total
-          </h3>
-
-          <p className="mt-0.5 text-[11px] text-[#5E6C84]">
-            Consumo de materiais por projeto
-          </p>
-        </div>
+        
 
         <div className="flex shrink-0 rounded-lg border border-[#DFE1E6] bg-[#F4F5F7] p-0.5">
           <button

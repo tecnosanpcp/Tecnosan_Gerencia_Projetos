@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import DataPanel from "./DataPanel.jsx";
+import KpiChartModal from "./KpiChartModal.jsx";
+
 import MaterialsChart from "./MaterialsChart.jsx";
 import MaterialsWasteChart from "./MaterialsWasteChart.jsx";
 import ProjectsChart from "./ProjectsChart.jsx";
@@ -33,6 +35,17 @@ function Home() {
     processado_kg: 0,
     refugo_kg: 0,
   });
+
+  /*
+   * ============================================================
+   * KPI SELECIONADO
+   *
+   * Controla qual gráfico de KPI está aberto.
+   * Não altera nenhuma API ou lógica existente.
+   * ============================================================
+   */
+
+  const [openedKpi, setOpenedKpi] = useState(null);
 
   /*
    * ============================================================
@@ -366,18 +379,27 @@ function Home() {
             title="Planejado"
             value={kpiData.planejado_kg}
             unit="KG"
+            onOpen={() =>
+              setOpenedKpi("planejado")
+            }
           />
 
           <DataPanel
             title="Processado"
             value={kpiData.processado_kg}
             unit="KG"
+            onOpen={() =>
+              setOpenedKpi("processado")
+            }
           />
 
           <DataPanel
             title="Refugo"
             value={kpiData.refugo_kg}
             unit="KG"
+            onOpen={() =>
+              setOpenedKpi("refugo")
+            }
           />
         </div>
 
@@ -387,6 +409,38 @@ function Home() {
 
         <DashboardChartGrid charts={charts} />
       </div>
+
+      {/* =====================================================
+          GRÁFICOS DOS KPIs
+          
+          O histórico não é inventado aqui.
+          Quando o getHomeKPIs() fornecer os dados históricos,
+          eles poderão ser passados diretamente ao modal.
+      ====================================================== */}
+
+      <KpiChartModal
+        isOpen={openedKpi === "planejado"}
+        onClose={() => setOpenedKpi(null)}
+        title="Planejado"
+        value={kpiData.planejado_kg}
+        unit="KG"
+      />
+
+      <KpiChartModal
+        isOpen={openedKpi === "processado"}
+        onClose={() => setOpenedKpi(null)}
+        title="Processado"
+        value={kpiData.processado_kg}
+        unit="KG"
+      />
+
+      <KpiChartModal
+        isOpen={openedKpi === "refugo"}
+        onClose={() => setOpenedKpi(null)}
+        title="Refugo"
+        value={kpiData.refugo_kg}
+        unit="KG"
+      />
     </div>
   );
 }

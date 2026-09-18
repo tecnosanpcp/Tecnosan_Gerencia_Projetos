@@ -431,7 +431,7 @@ export default function DashboardChartGrid({ charts }) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 items-stretch">
           {activeCharts.map((def) => (
             <ChartCard
               key={def.id}
@@ -542,7 +542,7 @@ function ChartCard({
           onReorderDrop(event, def.id);
         }
       }}
-      className={`relative bg-white rounded border overflow-hidden transition-all duration-200 ${
+      className={`relative h-full bg-white rounded border overflow-hidden transition-all duration-200 ${
         dragging
           ? "opacity-40 scale-[0.98]"
           : "opacity-100"
@@ -648,7 +648,7 @@ function ChartCard({
             onChartDragStart(event, def.id)
           }
           onDragEnd={onDragEnd}
-          className={`relative p-2 min-h-[220px] ${
+          className={`relative h-[220px] p-2 ${
             def.comparables?.length > 0
               ? "cursor-grab active:cursor-grabbing"
               : ""

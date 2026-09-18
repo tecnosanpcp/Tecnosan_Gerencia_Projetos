@@ -134,19 +134,7 @@ export default function ProjectEvolutionGraph({
   };
 
   return (
-    <div className="h-full min-h-0 w-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
-      <div className="mb-2 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-[14px] font-semibold text-[#172B4D]">
-            Evolução dos Projetos
-          </h3>
-
-          <p className="mt-0.5 text-[11px] text-[#5E6C84]">
-            Componentes entregues e pendentes
-          </p>
-        </div>
-      </div>
-
+    <div className="h-full min-h-0 w-full  p-4 ">
       <div className="h-[calc(100%-48px)] min-h-[220px] w-full">
         {safeCategories.length > 0 && safeSeries.length > 0 ? (
           <Chart

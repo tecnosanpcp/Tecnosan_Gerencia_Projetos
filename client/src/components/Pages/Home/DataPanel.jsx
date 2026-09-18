@@ -5,6 +5,7 @@ function DataPanel({
   comparison,
   previousMonth,
   previousYear,
+  onOpen,
 }) {
   const hasComparison =
     comparison !== undefined && comparison !== null;
@@ -13,25 +14,38 @@ function DataPanel({
 
   return (
     <div className="group relative overflow-hidden rounded-[4px] border border-[#DFE1E6] bg-white shadow-[0_1px_3px_rgba(9,30,66,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(9,30,66,0.12)]">
-      {/* Barra lateral de destaque */}
-      
-
       <div className="p-4 pl-[18px]">
-        {/* Título */}
         <div className="mb-2 flex items-center justify-between">
           <p className="m-0 text-[11px] font-bold uppercase tracking-[0.07em] text-[#5E6C84]">
             {title}
           </p>
 
-          <div className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-[#F4F5F7] text-[#0052CC]">
+          <button
+            type="button"
+            onClick={onOpen}
+            title={`Ver gráfico de ${title}`}
+            aria-label={`Ver gráfico de ${title}`}
+            className="
+              flex h-6 w-6 items-center justify-center
+              rounded-[4px]
+              bg-[#F4F5F7]
+              text-[#0052CC]
+              transition-all duration-150
+              hover:bg-[#DEEBFF]
+              hover:text-[#0747A6]
+              active:scale-95
+              focus:outline-none
+              focus:ring-2
+              focus:ring-[#B3D4FF]
+            "
+          >
             <KpiIcon />
-          </div>
+          </button>
         </div>
 
-        {/* Valor principal */}
         <div className="flex items-baseline gap-1">
           <span className="text-[28px] font-bold leading-none tracking-[-0.02em] text-[#172B4D]">
-            {value}
+            {Number(value || 0).toLocaleString("pt-BR")}
           </span>
 
           <span className="text-[12px] font-semibold text-[#6B778C]">
@@ -39,7 +53,6 @@ function DataPanel({
           </span>
         </div>
 
-        {/* Comparação */}
         <div className="mt-3 border-t border-[#F4F5F7] pt-3">
           {hasComparison ? (
             <div className="flex items-center gap-1.5">
@@ -75,7 +88,6 @@ function DataPanel({
             </div>
           )}
 
-          {/* Comparação histórica */}
           <div className="mt-2 flex items-center justify-between">
             <span className="text-[10px] text-[#97A0AF]">
               Mesmo mês em períodos anteriores

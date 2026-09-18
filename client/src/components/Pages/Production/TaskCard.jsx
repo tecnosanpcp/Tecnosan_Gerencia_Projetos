@@ -11,90 +11,63 @@ export default function TaskCard({
   onDragStart,
   isMoving = false,
 }) {
-  const getStatusStyles = (
-    status
-  ) => {
-    switch (status) {
-      case "Pending":
-        return {
-          border:
-            "border-[#0052CC]",
-          bg: "bg-[#DEEBFF]",
-          text:
-            "text-[#0052CC]",
-          dot:
-            "text-[#0052CC]",
-          label:
-            "Pendente",
-        };
+  const getStatusStyles = (status) => {
+  switch (status) {
+    case "Pending":
+      return {
+        border: "border-[#0052CC]",
+        bg: "bg-[#E9F2FF]",
+        text: "text-[#0052CC]",
+        dot: "text-[#0052CC]",
+        label: "Pendente",
+      };
 
-      case "Completed":
-        return {
-          border:
-            "border-[#00875A]",
-          bg: "bg-[#E3FCEF]",
-          text:
-            "text-[#00875A]",
-          dot:
-            "text-[#00875A]",
-          label:
-            "Concluído",
-        };
+    case "Completed":
+      return {
+        border: "border-[#00875A]",
+        bg: "bg-[#E7F7F0]",
+        text: "text-[#00875A]",
+        dot: "text-[#00875A]",
+        label: "Concluído",
+      };
 
-      case "Running":
-        return {
-          border:
-            "border-[#FF991F]",
-          bg: "bg-[#FFFAE6]",
-          text:
-            "text-[#FF991F]",
-          dot:
-            "text-[#FF991F]",
-          label:
-            "Em execução",
-        };
+    case "Running":
+      return {
+        border: "border-[#FF991F]",
+        bg: "bg-[#FFF3E0]",
+        text: "text-[#C66A00]",
+        dot: "text-[#C66A00]",
+        label: "Em execução",
+      };
 
-      case "Delayed":
-        return {
-          border:
-            "border-[#DE350B]",
-          bg: "bg-[#FFEBE6]",
-          text:
-            "text-[#DE350B]",
-          dot:
-            "text-[#DE350B]",
-          label:
-            "Atrasado",
-        };
+    case "Delayed":
+      return {
+        border: "border-[#DE350B]",
+        bg: "bg-[#FCE8E4]",
+        text: "text-[#DE350B]",
+        dot: "text-[#DE350B]",
+        label: "Atrasado",
+      };
 
-      case "Failed":
-        return {
-          border:
-            "border-[#DE350B]",
-          bg: "bg-[#FFEBE6]",
-          text:
-            "text-[#DE350B]",
-          dot:
-            "text-[#DE350B]",
-          label:
-            "Falhou",
-        };
+    case "Failed":
+      return {
+        border: "border-[#DE350B]",
+        bg: "bg-[#FCE8E4]",
+        text: "text-[#DE350B]",
+        dot: "text-[#DE350B]",
+        label: "Falhou",
+      };
 
-      default:
-        return {
-          border:
-            "border-[#DFE1E6]",
-          bg: "bg-white",
-          text:
-            "text-[#5E6C84]",
-          dot:
-            "text-[#97A0AF]",
-          label:
-            status ||
-            "Indefinido",
-        };
-    }
-  };
+    default:
+      return {
+        border: "border-[#5E6C84]",
+        bg: "bg-[#F4F5F7]",
+        text: "text-[#5E6C84]",
+        dot: "text-[#5E6C84]",
+        label: status || "Indefinido",
+      };
+  }
+};
 
   const styles =
     getStatusStyles(

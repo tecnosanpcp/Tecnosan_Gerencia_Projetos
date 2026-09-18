@@ -135,9 +135,7 @@ export default function Employees() {
                     </span>
                   </div>
 
-                  <p className="mt-0.5 text-[11px] text-[#6B778C]">
-                    Funcionários cadastrados no sistema
-                  </p>
+                  
                 </div>
 
                 <div className="relative w-full md:w-[280px]">

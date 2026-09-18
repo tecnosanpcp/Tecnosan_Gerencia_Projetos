@@ -229,16 +229,8 @@ export default function LeadTimeGraph({ data = [] }) {
   ];
 
   return (
-    <div className="h-full min-h-0 w-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
-      <div className="mb-2">
-        <h3 className="truncate text-[14px] font-semibold text-[#172B4D]">
-          Lead Time
-        </h3>
-
-        <p className="mt-0.5 text-[11px] text-[#5E6C84]">
-          Horas reais comparadas à meta
-        </p>
-      </div>
+    <div className="h-full min-h-0 w-full">
+      
 
       <div className="h-[calc(100%-48px)] min-h-[220px] w-full">
         {categories.length > 0 ? (

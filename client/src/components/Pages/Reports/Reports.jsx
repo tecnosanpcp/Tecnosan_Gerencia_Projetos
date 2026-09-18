@@ -1088,9 +1088,7 @@ export default function Reports() {
               >
 
                 <div className="mb-1 flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#E9F2FF] text-[#0052CC]">
-                    <MdAccessTime className="text-[17px]" />
-                  </div>
+                  
 
                   <div>
                     <h2 className="text-[14px] font-semibold text-[#172B4D]">
