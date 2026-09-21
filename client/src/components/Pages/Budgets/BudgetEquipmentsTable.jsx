@@ -2,12 +2,6 @@ import { useState, Fragment } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FaTrash } from "react-icons/fa";
 
-// Serviços
-// Antes: updateDates(equip.equipment_recipe_id, comp.component_recipe_id, ...)
-// alterava a RECEITA inteira em EquipRecipeCompRecipeService.js — ou seja,
-// mudar a data aqui afetava TODOS os orçamentos que usassem aquele
-// equipamento. Agora a data é por orçamento: grava em
-// budgets_components_schedule via budget_equipment_id.
 import { upsertBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js";
 import { deleteRelation } from "@services/BudgetsEquipRecipesServices.js";
 

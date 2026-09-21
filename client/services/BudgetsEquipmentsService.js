@@ -30,8 +30,7 @@ export const readBudgetEquipmentById = async (budget_equipment_id) => {
 
 export const createBudgetEquipment = async (
   budget_id,
-  equipment_recipe_id,
-  equipment_name
+  equipment_recipe_id
 ) => {
   try {
     if (!budget_id || !equipment_recipe_id) {
@@ -40,8 +39,7 @@ export const createBudgetEquipment = async (
 
     const response = await api.post("/budgets-equipments", {
       budget_id,
-      equipment_recipe_id,
-      equipment_name,
+      equipment_recipe_id
     });
 
     return response.data;

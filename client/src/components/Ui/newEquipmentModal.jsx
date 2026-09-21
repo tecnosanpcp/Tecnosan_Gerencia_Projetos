@@ -22,8 +22,7 @@ export default function NewEquipmentModal({
     setQuantity("");
     // window.location.reload();
   };
-
-  if (!isVisible) return null;
+  if (isVisible == false) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 w-screen h-screen">

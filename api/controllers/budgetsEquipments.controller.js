@@ -1,26 +1,33 @@
 import { pool } from "../config/db.js";
 
 // Instância de um equipamento dentro de um orçamento específico.
-// equipment_name pode divergir do nome da receita (customizável por orçamento).
+// equipment_name vai ser gerado automáticamente
 
 export const createBudgetEquipment = async (req, res) => {
   try {
-    const { budget_id, equipment_recipe_id, equipment_name } = req.body;
+    const { budget_id, equipment_recipe_id } = req.body;
 
     if (!budget_id || !equipment_recipe_id) {
       return res.status(400).json({ message: "Algum dado está faltando" });
     }
 
-    let name = equipment_name;
-    if (!name) {
-      const recipe = await pool.query(
-        "SELECT recipe_name FROM equipment_recipes WHERE equipment_recipe_id = $1",
-        [equipment_recipe_id],
-      );
-      if (recipe.rows.length === 0) {
-        return res.status(404).json({ message: "Receita de equipamento não encontrada" });
-      }
-      name = recipe.rows[0].recipe_name;
+    const equip_count = await pool.query(
+      `select
+	      count(equipment_recipe_id) AS quantity
+      from budgets_equipments
+      where budget_id = $2 and equipment_recipe_id = $1
+      group by equipment_recipe_id;`, 
+      [equipment_recipe_id, budget_id]
+    )
+
+    const recipe = await pool.query(
+      "SELECT recipe_name FROM equipment_recipes WHERE equipment_recipe_id = $1",
+      [equipment_recipe_id],
+    );
+
+    let name = recipe.rows[0].recipe_name;
+    if (parseInt(equip_count.rows[0]?.quantity) >= 1) {
+      name = `${name} ${1 + parseInt(equip_count.rows[0]?.quantity)}`;
     }
 
     const response = await pool.query(
