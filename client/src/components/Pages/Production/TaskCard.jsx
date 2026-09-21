@@ -9,86 +9,88 @@ export default function TaskCard({
   onClick,
   draggable = false,
   onDragStart,
+  onDragEnd,
   isMoving = false,
+  responsible,
+  employees = [],
 }) {
   const getStatusStyles = (status) => {
-  switch (status) {
-    case "Pending":
-      return {
-        border: "border-[#0052CC]",
-        bg: "bg-[#E9F2FF]",
-        text: "text-[#0052CC]",
-        dot: "text-[#0052CC]",
-        label: "Pendente",
-      };
+    switch (status) {
+      case "Pending":
+        return {
+          border: "border-[#0052CC]",
+          bg: "bg-[#E9F2FF]",
+          text: "text-[#0052CC]",
+          dot: "text-[#0052CC]",
+          label: "Pendente",
+        };
 
-    case "Completed":
-      return {
-        border: "border-[#00875A]",
-        bg: "bg-[#E7F7F0]",
-        text: "text-[#00875A]",
-        dot: "text-[#00875A]",
-        label: "Concluído",
-      };
+      case "Completed":
+        return {
+          border: "border-[#00875A]",
+          bg: "bg-[#E7F7F0]",
+          text: "text-[#00875A]",
+          dot: "text-[#00875A]",
+          label: "Concluído",
+        };
 
-    case "Running":
-      return {
-        border: "border-[#FF991F]",
-        bg: "bg-[#FFF3E0]",
-        text: "text-[#C66A00]",
-        dot: "text-[#C66A00]",
-        label: "Em execução",
-      };
+      case "Running":
+        return {
+          border: "border-[#FF991F]",
+          bg: "bg-[#FFF3E0]",
+          text: "text-[#C66A00]",
+          dot: "text-[#C66A00]",
+          label: "Em execução",
+        };
 
-    case "Delayed":
-      return {
-        border: "border-[#DE350B]",
-        bg: "bg-[#FCE8E4]",
-        text: "text-[#DE350B]",
-        dot: "text-[#DE350B]",
-        label: "Atrasado",
-      };
+      case "Delayed":
+        return {
+          border: "border-[#DE350B]",
+          bg: "bg-[#FCE8E4]",
+          text: "text-[#DE350B]",
+          dot: "text-[#DE350B]",
+          label: "Atrasado",
+        };
 
-    case "Failed":
-      return {
-        border: "border-[#DE350B]",
-        bg: "bg-[#FCE8E4]",
-        text: "text-[#DE350B]",
-        dot: "text-[#DE350B]",
-        label: "Falhou",
-      };
+      case "Failed":
+        return {
+          border: "border-[#DE350B]",
+          bg: "bg-[#FCE8E4]",
+          text: "text-[#DE350B]",
+          dot: "text-[#DE350B]",
+          label: "Falhou",
+        };
 
-    default:
-      return {
-        border: "border-[#5E6C84]",
-        bg: "bg-[#F4F5F7]",
-        text: "text-[#5E6C84]",
-        dot: "text-[#5E6C84]",
-        label: status || "Indefinido",
-      };
-  }
-};
+      default:
+        return {
+          border: "border-[#5E6C84]",
+          bg: "bg-[#F4F5F7]",
+          text: "text-[#5E6C84]",
+          dot: "text-[#5E6C84]",
+          label: status || "Indefinido",
+        };
+    }
+  };
 
-  const styles =
-    getStatusStyles(
-      task.status
-    );
+  const styles = getStatusStyles(task.status);
 
-  const formatTime = (
-    value
-  ) => {
+  const responsibleEmployee = employees.find(
+    (employee) =>
+      Number(employee.user_id) ===
+      Number(responsible?.user_id),
+  );
+
+  const formatTime = (value) => {
     if (!value) {
       return "--:--";
     }
 
-    return new Date(
-      value
-    ).toLocaleTimeString(
+    return new Date(value).toLocaleTimeString(
       "pt-BR",
       {
         hour: "2-digit",
         minute: "2-digit",
-      }
+      },
     );
   };
 
@@ -101,8 +103,11 @@ export default function TaskCard({
       onDragStart={(event) =>
         onDragStart?.(
           event,
-          task
+          task,
         )
+      }
+      onDragEnd={() =>
+        onDragEnd?.()
       }
       onClick={() =>
         onClick?.(task)
@@ -136,9 +141,7 @@ export default function TaskCard({
           group-hover:opacity-100
         "
       >
-        <FaGripVertical
-          size={12}
-        />
+        <FaGripVertical size={12} />
       </div>
 
       <p
@@ -150,9 +153,22 @@ export default function TaskCard({
           text-[#172B4D]
         "
       >
-        {task.component_name ||
-          "Componente"}
+        {task.component_name || "Componente"}
       </p>
+
+      {responsibleEmployee?.user_name && (
+        <p
+          className="
+            mt-1
+            truncate
+            text-[10px]
+            text-[#5E6C84]
+          "
+        >
+          Responsável:{" "}
+          {responsibleEmployee.user_name}
+        </p>
+      )}
 
       <p
         className="
@@ -165,8 +181,7 @@ export default function TaskCard({
         "
       >
         EQ-ID:{" "}
-        {task.equipment_id ??
-          "-"}
+        {task.equipment_id ?? "-"}
       </p>
 
       <div
@@ -212,9 +227,7 @@ export default function TaskCard({
         >
           <FaRegClock />
 
-          {formatTime(
-            task.start_date
-          )}
+          {formatTime(task.start_date)}
         </span>
       </div>
     </article>

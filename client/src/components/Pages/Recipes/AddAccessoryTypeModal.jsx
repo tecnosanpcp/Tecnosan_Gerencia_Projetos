@@ -1,8 +1,8 @@
 import { IoMdClose } from "react-icons/io";
 import { useState } from "react";
-import {useQueryClient} from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query";
 
-import { createAccessory } from "@services/AccessoriesServices.js"; 
+import { createAccessory } from "@services/AccessoriesServices.js";
 
 export default function AddAccessoryTypeModal({ isVisible, setVisible }) {
   const [name, setName] = useState("");
@@ -22,14 +22,15 @@ export default function AddAccessoryTypeModal({ isVisible, setVisible }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
+
     try {
       if (!name) {
         alert("O nome é obrigatório.");
         return;
       }
-  
+
       await createAccessory(name, serialNumber, value, purchaseDate);
-      
+
       queryClient.invalidateQueries(["accessories"]);
       clearStates();
     } catch (error) {
@@ -41,63 +42,183 @@ export default function AddAccessoryTypeModal({ isVisible, setVisible }) {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-200 p-6 rounded-lg shadow-lg w-96 flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Novo Acessório</h2>
-          <button onClick={clearStates} type="button"><IoMdClose /></button>
-        </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
+      <div className="w-full max-w-[460px] overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
+        <form onSubmit={handleSave}>
+          {/* HEADER */}
+          <div className="flex items-center justify-between border-b border-[#DFE1E6] px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[#172B4D]">
+                Adicionar Acessório
+              </h2>
 
-        <form onSubmit={handleSave} className="flex flex-col space-y-4">
-          <div className="flex flex-col space-y-2">
-            <label className="text-gray-700">Nome *</label>
-            <input
-              type="text"
-              className="p-2 rounded border border-gray-300"
-              placeholder="Ex: Furadeira Bosch"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+              <p className="mt-0.5 text-[11px] text-[#6B778C]">
+                Cadastre um novo acessório no sistema.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={clearStates}
+              className="
+                flex h-7 w-7 items-center justify-center
+                rounded-md
+                text-[#5E6C84]
+                transition
+                hover:bg-[#F4F5F7]
+                hover:text-[#172B4D]
+              "
+            >
+              <IoMdClose size={18} />
+            </button>
           </div>
 
-          <div className="flex flex-col space-y-2">
-            <label className="text-gray-700">Número de Série</label>
-            <input
-              type="text"
-              className="p-2 rounded border border-gray-300"
-              placeholder="Ex: SN-123456"
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
-            />
+          {/* BODY */}
+          <div className="space-y-4 px-5 py-5">
+            {/* NOME */}
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                Nome <span className="text-[#DE350B]">*</span>
+              </label>
+
+              <input
+                type="text"
+                placeholder="Ex: Furadeira Bosch"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="
+                  h-9 w-full rounded-md
+                  border border-[#DFE1E6]
+                  bg-white px-3
+                  text-xs text-[#172B4D]
+                  outline-none
+                  transition
+                  placeholder:text-[#97A0AF]
+                  focus:border-[#4C9AFF]
+                  focus:ring-2
+                  focus:ring-[#DEEBFF]
+                "
+              />
+            </div>
+
+            {/* NÚMERO DE SÉRIE */}
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                Número de Série
+              </label>
+
+              <input
+                type="text"
+                placeholder="Ex: SN-123456"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                className="
+                  h-9 w-full rounded-md
+                  border border-[#DFE1E6]
+                  bg-white px-3
+                  text-xs text-[#172B4D]
+                  outline-none
+                  transition
+                  placeholder:text-[#97A0AF]
+                  focus:border-[#4C9AFF]
+                  focus:ring-2
+                  focus:ring-[#DEEBFF]
+                "
+              />
+            </div>
+
+            {/* DATA DE COMPRA */}
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                Data de Compra
+              </label>
+
+              <input
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                className="
+                  h-9 w-full rounded-md
+                  border border-[#DFE1E6]
+                  bg-white px-3
+                  text-xs text-[#172B4D]
+                  outline-none
+                  transition
+                  focus:border-[#4C9AFF]
+                  focus:ring-2
+                  focus:ring-[#DEEBFF]
+                "
+              />
+            </div>
+
+            {/* VALOR */}
+            <div>
+              <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                Valor
+              </label>
+
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-[#6B778C]">
+                  R$
+                </span>
+
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  className="
+                    h-9 w-full rounded-md
+                    border border-[#DFE1E6]
+                    bg-white
+                    pl-9 pr-3
+                    text-xs text-[#172B4D]
+                    outline-none
+                    transition
+                    focus:border-[#4C9AFF]
+                    focus:ring-2
+                    focus:ring-[#DEEBFF]
+                  "
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col space-y-2">
-            <label className="text-gray-700">Data de Compra</label>
-            <input
-              type="date"
-              className="p-2 rounded border border-gray-300"
-              value={purchaseDate}
-              onChange={(e) => setPurchaseDate(e.target.value)}
-            />
-          </div>
+          {/* FOOTER */}
+          <div className="flex items-center justify-end gap-2 border-t border-[#DFE1E6] bg-[#FAFBFC] px-5 py-3">
+            <button
+              type="button"
+              onClick={clearStates}
+              className="
+                h-8 rounded-md
+                border border-[#DFE1E6]
+                bg-white px-3
+                text-[11px] font-medium
+                text-[#42526E]
+                transition
+                hover:bg-[#F4F5F7]
+              "
+            >
+              Cancelar
+            </button>
 
-          <div className="flex flex-col space-y-2">
-            <label className="text-gray-700">Valor (R$)</label>
-            <input
-              type="number"
-              className="p-2 rounded border border-gray-300"
-              placeholder="0.00"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <button type="button" onClick={clearStates} className="p-2 bg-slate-50 rounded hover:bg-gray-300">Cancelar</button>
-            <button type="submit" className="bnt-add">Salvar</button>
+            <button
+              type="submit"
+              className="
+                h-8 rounded-md
+                bg-[#0052CC] px-3.5
+                text-[11px] font-semibold
+                text-white
+                transition
+                hover:bg-[#0065FF]
+                active:scale-[0.98]
+              "
+            >
+              Salvar Acessório
+            </button>
           </div>
         </form>
       </div>

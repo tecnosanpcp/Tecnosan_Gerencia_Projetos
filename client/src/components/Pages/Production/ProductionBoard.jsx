@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import TaskCard from "./TaskCard";
 import TaskModal from "./TaskModal";
@@ -49,6 +49,8 @@ function capitalizeFirst(text) {
 
 export default function ProductionBoard({
   weekDays,
+  offset,
+  setOffset,
   tasks,
   responsible,
   setIsAddOpen,
@@ -74,6 +76,119 @@ export default function ProductionBoard({
 
   /*
    * ==========================================================
+   * NAVEGAÇÃO COM AS SETAS DO TECLADO
+   * ==========================================================
+   */
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const target = event.target;
+
+      const isTyping =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
+
+      if (isTyping) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+
+        setOffset((current) => current - 1);
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+
+        setOffset((current) => current + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setOffset]);
+  /*
+   * ==========================================================
+   * NAVEGAÇÃO AUTOMÁTICA DURANTE DRAG
+   * ==========================================================
+   */
+
+  const edgeDirectionRef = useRef(null);
+  const edgeTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (edgeTimerRef.current) {
+        clearTimeout(edgeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleEdgeNavigation = (direction) => {
+    if (!draggedTask || movingTaskId) {
+      return;
+    }
+
+    if (edgeDirectionRef.current === direction) {
+      return;
+    }
+
+    edgeDirectionRef.current = direction;
+
+    if (edgeTimerRef.current) {
+      clearTimeout(edgeTimerRef.current);
+    }
+
+    edgeTimerRef.current = setTimeout(() => {
+      setOffset((currentOffset) => currentOffset + direction);
+
+      edgeTimerRef.current = null;
+    }, 600);
+  };
+
+  const handleBoardDragOver = (event) => {
+    if (!draggedTask || movingTaskId) {
+      return;
+    }
+
+    const board = event.currentTarget;
+    const rect = board.getBoundingClientRect();
+
+    const x = event.clientX - rect.left;
+
+    const edgeSize = 90;
+
+    const isLeftEdge = x <= edgeSize;
+
+    const isRightEdge = x >= rect.width - edgeSize;
+
+    if (isLeftEdge) {
+      handleEdgeNavigation(-1);
+      return;
+    }
+
+    if (isRightEdge) {
+      handleEdgeNavigation(1);
+      return;
+    }
+
+    edgeDirectionRef.current = null;
+
+    if (edgeTimerRef.current) {
+      clearTimeout(edgeTimerRef.current);
+
+      edgeTimerRef.current = null;
+    }
+  };
+
+  /*
+   * ==========================================================
    * FILTROS
    * ==========================================================
    */
@@ -84,7 +199,9 @@ export default function ProductionBoard({
     async function applyFilters() {
       if (!tasks || tasks.length === 0) {
         setFilteredTasks([]);
+
         onFilteredDataChange?.([]);
+
         return;
       }
 
@@ -94,7 +211,9 @@ export default function ProductionBoard({
         selectedProj.length === 0
       ) {
         setFilteredTasks(tasks);
+
         onFilteredDataChange?.(tasks);
+
         return;
       }
 
@@ -187,11 +306,37 @@ export default function ProductionBoard({
       return;
     }
 
+    edgeDirectionRef.current = null;
+
+    if (edgeTimerRef.current) {
+      clearTimeout(edgeTimerRef.current);
+
+      edgeTimerRef.current = null;
+    }
+
     setDraggedTask(task);
 
     event.dataTransfer.effectAllowed = "move";
 
     event.dataTransfer.setData("text/plain", String(task.component_id));
+  };
+
+  /*
+   * ==========================================================
+   * DRAG END
+   * ==========================================================
+   */
+
+  const handleDragEnd = () => {
+    edgeDirectionRef.current = null;
+
+    if (edgeTimerRef.current) {
+      clearTimeout(edgeTimerRef.current);
+
+      edgeTimerRef.current = null;
+    }
+
+    setDragOverDate(null);
   };
 
   /*
@@ -219,6 +364,14 @@ export default function ProductionBoard({
 
     setDragOverDate(null);
 
+    edgeDirectionRef.current = null;
+
+    if (edgeTimerRef.current) {
+      clearTimeout(edgeTimerRef.current);
+
+      edgeTimerRef.current = null;
+    }
+
     if (!draggedTask) {
       return;
     }
@@ -238,6 +391,7 @@ export default function ProductionBoard({
 
     if (currentDateKey === targetDay.dateKey) {
       setDraggedTask(null);
+
       return;
     }
 
@@ -281,26 +435,17 @@ export default function ProductionBoard({
      * sem esperar a resposta da API.
      */
 
-    setFilteredTasks((current) =>
-      current.map((task) =>
+    setFilteredTasks((current) => {
+      const updatedTasks = current.map((task) =>
         Number(task.component_id) === Number(draggedTask.component_id)
           ? optimisticTask
           : task,
-      ),
-    );
+      );
 
-    /*
-     * Atualiza também os dados utilizados
-     * para exportação.
-     */
+      onFilteredDataChange?.(updatedTasks);
 
-    onFilteredDataChange?.(
-      filteredTasks.map((task) =>
-        Number(task.component_id) === Number(draggedTask.component_id)
-          ? optimisticTask
-          : task,
-      ),
-    );
+      return updatedTasks;
+    });
 
     setMovingTaskId(draggedTask.component_id);
 
@@ -349,7 +494,13 @@ export default function ProductionBoard({
         ),
       );
 
-      onFilteredDataChange?.(filteredTasks);
+      onFilteredDataChange?.(
+        filteredTasks.map((task) =>
+          Number(task.component_id) === Number(draggedTask.component_id)
+            ? previousTask
+            : task,
+        ),
+      );
 
       alert("Não foi possível mover o componente.");
     } finally {
@@ -371,6 +522,7 @@ export default function ProductionBoard({
     }
 
     setSelectTask(task);
+
     setOpen(true);
   };
 
@@ -399,24 +551,25 @@ export default function ProductionBoard({
       />
 
       <section
+        onDragOver={handleBoardDragOver}
         className="
-        h-full
-        w-full
-        overflow-hidden
-        rounded-xl
-        border
-        border-[#DFE1E6]
-        bg-white
-        shadow-sm
-      "
+          h-full
+          w-full
+          overflow-hidden
+          rounded-xl
+          border
+          border-[#DFE1E6]
+          bg-white
+          shadow-sm
+        "
       >
         <div
           className="
-          grid
-          h-full
-          min-h-0
-          grid-cols-7
-        "
+            grid
+            h-full
+            min-h-0
+            grid-cols-7
+          "
         >
           {weekDays.map((day) => {
             const dayTasks = filteredTasks.filter((task) => {
@@ -447,8 +600,8 @@ export default function ProductionBoard({
                   `}
               >
                 {/* =================================================
-                      CABEÇALHO DO DIA
-                  ================================================= */}
+                        CABEÇALHO DO DIA
+                    ================================================= */}
 
                 <div
                   className={`
@@ -498,20 +651,20 @@ export default function ProductionBoard({
                 </div>
 
                 {/* =================================================
-                      COMPONENTES DO DIA
-                  ================================================= */}
+                        COMPONENTES DO DIA
+                    ================================================= */}
 
                 <div
                   className="
-                  flex
-                  h-[calc(100vh-280px)]
-                  min-h-0
-                  flex-col
-                  gap-2
-                  overflow-y-auto
-                  overflow-x-hidden
-                  p-2
-                "
+                      flex
+                      h-[calc(100vh-280px)]
+                      min-h-0
+                      flex-col
+                      gap-2
+                      overflow-y-auto
+                      overflow-x-hidden
+                      p-2
+                    "
                 >
                   {dayTasks.map((task) => (
                     <TaskCard
@@ -520,6 +673,13 @@ export default function ProductionBoard({
                       onClick={handleTaskClick}
                       draggable
                       onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      responsible={responsible.find(
+                        (item) =>
+                          Number(item.component_id) ===
+                          Number(task.component_id),
+                      )}
+                      employees={employees}
                       isMoving={
                         Number(movingTaskId) === Number(task.component_id)
                       }
@@ -527,12 +687,12 @@ export default function ProductionBoard({
                   ))}
 
                   {/* =================================================
-                        CARD ADICIONAR
+                          CARD ADICIONAR
 
-                        IMPORTANTE:
-                        Ele aparece SEMPRE, mesmo quando
-                        existem componentes no dia.
-                    ================================================= */}
+                          IMPORTANTE:
+                          Ele aparece SEMPRE, mesmo quando
+                          existem componentes no dia.
+                      ================================================= */}
 
                   <button
                     type="button"

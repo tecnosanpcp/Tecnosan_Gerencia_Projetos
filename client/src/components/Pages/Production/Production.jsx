@@ -402,12 +402,6 @@ export default function Production() {
       />
 
       <main className="flex h-full w-full flex-col overflow-hidden p-3 md:p-4 lg:p-5">
-        {/*
-         * ======================================================
-         * ÚNICO CARD DO CABEÇALHO + FILTROS
-         * ======================================================
-         */}
-
         <section
           className="
             flex
@@ -443,18 +437,11 @@ export default function Production() {
           />
         </section>
 
-        {/*
-         * ======================================================
-         * CALENDÁRIO
-         * ======================================================
-         *
-         * O calendário usa exatamente a mesma largura
-         * horizontal do card acima.
-         */}
-
         <div className="min-h-0 flex-1 overflow-hidden pt-3">
           <ProductionBoard
             weekDays={weekDays}
+            offset={offset}
+            setOffset={setOffset}
             tasks={tasks}
             responsible={responsible}
             setIsAddOpen={openAddForDate}
