@@ -10,11 +10,32 @@ function AlertModal({
 }) {
   const bnt_style = style === "waring" ? "bnt-red" : "bnt-blue";
 
+  const handleKeyDown = (event) => {
+    if (event.key !== "Enter") return;
+
+    const target = event.target;
+
+    if (
+      target &&
+      (target.tagName === "BUTTON" ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    func?.();
+  };
+
   if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex min-h-screen w-screen items-center justify-center bg-black/50 p-4">
       <div
+        onKeyDown={handleKeyDown}
         className="
           w-full max-w-md
           rounded-lg

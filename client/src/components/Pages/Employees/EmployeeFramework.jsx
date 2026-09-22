@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import AlertModal from "../../Ui/AlertModal.jsx";
 import {
   FaUserCircle,
   FaUserEdit,
@@ -9,18 +9,11 @@ import {
   FaRegAddressCard,
 } from "react-icons/fa";
 
-import {
-  CiBadgeDollar,
-  CiCalendar,
-} from "react-icons/ci";
+import { CiBadgeDollar, CiCalendar } from "react-icons/ci";
 
-import {
-  IoTimeOutline,
-} from "react-icons/io5";
+import { IoTimeOutline } from "react-icons/io5";
 
-import {
-  BsBarChartLine,
-} from "react-icons/bs";
+import { BsBarChartLine } from "react-icons/bs";
 
 import EditEmployeeModal from "./EditEmployeeModal";
 
@@ -46,8 +39,7 @@ export default function EmployeeFramework(props) {
   const overtime = employee_overtime ?? 0;
 
   const performanceValue =
-    employee_performance === null ||
-    employee_performance === undefined
+    employee_performance === null || employee_performance === undefined
       ? 100
       : Number(employee_performance) * 100;
 
@@ -59,7 +51,7 @@ export default function EmployeeFramework(props) {
     // Mantido conforme implementação atual.
     // O projeto ainda não possui service de exclusão de funcionário.
   };
-
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   return (
     <>
       <EditEmployeeModal
@@ -67,7 +59,24 @@ export default function EmployeeFramework(props) {
         setVisible={setIsModalVisible}
         user_id={user_id}
       />
+      <AlertModal
+        title="Quer excluir esse colaborador?"
+        body="Tem certeza que quer excluir esse colaborador? A ação não é reversível."
+        neg_opt="Cancelar"
+        pos_opt="Excluir"
+        func={async () => {
+          await deleteEmployee();
 
+          setIsDeleteModalVisible(false);
+
+          if (onEmployeeChanged) {
+            await onEmployeeChanged();
+          }
+        }}
+        isVisible={isDeleteModalVisible}
+        setVisible={setIsDeleteModalVisible}
+        style="waring"
+      />
       <article
         className={[
           "group flex min-w-0 flex-col overflow-hidden rounded-lg",
@@ -94,15 +103,9 @@ export default function EmployeeFramework(props) {
             </p>
 
             <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[#6B778C]">
-              <FaRegAddressCard
-                size={11}
-                className="shrink-0"
-              />
+              <FaRegAddressCard size={11} className="shrink-0" />
 
-              <span
-                className="truncate text-[11px]"
-                title={office}
-              >
+              <span className="truncate text-[11px]" title={office}>
                 {office}
               </span>
             </div>
@@ -112,18 +115,12 @@ export default function EmployeeFramework(props) {
           <button
             type="button"
             aria-label={
-              isExpanded
-                ? "Recolher colaborador"
-                : "Expandir colaborador"
+              isExpanded ? "Recolher colaborador" : "Expandir colaborador"
             }
             onClick={() => setIsExpanded((current) => !current)}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#6B778C] transition hover:bg-[#F4F5F7] hover:text-[#172B4D]"
           >
-            {isExpanded ? (
-              <FaAngleUp size={14} />
-            ) : (
-              <FaAngleDown size={14} />
-            )}
+            {isExpanded ? <FaAngleUp size={14} /> : <FaAngleDown size={14} />}
           </button>
         </div>
 
@@ -154,10 +151,7 @@ export default function EmployeeFramework(props) {
               {/* faltas */}
               <div className="rounded-md border border-[#DFE1E6] bg-white px-2.5 py-2">
                 <div className="flex items-center gap-2">
-                  <CiCalendar
-                    size={18}
-                    className="shrink-0 text-[#DE350B]"
-                  />
+                  <CiCalendar size={18} className="shrink-0 text-[#DE350B]" />
 
                   <div className="min-w-0">
                     <p className="text-[10px] font-medium uppercase tracking-wide text-[#97A0AF]">
@@ -225,19 +219,7 @@ export default function EmployeeFramework(props) {
 
               <button
                 type="button"
-                onClick={async () => {
-                  const confirmDelete = window.confirm(
-                    "Tem certeza que quer excluir o funcionário?"
-                  );
-
-                  if (confirmDelete) {
-                    await deleteEmployee();
-
-                    if (onEmployeeChanged) {
-                      await onEmployeeChanged();
-                    }
-                  }
-                }}
+                onClick={() => setIsDeleteModalVisible(true)}
                 className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-[#FFBDAD] bg-white text-[11px] font-semibold text-[#DE350B] transition hover:bg-[#FFEBE6]"
               >
                 <FaTrash size={11} />

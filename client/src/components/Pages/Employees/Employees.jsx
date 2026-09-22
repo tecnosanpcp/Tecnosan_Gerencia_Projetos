@@ -50,7 +50,7 @@ export default function Employees() {
     if (!term) return employees;
 
     return employees.filter((employee) =>
-      JSON.stringify(employee).toLowerCase().includes(term)
+      JSON.stringify(employee).toLowerCase().includes(term),
     );
   }, [employees, employeeSearch]);
 
@@ -60,14 +60,17 @@ export default function Employees() {
     if (!term) return departments;
 
     return departments.filter((department) =>
-      JSON.stringify(department).toLowerCase().includes(term)
+      JSON.stringify(department).toLowerCase().includes(term),
     );
   }, [departments, departmentSearch]);
 
   const refreshEmployees = async () => {
     await fetchEmployees();
   };
-
+  const refreshDepartments = async () => {
+    const data = await listDepartments();
+    setDepartments(data);
+  };
   return (
     <>
       <RegisterEmployeeModal
@@ -79,6 +82,7 @@ export default function Employees() {
       <DepartmentModalRegister
         visible={isAddDepModal}
         setVisible={setAddDepModal}
+        onDepartmentChanged={refreshDepartments}
       />
 
       <main className="min-h-screen w-full bg-[#F4F5F7] font-sans text-[#172B4D] overflow-x-hidden">
@@ -121,10 +125,7 @@ export default function Employees() {
               <div className="flex flex-col gap-3 border-b border-[#DFE1E6] px-4 py-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <FiUsers
-                      size={17}
-                      className="text-[#0052CC]"
-                    />
+                    <FiUsers size={17} className="text-[#0052CC]" />
 
                     <h2 className="text-[15px] font-semibold text-[#172B4D]">
                       Colaboradores
@@ -134,8 +135,6 @@ export default function Employees() {
                       {filteredEmployees.length}
                     </span>
                   </div>
-
-                  
                 </div>
 
                 <div className="relative w-full md:w-[280px]">
@@ -147,9 +146,7 @@ export default function Employees() {
                   <input
                     type="text"
                     value={employeeSearch}
-                    onChange={(event) =>
-                      setEmployeeSearch(event.target.value)
-                    }
+                    onChange={(event) => setEmployeeSearch(event.target.value)}
                     placeholder="Pesquisar colaborador..."
                     className="h-9 w-full rounded-md border border-[#DFE1E6] bg-white pl-9 pr-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
                   />
@@ -200,10 +197,7 @@ export default function Employees() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <FiBriefcase
-                        size={17}
-                        className="text-[#6554C0]"
-                      />
+                      <FiBriefcase size={17} className="text-[#6554C0]" />
 
                       <h2 className="text-[15px] font-semibold text-[#172B4D]">
                         Departamentos
@@ -255,14 +249,12 @@ export default function Employees() {
                         key={department.department_id}
                         id={department.department_id}
                         name={department.department_name}
+                        onDepartmentChanged={refreshDepartments}
                       />
                     ))
                   ) : (
                     <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border border-dashed border-[#DFE1E6] bg-[#FAFBFC] px-5 text-center">
-                      <FiBriefcase
-                        size={20}
-                        className="mb-2 text-[#97A0AF]"
-                      />
+                      <FiBriefcase size={20} className="mb-2 text-[#97A0AF]" />
 
                       <p className="text-[13px] font-semibold text-[#172B4D]">
                         Nenhum departamento

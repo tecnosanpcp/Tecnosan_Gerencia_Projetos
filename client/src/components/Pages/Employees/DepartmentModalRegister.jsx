@@ -5,16 +5,30 @@ import { useState } from "react";
 
 import { createDeparment } from "@services/DepartmentService";
 
-function DepartmentModalRegister({ visible, setVisible }) {
+function DepartmentModalRegister({ visible, setVisible, onDepartmentChanged }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [departmentName, setDepartmentName] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
+
       await createDeparment(departmentName);
+
+      if (onDepartmentChanged) {
+        await onDepartmentChanged();
+      }
+
+      setDepartmentName("");
+      setVisible(false);
     } catch (error) {
       console.error("Erro ao cadastrar departamento:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -73,13 +87,8 @@ function DepartmentModalRegister({ visible, setVisible }) {
               htmlFor="department_name"
               className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[#172B4D]"
             >
-              <FiBriefcase
-                size={14}
-                className="text-[#6B778C]"
-              />
-
+              <FiBriefcase size={14} className="text-[#6B778C]" />
               Nome do departamento
-
               <span className="text-[#DE350B]">*</span>
             </label>
 
@@ -90,9 +99,7 @@ function DepartmentModalRegister({ visible, setVisible }) {
               name="department_name"
               placeholder="Digite o nome do novo departamento"
               value={departmentName}
-              onChange={(event) =>
-                setDepartmentName(event.target.value)
-              }
+              onChange={(event) => setDepartmentName(event.target.value)}
               required
               className="h-10 w-full rounded-md border border-[#DFE1E6] bg-white px-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
             />
@@ -110,9 +117,14 @@ function DepartmentModalRegister({ visible, setVisible }) {
 
             <button
               type="submit"
-              className="h-9 rounded-md bg-[#0052CC] px-5 text-[12px] font-semibold text-white transition hover:bg-[#0065FF] active:scale-[0.98]"
+              disabled={isSubmitting}
+              className={`h-9 rounded-md px-5 text-[12px] font-semibold text-white transition active:scale-[0.98] ${
+                isSubmitting
+                  ? "cursor-not-allowed bg-[#97A0AF]"
+                  : "bg-[#0052CC] hover:bg-[#0065FF]"
+              }`}
             >
-              Cadastrar departamento
+              {isSubmitting ? "Cadastrando..." : "Cadastrar departamento"}
             </button>
           </div>
         </form>
@@ -124,6 +136,7 @@ function DepartmentModalRegister({ visible, setVisible }) {
 DepartmentModalRegister.propTypes = {
   visible: PropTypes.bool.isRequired,
   setVisible: PropTypes.func.isRequired,
+  onDepartmentChanged: PropTypes.func,
 };
 
 export default DepartmentModalRegister;

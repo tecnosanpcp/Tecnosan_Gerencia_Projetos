@@ -1,41 +1,41 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import AlertModal from "../../Ui/AlertModal.jsx";
+import { FaTrash } from "react-icons/fa";
 
-import {
-  FaTrash,
-} from "react-icons/fa";
+import { MdEdit } from "react-icons/md";
 
-import {
-  MdEdit,
-} from "react-icons/md";
-
-import {
-  FiBriefcase,
-} from "react-icons/fi";
+import { FiBriefcase } from "react-icons/fi";
 
 import DepartmentModalEdit from "./DepartmentModalEdit";
 
-import {
-  deleteDepartment,
-} from "@services/DepartmentService";
+import { deleteDepartment } from "@services/DepartmentService";
 
-function DepartmentCard({ id, name }) {
+function DepartmentCard({ id, name, onDepartmentChanged }) {
   const [isModalOpen, setModalOpen] = useState(false);
-
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const handleDelete = async () => {
-    const CONFIRM = window.confirm(
-      `Tem certeza que quer excluir o departamento ${name}`
-    );
-
-    if (!CONFIRM) return;
-
     await deleteDepartment(id);
 
-    window.location.reload();
+    setIsDeleteModalVisible(false);
+
+    if (onDepartmentChanged) {
+      await onDepartmentChanged();
+    }
   };
 
   return (
     <>
+      <AlertModal
+        title="Quer excluir esse departamento?"
+        body={`Tem certeza que quer excluir o departamento ${name}? A ação não é reversível.`}
+        neg_opt="Cancelar"
+        pos_opt="Excluir"
+        func={handleDelete}
+        isVisible={isDeleteModalVisible}
+        setVisible={setIsDeleteModalVisible}
+        style="waring"
+      />
       <DepartmentModalEdit
         visible={isModalOpen}
         setVisible={setModalOpen}
@@ -59,9 +59,7 @@ function DepartmentCard({ id, name }) {
               {name}
             </p>
 
-            <p className="mt-0.5 text-[10px] text-[#6B778C]">
-              Departamento
-            </p>
+            <p className="mt-0.5 text-[10px] text-[#6B778C]">Departamento</p>
           </div>
 
           {/* ações */}
@@ -77,7 +75,7 @@ function DepartmentCard({ id, name }) {
 
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setIsDeleteModalVisible(true)}
               title="Excluir departamento"
               className="flex h-7 w-7 items-center justify-center rounded-md text-[#6B778C] transition hover:bg-[#FFEBE6] hover:text-[#DE350B]"
             >
@@ -93,6 +91,7 @@ function DepartmentCard({ id, name }) {
 DepartmentCard.propTypes = {
   id: PropTypes.number.isRequired,
   name: PropTypes.string.isRequired,
+  onDepartmentChanged: PropTypes.func,
 };
 
 export default DepartmentCard;
