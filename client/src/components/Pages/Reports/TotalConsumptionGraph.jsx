@@ -7,47 +7,48 @@ export default function TotalConsumptionGraph({ data = [] }) {
   const safeData = Array.isArray(data) ? data : [];
 
   const normalizedData = useMemo(() => {
-    return safeData.map((item) => {
-      const project =
-        item.project_name ||
-        item.projeto ||
-        item.project ||
-        "Sem projeto";
+  return safeData.map((item) => {
+    const project =
+      item.project_name ||
+      item.projeto ||
+      item.project ||
+      "Sem projeto";
 
-      const material =
-        item.material_name ||
-        item.material ||
-        item.nome_material ||
-        "Material";
+    const material =
+      item.material_name ||
+      item.material ||
+      item.nome_material ||
+      "Material";
 
-      const kg =
-        Number(
+    const kg =
+      Number(
+        item.total_material_consumed ??
           item.total_kg ??
-            item.consumed_kg ??
-            item.consumption_kg ??
-            item.kg ??
-            item.quantity_kg ??
-            0
-        ) || 0;
+          item.consumed_kg ??
+          item.consumption_kg ??
+          item.kg ??
+          item.quantity_kg ??
+          0
+      ) || 0;
 
-      const value =
-        Number(
-          item.total_value ??
-            item.total_price ??
-            item.value ??
-            item.valor ??
-            item.cost ??
-            0
-        ) || 0;
+    const value =
+      Number(
+        item.total_value ??
+          item.total_price ??
+          item.value ??
+          item.valor ??
+          item.cost ??
+          0
+      ) || 0;
 
-      return {
-        project,
-        material,
-        kg,
-        value,
-      };
-    });
-  }, [safeData]);
+    return {
+      project,
+      material,
+      kg,
+      value,
+    };
+  });
+}, [safeData]);
 
   const projects = useMemo(() => {
     return [...new Set(normalizedData.map((item) => item.project))];

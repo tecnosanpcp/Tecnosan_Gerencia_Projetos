@@ -23,7 +23,7 @@ const MaterialsChart = () => {
   }, []);
 
   return (
-    <div className="w-full h-[300px] flex flex-col">
+    <div className="w-full h-full min-h-0 flex flex-col">
       <div className="flex-1 w-full min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart

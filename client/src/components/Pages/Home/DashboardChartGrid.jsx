@@ -76,22 +76,14 @@ const CHARTS = [
   },
 ];
 
-const CATEGORIES = [
-  "Todos",
-  "Produção",
-  "Qualidade",
-  "Projetos",
-  "RH",
-];
+const CATEGORIES = ["Todos", "Produção", "Qualidade", "Projetos", "RH"];
 
 export default function DashboardChartGrid({ charts }) {
   const [visible, setVisible] = useState(
-    () => new Set(CHARTS.map((chart) => chart.id))
+    () => new Set(CHARTS.map((chart) => chart.id)),
   );
 
-  const [minimized, setMinimized] = useState(
-    () => new Set()
-  );
+  const [minimized, setMinimized] = useState(() => new Set());
 
   const [expanded, setExpanded] = useState(null);
 
@@ -99,8 +91,8 @@ export default function DashboardChartGrid({ charts }) {
 
   const [comparison, setComparison] = useState(null);
 
-  const [orderedCharts, setOrderedCharts] = useState(
-    () => CHARTS.map((chart) => chart.id)
+  const [orderedCharts, setOrderedCharts] = useState(() =>
+    CHARTS.map((chart) => chart.id),
   );
 
   const [draggingId, setDraggingId] = useState(null);
@@ -148,26 +140,19 @@ export default function DashboardChartGrid({ charts }) {
   };
 
   const minimizeAll = () => {
-    setMinimized(
-      new Set(CHARTS.map((chart) => chart.id))
-    );
+    setMinimized(new Set(CHARTS.map((chart) => chart.id)));
   };
 
   const activeCharts = useMemo(() => {
     return orderedCharts
-      .map((id) =>
-        CHARTS.find((chart) => chart.id === id)
-      )
+      .map((id) => CHARTS.find((chart) => chart.id === id))
       .filter(Boolean)
       .filter((chart) => visible.has(chart.id));
   }, [orderedCharts, visible]);
 
   const chartById = useMemo(
-    () =>
-      Object.fromEntries(
-        charts.map((chart) => [chart.id, chart])
-      ),
-    [charts]
+    () => Object.fromEntries(charts.map((chart) => [chart.id, chart])),
+    [charts],
   );
 
   /*
@@ -182,17 +167,14 @@ export default function DashboardChartGrid({ charts }) {
     setDraggingId(id);
 
     event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData(
-      "application/x-dashboard-reorder",
-      id
-    );
+    event.dataTransfer.setData("application/x-dashboard-reorder", id);
   };
 
   const handleReorderDragOver = (event, targetId) => {
     event.preventDefault();
 
     const sourceId = event.dataTransfer.getData(
-      "application/x-dashboard-reorder"
+      "application/x-dashboard-reorder",
     );
 
     if (!sourceId || sourceId === targetId) {
@@ -207,7 +189,7 @@ export default function DashboardChartGrid({ charts }) {
     event.stopPropagation();
 
     const sourceId = event.dataTransfer.getData(
-      "application/x-dashboard-reorder"
+      "application/x-dashboard-reorder",
     );
 
     if (!sourceId || sourceId === targetId) {
@@ -222,10 +204,7 @@ export default function DashboardChartGrid({ charts }) {
       const sourceIndex = next.indexOf(sourceId);
       const targetIndex = next.indexOf(targetId);
 
-      if (
-        sourceIndex === -1 ||
-        targetIndex === -1
-      ) {
+      if (sourceIndex === -1 || targetIndex === -1) {
         return current;
       }
 
@@ -256,27 +235,19 @@ export default function DashboardChartGrid({ charts }) {
     setDraggingId(id);
 
     event.dataTransfer.effectAllowed = "copy";
-    event.dataTransfer.setData(
-      "application/x-dashboard-compare",
-      id
-    );
+    event.dataTransfer.setData("application/x-dashboard-compare", id);
   };
 
-  const handleChartCompareDragOver = (
-    event,
-    targetId
-  ) => {
+  const handleChartCompareDragOver = (event, targetId) => {
     const sourceId = event.dataTransfer.getData(
-      "application/x-dashboard-compare"
+      "application/x-dashboard-compare",
     );
 
     if (!sourceId || sourceId === targetId) {
       return;
     }
 
-    const source = CHARTS.find(
-      (chart) => chart.id === sourceId
-    );
+    const source = CHARTS.find((chart) => chart.id === sourceId);
 
     if (!source?.comparables?.includes(targetId)) {
       return;
@@ -288,15 +259,12 @@ export default function DashboardChartGrid({ charts }) {
     setDropTargetId(targetId);
   };
 
-  const handleChartCompareDrop = (
-    event,
-    targetId
-  ) => {
+  const handleChartCompareDrop = (event, targetId) => {
     event.preventDefault();
     event.stopPropagation();
 
     const sourceId = event.dataTransfer.getData(
-      "application/x-dashboard-compare"
+      "application/x-dashboard-compare",
     );
 
     if (!sourceId || sourceId === targetId) {
@@ -305,9 +273,7 @@ export default function DashboardChartGrid({ charts }) {
       return;
     }
 
-    const source = CHARTS.find(
-      (chart) => chart.id === sourceId
-    );
+    const source = CHARTS.find((chart) => chart.id === sourceId);
 
     if (!source?.comparables?.includes(targetId)) {
       setDraggingId(null);
@@ -388,35 +354,21 @@ export default function DashboardChartGrid({ charts }) {
 
       {/* INSTRUÇÃO DE ARRASTAR */}
       <div className="mb-3 flex items-center gap-2 text-[10px] text-[#6B778C]">
-        <GitCompareArrows
-          size={13}
-          className="text-[#0052CC]"
-        />
+        <GitCompareArrows size={13} className="text-[#0052CC]" />
 
-        <span>
-          Arraste o conteúdo de um gráfico sobre outro para
-          comparar.
-        </span>
+        <span>Arraste o conteúdo de um gráfico sobre outro para comparar.</span>
 
         <span className="text-[#DFE1E6]">•</span>
 
-        <GripVertical
-          size={13}
-          className="text-[#97A0AF]"
-        />
+        <GripVertical size={13} className="text-[#97A0AF]" />
 
-        <span>
-          Use o ícone de movimentação para reorganizar.
-        </span>
+        <span>Use o ícone de movimentação para reorganizar.</span>
       </div>
 
       {/* GRID */}
       {activeCharts.length === 0 ? (
         <div className="bg-white border border-[#DFE1E6] rounded p-12 text-center">
-          <EyeOff
-            size={38}
-            className="mx-auto mb-3 text-[#97A0AF]"
-          />
+          <EyeOff size={38} className="mx-auto mb-3 text-[#97A0AF]" />
 
           <p className="m-0 text-sm font-semibold text-[#5E6C84]">
             Nenhum gráfico selecionado
@@ -440,18 +392,14 @@ export default function DashboardChartGrid({ charts }) {
               minimized={minimized.has(def.id)}
               dragging={draggingId === def.id}
               dropTarget={dropTargetId === def.id}
-              onToggleMinimize={() =>
-                toggleMinimized(def.id)
-              }
+              onToggleMinimize={() => toggleMinimized(def.id)}
               onExpand={() => setExpanded(def.id)}
               onHide={() => toggleVisible(def.id)}
               onReorderDragStart={handleReorderDragStart}
               onChartDragStart={handleChartDragStart}
               onReorderDragOver={handleReorderDragOver}
               onReorderDrop={handleReorderDrop}
-              onCompareDragOver={
-                handleChartCompareDragOver
-              }
+              onCompareDragOver={handleChartCompareDragOver}
               onCompareDrop={handleChartCompareDrop}
               onDragEnd={handleDragEnd}
             />
@@ -472,14 +420,8 @@ export default function DashboardChartGrid({ charts }) {
       {/* TELA CHEIA */}
       {expanded && chartById[expanded] && (
         <ExpandModal
-          title={
-            CHARTS.find((chart) => chart.id === expanded)
-              ?.title
-          }
-          subtitle={
-            CHARTS.find((chart) => chart.id === expanded)
-              ?.subtitle
-          }
+          title={CHARTS.find((chart) => chart.id === expanded)?.title}
+          subtitle={CHARTS.find((chart) => chart.id === expanded)?.subtitle}
           onClose={() => setExpanded(null)}
         >
           {chartById[expanded].element}
@@ -533,7 +475,7 @@ function ChartCard({
       }}
       onDrop={(event) => {
         const compareId = event.dataTransfer.getData(
-          "application/x-dashboard-compare"
+          "application/x-dashboard-compare",
         );
 
         if (compareId) {
@@ -543,9 +485,7 @@ function ChartCard({
         }
       }}
       className={`relative h-full bg-white rounded border overflow-hidden transition-all duration-200 ${
-        dragging
-          ? "opacity-40 scale-[0.98]"
-          : "opacity-100"
+        dragging ? "opacity-40 scale-[0.98]" : "opacity-100"
       } ${
         dropTarget
           ? "border-[#0052CC] shadow-[0_0_0_2px_rgba(0,82,204,0.18),0_8px_24px_rgba(9,30,66,0.14)]"
@@ -556,10 +496,7 @@ function ChartCard({
       {dropTarget && (
         <div className="absolute inset-0 z-20 pointer-events-none bg-[#0052CC]/[0.04] flex items-center justify-center">
           <div className="px-4 py-2 rounded-md bg-white border border-[#B3D4FF] shadow-[0_4px_14px_rgba(9,30,66,0.15)] flex items-center gap-2">
-            <GitCompareArrows
-              size={16}
-              className="text-[#0052CC]"
-            />
+            <GitCompareArrows size={16} className="text-[#0052CC]" />
 
             <span className="text-[11px] font-bold text-[#0052CC]">
               Solte para comparar
@@ -571,18 +508,14 @@ function ChartCard({
       {/* HEADER */}
       <header
         className={`flex items-center gap-2.5 px-3.5 py-2.5 ${
-          minimized
-            ? ""
-            : "border-b border-[#F4F5F7]"
+          minimized ? "" : "border-b border-[#F4F5F7]"
         }`}
       >
         {/* HANDLE DE REORDENAÇÃO */}
         <button
           type="button"
           draggable
-          onDragStart={(event) =>
-            onReorderDragStart(event, def.id)
-          }
+          onDragStart={(event) => onReorderDragStart(event, def.id)}
           onDragEnd={onDragEnd}
           title="Arrastar para reorganizar"
           aria-label="Arrastar para reorganizar"
@@ -607,11 +540,7 @@ function ChartCard({
 
         <div className="flex gap-1 shrink-0">
           <ChartAction
-            title={
-              minimized
-                ? "Expandir card"
-                : "Minimizar card"
-            }
+            title={minimized ? "Expandir card" : "Minimizar card"}
             onClick={onToggleMinimize}
           >
             <ChevronDown
@@ -622,17 +551,11 @@ function ChartCard({
             />
           </ChartAction>
 
-          <ChartAction
-            title="Ocultar gráfico"
-            onClick={onHide}
-          >
+          <ChartAction title="Ocultar gráfico" onClick={onHide}>
             <EyeOff size={13} />
           </ChartAction>
 
-          <ChartAction
-            title="Abrir em tela cheia"
-            onClick={onExpand}
-          >
+          <ChartAction title="Abrir em tela cheia" onClick={onExpand}>
             <Maximize2 size={13} />
           </ChartAction>
         </div>
@@ -641,12 +564,8 @@ function ChartCard({
       {/* CONTEÚDO ARRASTÁVEL PARA COMPARAÇÃO */}
       {!minimized && (
         <div
-          draggable={
-            def.comparables?.length > 0
-          }
-          onDragStart={(event) =>
-            onChartDragStart(event, def.id)
-          }
+          draggable={def.comparables?.length > 0}
+          onDragStart={(event) => onChartDragStart(event, def.id)}
           onDragEnd={onDragEnd}
           className={`relative h-[220px] p-2 ${
             def.comparables?.length > 0
@@ -656,10 +575,7 @@ function ChartCard({
         >
           {def.comparables?.length > 0 && (
             <div className="absolute right-3 top-2 z-10 pointer-events-none opacity-0 group-hover:opacity-100">
-              <GitCompareArrows
-                size={13}
-                className="text-[#0052CC]"
-              />
+              <GitCompareArrows size={13} className="text-[#0052CC]" />
             </div>
           )}
 
@@ -670,11 +586,7 @@ function ChartCard({
   );
 }
 
-function ChartAction({
-  title,
-  onClick,
-  children,
-}) {
+function ChartAction({ title, onClick, children }) {
   return (
     <button
       type="button"
@@ -705,9 +617,7 @@ function CustomizePanel({
   const filtered =
     category === "Todos"
       ? CHARTS
-      : CHARTS.filter(
-          (chart) => chart.category === category
-        );
+      : CHARTS.filter((chart) => chart.category === category);
 
   return (
     <>
@@ -722,9 +632,7 @@ function CustomizePanel({
 
       <aside
         className={`fixed top-0 right-0 bottom-0 z-[8001] w-[340px] max-w-[92vw] bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.18)] flex flex-col transition-transform duration-300 ${
-          open
-            ? "translate-x-0"
-            : "translate-x-full"
+          open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="px-5 pt-5 pb-4 border-b border-[#DFE1E6] shrink-0">
@@ -801,11 +709,7 @@ function CustomizePanel({
                   }`}
                 >
                   <span className="w-7 h-7 rounded-md bg-[#E9F2FF] flex items-center justify-center shrink-0 text-[#0052CC]">
-                    {active ? (
-                      <Eye size={14} />
-                    ) : (
-                      <EyeOff size={14} />
-                    )}
+                    {active ? <Eye size={14} /> : <EyeOff size={14} />}
                   </span>
 
                   <span className="flex-1 min-w-0">
@@ -820,16 +724,12 @@ function CustomizePanel({
 
                   <span
                     className={`w-8 h-[18px] rounded-full p-0.5 ${
-                      active
-                        ? "bg-[#0052CC]"
-                        : "bg-[#DFE1E6]"
+                      active ? "bg-[#0052CC]" : "bg-[#DFE1E6]"
                     }`}
                   >
                     <span
                       className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${
-                        active
-                          ? "translate-x-3.5"
-                          : "translate-x-0"
+                        active ? "translate-x-3.5" : "translate-x-0"
                       }`}
                     />
                   </span>
@@ -851,22 +751,15 @@ function CustomizePanel({
    EXPANDIR GRÁFICO
 ============================================================ */
 
-function ExpandModal({
-  title,
-  subtitle,
-  onClose,
-  children,
-}) {
+function ExpandModal({ title, subtitle, onClose, children }) {
   return (
     <div
       className="fixed inset-0 z-[9000] bg-[rgba(9,30,66,0.58)] backdrop-blur-[5px] flex items-center justify-center p-6"
       onMouseDown={onClose}
     >
       <div
-        className="bg-white rounded-lg w-full max-w-[1100px] max-h-[90vh] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col"
-        onMouseDown={(event) =>
-          event.stopPropagation()
-        }
+        className="bg-white rounded-lg w-full max-w-[1400px] h-[92vh] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-6 py-4 border-b border-[#DFE1E6] shrink-0">
           <span className="w-1 h-5 rounded bg-[#0052CC]" />
@@ -876,9 +769,7 @@ function ExpandModal({
               {title}
             </h2>
 
-            <p className="m-0 mt-0.5 text-[12px] text-[#5E6C84]">
-              {subtitle}
-            </p>
+            <p className="m-0 mt-0.5 text-[12px] text-[#5E6C84]">{subtitle}</p>
           </div>
 
           <button
@@ -890,10 +781,8 @@ function ExpandModal({
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-auto p-6">
-          {children}
-        </div>
+        <div className="flex-1 min-h-0 overflow-hidden p-6">{children}</div>
       </div>
     </div>
   );
-}   
+}
