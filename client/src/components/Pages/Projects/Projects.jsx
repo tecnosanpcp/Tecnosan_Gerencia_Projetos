@@ -17,7 +17,7 @@ import { VerifyAuth } from "@services/AuthService";
 
 function Projects() {
   const { currentProject, setCurrentProject } = useContext(
-    selectedProjectContext
+    selectedProjectContext,
   );
 
   const navigate = useNavigate();
@@ -45,6 +45,28 @@ function Projects() {
   return (
     <DashboardLayout
       title="Projetos"
+      actions={
+        <button
+          type="button"
+          onClick={() => navigate("/budgets")}
+          className="
+        inline-flex
+        items-center
+        justify-center
+        rounded-[4px]
+        border border-[#DFE1E6]
+        bg-white
+        px-3 py-1.5
+        text-[12px]
+        font-semibold
+        text-[#172B4D]
+        transition-colors
+        hover:bg-[#F4F5F7]
+      "
+        >
+          Ir para Orçamentos
+        </button>
+      }
       sidebar={
         <SidebarList
           items={projects.map((project) => ({

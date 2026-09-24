@@ -104,10 +104,10 @@ function BudgetEquipmentTable({
         return (
           <div
             key={group.budget_id}
-            className="flex w-full flex-col gap-2"
+            className="flex w-full flex-col border-b border-[#DFE1E6]"
           >
             {!currentBudget && (
-              <div className="flex items-center justify-between rounded-lg border border-[#DFE1E6] bg-white px-3 py-2">
+              <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
                 <div className="min-w-0">
                   <h2 className="truncate text-sm font-semibold text-[#172B4D]">
                     {group.budget_name}
@@ -120,8 +120,8 @@ function BudgetEquipmentTable({
               </div>
             )}
 
-            <div className="w-full overflow-x-auto rounded-lg border border-[#DFE1E6] bg-white">
-              <table className="w-full min-w-[980px] table-fixed border-collapse">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full table-fixed ">
                 <colgroup>
                   <col className="w-[17%]" />
                   <col className="w-[8%]" />

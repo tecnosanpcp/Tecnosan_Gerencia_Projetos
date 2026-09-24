@@ -9,11 +9,18 @@ import NewEquipmentModal from "../../Ui/newEquipmentModal";
 import BudgetAccessories from "./BudgetAccessories";
 
 // Services
-import { getTasksTimeline, getEquipmentsTimeline, getProjectsTimeline } from "@services/ViewsSummary.js";
+import {
+  getTasksTimeline,
+  getEquipmentsTimeline,
+  getProjectsTimeline,
+} from "@services/ViewsSummary.js";
 import { readEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { createRelation } from "@services/BudgetsEquipRecipesServices.js";
 import { VerifyAuth } from "@services/AuthService.js";
-import { vwEquipmentRecipesMaterialSummary, vwComponentRecipeMaterialsSummary } from "@services/ViewsService.js";
+import {
+  vwEquipmentRecipesMaterialSummary,
+  vwComponentRecipeMaterialsSummary,
+} from "@services/ViewsService.js";
 
 export default function BudgetsMain({ currentBudget, allBudgets }) {
   const queryClient = useQueryClient();
@@ -25,37 +32,42 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
   // 1. QUERIES PADRONIZADAS (CACHE GLOBAL)
   // ==========================================
 
-  const { data: userData } = useQuery({ 
-    queryKey: ["authUser"], 
-    queryFn: VerifyAuth, 
-    staleTime: Infinity 
+  const { data: userData } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: VerifyAuth,
+    staleTime: Infinity,
   });
 
-  const tasksQuery = useQuery({ 
-    queryKey: ["timelineTasks"], 
-    queryFn: getTasksTimeline 
+  const tasksQuery = useQuery({
+    queryKey: ["timelineTasks"],
+    queryFn: getTasksTimeline,
   });
 
-  const equipTimelineQuery = useQuery({ 
-    queryKey: ["timelineEquipments"], 
-    queryFn: getEquipmentsTimeline 
+  const equipTimelineQuery = useQuery({
+    queryKey: ["timelineEquipments"],
+    queryFn: getEquipmentsTimeline,
   });
 
-  const budgetsTimelineQuery = useQuery({ 
-    queryKey: ["timelineBudgets"], 
-    queryFn: getProjectsTimeline 
+  const budgetsTimelineQuery = useQuery({
+    queryKey: ["timelineBudgets"],
+    queryFn: getProjectsTimeline,
   });
 
-  const recipesQuery = useQuery({ 
-    queryKey: ["equipmentRecipes"], 
-    queryFn: readEquipmentRecipe 
+  const recipesQuery = useQuery({
+    queryKey: ["equipmentRecipes"],
+    queryFn: readEquipmentRecipe,
   });
 
   // Query detalhada dos materiais do orçamento
   const budgetDetailsQuery = useQuery({
-    queryKey: ["budgetDetails", currentBudget?.id || currentBudget?.budget_id || "all"],
+    queryKey: [
+      "budgetDetails",
+      currentBudget?.id || currentBudget?.budget_id || "all",
+    ],
     queryFn: async () => {
-      const budgetsToProcess = currentBudget ? [currentBudget] : (allBudgets || []);
+      const budgetsToProcess = currentBudget
+        ? [currentBudget]
+        : allBudgets || [];
       const results = [];
       for (const bud of budgetsToProcess) {
         const id = bud.id || bud.budget_id;
@@ -69,25 +81,26 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
           budget_name: bud.name || bud.budget_name,
           status: bud.status,
           equipments: equipSummary || [],
-          components: compSummary || []
+          components: compSummary || [],
         });
       }
       return results;
     },
-    enabled: !!currentBudget || (allBudgets?.length > 0),
+    enabled: !!currentBudget || allBudgets?.length > 0,
   });
 
   // ==========================================
   // 2. MUTAÇÃO (CREATE RELATION)
   // ==========================================
   const addEquipMutation = useMutation({
-    mutationFn: ({ budgetId, recipeId, qty }) => createRelation(budgetId, recipeId, qty),
+    mutationFn: ({ budgetId, recipeId, qty }) =>
+      createRelation(budgetId, recipeId, qty),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgetDetails"] });
       queryClient.invalidateQueries({ queryKey: ["timelineTasks"] });
       queryClient.invalidateQueries({ queryKey: ["timelineEquipments"] });
       setVisible(false);
-    }
+    },
   });
 
   const renderView = () => {
@@ -102,17 +115,47 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     };
 
     switch (view) {
-      case "equipments": return <BudgetEquipmentTable {...commonProps} />;
-      case "timeline": return <BudgetTimeline {...commonProps} timelineBudgets={budgetsTimelineQuery.data || []} />;
-      case "accessories": return <BudgetAccessories {...commonProps} />;
-      default: return <h1>Escolha uma tela</h1>;
+      case "equipments":
+        return <BudgetEquipmentTable {...commonProps} />;
+      case "timeline":
+        return (
+          <BudgetTimeline
+            {...commonProps}
+            timelineBudgets={budgetsTimelineQuery.data || []}
+          />
+        );
+      case "accessories":
+        return <BudgetAccessories {...commonProps} />;
+      default:
+        return <h1>Escolha uma tela</h1>;
     }
   };
 
   return (
     <React.Fragment>
-      <main className="card m-0 p-4 gap-4 overflow-y-auto">
-        <div className="flex flex-row justify-between w-full">
+      <main
+        className="
+    
+    bg-white
+   
+    overflow-y-auto
+  "
+      >
+        {/* Toolbar */}
+        <div
+          className="
+    flex
+    flex-col
+    gap-3
+    border-b
+    border-[#DFE1E6]
+    p-3
+    sm:p-4
+    lg:flex-row
+    lg:items-center
+    lg:justify-between
+  "
+        >
           <div className="flex flex-row items-center space-x-4 p-2 rounded-xl bg-gray-100 h-fit">
             <FaSearch className="text-gray-500" />
             <input
@@ -130,9 +173,24 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
                 + Novo Equipamento
               </button>
             )}
-            <button className={`bnt ${view === 'equipments' ? 'bg-blue-100' : ''}`} onClick={() => setView("equipments")}>Equipamentos</button>
-            <button className={`bnt ${view === 'timeline' ? 'bg-blue-100' : ''}`} onClick={() => setView("timeline")}>Cronograma</button>
-            <button className={`bnt ${view === 'accessories' ? 'bg-blue-100' : ''}`} onClick={() => setView("accessories")}>Acessórios</button>
+            <button
+              className={`bnt ${view === "equipments" ? "bg-blue-100" : ""}`}
+              onClick={() => setView("equipments")}
+            >
+              Equipamentos
+            </button>
+            <button
+              className={`bnt ${view === "timeline" ? "bg-blue-100" : ""}`}
+              onClick={() => setView("timeline")}
+            >
+              Cronograma
+            </button>
+            <button
+              className={`bnt ${view === "accessories" ? "bg-blue-100" : ""}`}
+              onClick={() => setView("accessories")}
+            >
+              Acessórios
+            </button>
           </div>
         </div>
 
@@ -150,7 +208,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
           addEquipMutation.mutate({
             budgetId: currentBudget?.id || currentBudget?.budget_id,
             recipeId: selectedRecipe,
-            qty: quantity
+            qty: quantity,
           });
         }}
         recipesList={recipesQuery.data || []}

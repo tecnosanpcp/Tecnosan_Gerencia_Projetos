@@ -39,11 +39,25 @@
         title="Orçamento"
         actions={
           <button
-            className="px-4 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm"
-            onClick={() => navigate("/projects")}
-          >
-            Ir para Projetos
-          </button>
+          type="button"
+          onClick={() => navigate("/projects")}
+          className="
+        inline-flex
+        items-center
+        justify-center
+        rounded-[4px]
+        border border-[#DFE1E6]
+        bg-white
+        px-3 py-1.5
+        text-[12px]
+        font-semibold
+        text-[#172B4D]
+        transition-colors
+        hover:bg-[#F4F5F7]
+      "
+        >
+          Ir para Projetos
+        </button>
         }
         sidebar={
           <SidebarList
@@ -80,7 +94,7 @@
 
         {isAddBudgetModalOpen && (
           <AddBudgetModal
-            isOpen={isAddBudgetModalOpen}
+            isOpen={isAddBudgetModalOpen} 
             setOpen={setAddBudgetModalOpen}
           />
         )}
