@@ -19,10 +19,10 @@ export default function LeadTimeGraph({ data = [] }) {
       (item) =>
         Number(
           item.meta_hours ??
-            item.target_hours ??
-            item.planned_hours ??
-            item.horas_meta ??
-            0
+          item.target_hours ??
+          item.planned_hours ??
+          item.horas_meta ??
+          0
         ) || 0
     );
   }, [safeData]);
@@ -32,10 +32,10 @@ export default function LeadTimeGraph({ data = [] }) {
       (item) =>
         Number(
           item.real_hours ??
-            item.actual_hours ??
-            item.total_hours ??
-            item.horas_reais ??
-            0
+          item.actual_hours ??
+          item.total_hours ??
+          item.horas_reais ??
+          0
         ) || 0
     );
   }, [safeData]);
@@ -110,8 +110,10 @@ export default function LeadTimeGraph({ data = [] }) {
           fontSize: "9px",
           fontFamily: "Inter, system-ui, sans-serif",
         },
-        rotate: -40,
+        rotate: 0,
         trim: true,
+        hideOverlappingLabels: true,
+        maxHeight: 36,
       },
 
       axisBorder: {
@@ -230,7 +232,7 @@ export default function LeadTimeGraph({ data = [] }) {
 
   return (
     <div className="h-full min-h-0 w-full">
-      
+
 
       <div className="h-[calc(100%-48px)] min-h-[220px] w-full">
         {categories.length > 0 ? (

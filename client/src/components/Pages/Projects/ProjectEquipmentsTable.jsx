@@ -217,7 +217,7 @@ export default function ProjectEquipmentsTable({
       {groupedProjects.map((group) => (
         <div key={group.project_id} className="w-full">
           {!selectedProject?.id && (
-            <div className="border-b border-[#DFE1E6] bg-white px-4 py-3">
+            <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-t border-[#DFE1E6]">
               <h2 className="m-0 text-[13px] font-semibold text-[#172B4D]">
                 {group.project_name}
               </h2>

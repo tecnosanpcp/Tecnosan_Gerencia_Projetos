@@ -147,7 +147,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     flex
     flex-col
     gap-3
-    border-b
+    border
     border-[#DFE1E6]
     p-3
     sm:p-4
@@ -156,11 +156,27 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     lg:justify-between
   "
         >
-          <div className="flex flex-row items-center space-x-4 p-2 rounded-xl bg-gray-100 h-fit">
+          <div
+            className="
+              flex
+              h-9
+              min-w-0
+              w-full
+              items-center
+              gap-2
+              rounded
+              border
+              border-[#DFE1E6]
+              bg-white
+              px-3
+              lg:max-w-[360px]
+              xl:max-w-[420px]
+            "
+          >
             <FaSearch className="text-gray-500" />
             <input
               type="text"
-              placeholder="Pesquisar equipamento"
+              placeholder="Pesquisar..."
               className="bg-transparent outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

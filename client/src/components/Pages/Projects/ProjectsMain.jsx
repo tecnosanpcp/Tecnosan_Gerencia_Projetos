@@ -109,10 +109,10 @@ export default function ProjectsMain({ times }) {
         className="
           min-w-0
           overflow-hidden
-          rounded-md
+          
           border border-[#DFE1E6]
           bg-white
-          shadow-sm
+          
         "
       >
         {/* Toolbar */}
@@ -121,7 +121,7 @@ export default function ProjectsMain({ times }) {
             flex
             flex-col
             gap-3
-            border-b
+            border-b-0
             border-[#DFE1E6]
             p-3
             sm:p-4

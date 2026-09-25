@@ -92,7 +92,7 @@ function BudgetEquipmentTable({
   }
 
   return (
-    <div className="flex w-full flex-col gap-5 pb-2">
+    <div className="flex w-full flex-col ">
       {groupedData.map((group) => {
         const filteredEquipments =
           group.equipments?.filter((equip) =>
@@ -107,7 +107,7 @@ function BudgetEquipmentTable({
             className="flex w-full flex-col border-b border-[#DFE1E6]"
           >
             {!currentBudget && (
-              <div className="flex items-center justify-between bg-gray-100 px-3 py-2">
+              <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-x border-[#DFE1E6]">
                 <div className="min-w-0">
                   <h2 className="truncate text-sm font-semibold text-[#172B4D]">
                     {group.budget_name}
@@ -140,7 +140,7 @@ function BudgetEquipmentTable({
 
                 <thead>
                   <tr className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
-                    <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84] border border-t-0 border-r-0 border-[#DFE1E6]">
                       Equipamento
                     </th>
                     <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
@@ -176,7 +176,7 @@ function BudgetEquipmentTable({
                     <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Horas
                     </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84] border-r ">
                       Ações
                     </th>
                   </tr>
@@ -216,7 +216,7 @@ function BudgetEquipmentTable({
                               : "bg-white hover:bg-[#F4F5F7]"
                           }`}
                         >
-                          <td className="px-3 py-2 text-left">
+                          <td className="px-3 py-2 text-left border-l border-[#DFE1E6]">
                             <div className="flex min-w-0 items-center gap-2">
                               <span
                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold transition-colors ${

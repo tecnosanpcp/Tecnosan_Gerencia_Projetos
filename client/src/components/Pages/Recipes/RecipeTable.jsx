@@ -194,19 +194,19 @@ export default function RecipeTable({ i }) {
       {/* MODAL DE EDIÇÃO */}
       {renderEditModal()}
 
-      <div className="mt-4 w-full overflow-hidden border border-[#DFE1E6] bg-white">
+      <div className="mt-4 flex max-h-[500px] w-full flex-col overflow-hidden border border-[#DFE1E6] bg-white">
         {/* CABEÇALHO DA TABELA */}
         {list.length > 0 && (
-          <div className="w-full overflow-x-auto">
+          <div className="min-h-0 w-full flex-1 overflow-auto">
             <table className="w-full min-w-[760px] table-fixed border-collapse">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="h-10 border-b border-[#C1C7D0] bg-[#F4F5F7]">
                   {Object.keys(list[0]).map(
                     (col, index) =>
                       index > 0 && (
                         <th
                           key={col}
-                          className="border-r border-[#DFE1E6] px-3 text-left last:border-r-0"
+                          className="border-r border-[#DFE1E6] px-3 py-1 text-left last:border-r-0"
                         >
                           <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                             {col.replaceAll("_", " ")}
@@ -232,7 +232,7 @@ export default function RecipeTable({ i }) {
                       {/* LINHA PRINCIPAL */}
                       <tr
                         className={`
-                          h-11
+                          h-8
                           border-b
                           border-[#DFE1E6]
                           transition-colors
@@ -271,37 +271,7 @@ export default function RecipeTable({ i }) {
                         <td className="px-2">
                           <div className="flex items-center justify-center gap-1">
                             {/* VISUALIZAR */}
-                            {i.label !== "Material" &&
-                              i.label !== "Acessório" && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    toggleRow(row, idx)
-                                  }
-                                  className="
-                                    flex
-                                    h-7
-                                    w-7
-                                    items-center
-                                    justify-center
-                                    text-[#5E6C84]
-                                    transition-colors
-                                    hover:bg-[#EBECF0]
-                                    hover:text-[#172B4D]
-                                  "
-                                  title={
-                                    expanded
-                                      ? "Recolher"
-                                      : "Visualizar"
-                                  }
-                                >
-                                  {expanded ? (
-                                    <FiChevronDown size={14} />
-                                  ) : (
-                                    <FiChevronRight size={14} />
-                                  )}
-                                </button>
-                              )}
+                            
 
                             {/* EDITAR */}
                             <button

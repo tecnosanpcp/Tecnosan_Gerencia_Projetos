@@ -65,6 +65,8 @@ const CHARTS = [
     subtitle: "Consumo de materiais por projeto",
     category: "Produção",
     comparables: [],
+    fullWidth: true,
+    fixedBottom: true,
   },
 
   {
@@ -211,6 +213,14 @@ export default function DashboardChartGrid({ charts }) {
       next.splice(sourceIndex, 1);
       next.splice(targetIndex, 0, sourceId);
 
+      const fixedBottomId = "report-consumption";
+
+      const fixedIndex = next.indexOf(fixedBottomId);
+
+      if (fixedIndex !== -1) {
+        next.splice(fixedIndex, 1);
+        next.push(fixedBottomId);
+      }
       return next;
     });
 
@@ -340,11 +350,10 @@ export default function DashboardChartGrid({ charts }) {
           <button
             type="button"
             onClick={() => setCustomizing(true)}
-            className={`h-8 px-3 rounded border text-[11px] font-bold flex items-center gap-1.5 transition-colors ${
-              customizing
-                ? "bg-[#0052CC] border-[#0052CC] text-white"
-                : "bg-white border-[#DFE1E6] text-[#172B4D] hover:bg-[#F4F5F7]"
-            }`}
+            className={`h-8 px-3 rounded border text-[11px] font-bold flex items-center gap-1.5 transition-colors ${customizing
+              ? "bg-[#0052CC] border-[#0052CC] text-white"
+              : "bg-white border-[#DFE1E6] text-[#172B4D] hover:bg-[#F4F5F7]"
+              }`}
           >
             <Settings2 size={14} />
             Personalizar Dashboard
@@ -484,13 +493,14 @@ function ChartCard({
           onReorderDrop(event, def.id);
         }
       }}
-      className={`relative h-full bg-white rounded border overflow-hidden transition-all duration-200 ${
-        dragging ? "opacity-40 scale-[0.98]" : "opacity-100"
-      } ${
-        dropTarget
+      className={`relative ${def.fullWidth
+        ? "lg:col-span-3"
+        : ""
+        } h-full bg-white rounded border overflow-hidden transition-all duration-200 ${dragging ? "opacity-40 scale-[0.98]" : "opacity-100"
+        } ${dropTarget
           ? "border-[#0052CC] shadow-[0_0_0_2px_rgba(0,82,204,0.18),0_8px_24px_rgba(9,30,66,0.14)]"
           : "border-[#DFE1E6] shadow-[0_1px_3px_rgba(0,0,0,0.07)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.12)]"
-      }`}
+        }`}
     >
       {/* INDICADOR DE COMPARAÇÃO */}
       {dropTarget && (
@@ -507,9 +517,8 @@ function ChartCard({
 
       {/* HEADER */}
       <header
-        className={`flex items-center gap-2.5 px-3.5 py-2.5 ${
-          minimized ? "" : "border-b border-[#F4F5F7]"
-        }`}
+        className={`flex items-center gap-2.5 px-3.5 py-2.5 ${minimized ? "" : "border-b border-[#F4F5F7]"
+          }`}
       >
         {/* HANDLE DE REORDENAÇÃO */}
         <button
@@ -545,9 +554,8 @@ function ChartCard({
           >
             <ChevronDown
               size={13}
-              className={`transition-transform ${
-                minimized ? "rotate-180" : ""
-              }`}
+              className={`transition-transform ${minimized ? "rotate-180" : ""
+                }`}
             />
           </ChartAction>
 
@@ -564,14 +572,21 @@ function ChartCard({
       {/* CONTEÚDO ARRASTÁVEL PARA COMPARAÇÃO */}
       {!minimized && (
         <div
-          draggable={def.comparables?.length > 0}
-          onDragStart={(event) => onChartDragStart(event, def.id)}
-          onDragEnd={onDragEnd}
-          className={`relative h-[220px] p-2 ${
+          draggable={
+            !def.fixedBottom &&
             def.comparables?.length > 0
+          }
+          onDragStart={(event) =>
+            onChartDragStart(event, def.id)
+          }
+          onDragEnd={onDragEnd}
+          className={`relative min-h-0 p-2 ${def.fullWidth
+            ? "h-[300px]"
+            : "h-[280px]"
+            } ${def.comparables?.length > 0
               ? "cursor-grab active:cursor-grabbing"
               : ""
-          }`}
+            }`}
         >
           {def.comparables?.length > 0 && (
             <div className="absolute right-3 top-2 z-10 pointer-events-none opacity-0 group-hover:opacity-100">
@@ -631,9 +646,8 @@ function CustomizePanel({
       )}
 
       <aside
-        className={`fixed top-0 right-0 bottom-0 z-[8001] w-[340px] max-w-[92vw] bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.18)] flex flex-col transition-transform duration-300 ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 bottom-0 z-[8001] w-[340px] max-w-[92vw] bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.18)] flex flex-col transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="px-5 pt-5 pb-4 border-b border-[#DFE1E6] shrink-0">
           <div className="flex items-center justify-between gap-3">
@@ -662,11 +676,10 @@ function CustomizePanel({
                 key={cat}
                 type="button"
                 onClick={() => setCategory(cat)}
-                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold ${
-                  category === cat
-                    ? "bg-[#E9F2FF] text-[#0052CC]"
-                    : "bg-[#F4F5F7] text-[#5E6C84] hover:bg-[#EBECF0]"
-                }`}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold ${category === cat
+                  ? "bg-[#E9F2FF] text-[#0052CC]"
+                  : "bg-[#F4F5F7] text-[#5E6C84] hover:bg-[#EBECF0]"
+                  }`}
               >
                 {cat}
               </button>
@@ -702,11 +715,10 @@ function CustomizePanel({
                   key={chart.id}
                   type="button"
                   onClick={() => onToggle(chart.id)}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border transition-colors ${
-                    active
-                      ? "border-[#B3D4FF] bg-[#F7FAFF]"
-                      : "border-[#DFE1E6] bg-white hover:bg-[#F4F5F7]"
-                  }`}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border transition-colors ${active
+                    ? "border-[#B3D4FF] bg-[#F7FAFF]"
+                    : "border-[#DFE1E6] bg-white hover:bg-[#F4F5F7]"
+                    }`}
                 >
                   <span className="w-7 h-7 rounded-md bg-[#E9F2FF] flex items-center justify-center shrink-0 text-[#0052CC]">
                     {active ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -723,14 +735,12 @@ function CustomizePanel({
                   </span>
 
                   <span
-                    className={`w-8 h-[18px] rounded-full p-0.5 ${
-                      active ? "bg-[#0052CC]" : "bg-[#DFE1E6]"
-                    }`}
+                    className={`w-8 h-[18px] rounded-full p-0.5 ${active ? "bg-[#0052CC]" : "bg-[#DFE1E6]"
+                      }`}
                   >
                     <span
-                      className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${
-                        active ? "translate-x-3.5" : "translate-x-0"
-                      }`}
+                      className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${active ? "translate-x-3.5" : "translate-x-0"
+                        }`}
                     />
                   </span>
                 </button>
