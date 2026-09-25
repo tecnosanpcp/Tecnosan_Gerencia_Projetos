@@ -7,6 +7,21 @@ export default function ProjectEvolutionGraph({
 }) {
   const safeCategories = Array.isArray(categories) ? categories : [];
   const safeSeries = Array.isArray(series) ? series : [];
+  const abbreviateProjectName = (name, maxLength = 16) => {
+    if (!name) return "Sem projeto";
+
+    const text = String(name).trim();
+
+    if (text.length <= maxLength) {
+      return text;
+    }
+
+    return `${text.slice(0, maxLength).trim()}...`;
+  };
+
+  const displayCategories = safeCategories.map((category) =>
+    abbreviateProjectName(category),
+  );
 
   const options = {
     chart: {
@@ -43,14 +58,14 @@ export default function ProjectEvolutionGraph({
     },
 
     xaxis: {
-      categories: safeCategories,
+      categories: displayCategories,
       labels: {
         style: {
           colors: "#5E6C84",
           fontSize: "10px",
           fontFamily: "Inter, system-ui, sans-serif",
         },
-        rotate: -35,
+        rotate: 0,
         trim: true,
       },
       axisBorder: {
@@ -120,7 +135,7 @@ export default function ProjectEvolutionGraph({
           },
           xaxis: {
             labels: {
-              rotate: -45,
+              rotate: -30,
               fontSize: "9px",
             },
           },
