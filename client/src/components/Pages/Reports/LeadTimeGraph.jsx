@@ -62,7 +62,13 @@ export default function LeadTimeGraph({ data = [] }) {
       background: "transparent",
       animations: {
         enabled: true,
-        speed: 300,
+        speed: 150,
+        animateGradually: {
+          enabled: false,
+        },
+        dynamicAnimation: {
+          enabled: false,
+        },
       },
     },
 

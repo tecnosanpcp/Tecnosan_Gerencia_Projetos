@@ -34,7 +34,13 @@ export default function ProjectEvolutionGraph({
       background: "transparent",
       animations: {
         enabled: true,
-        speed: 300,
+        speed: 150,
+        animateGradually: {
+          enabled: false,
+        },
+        dynamicAnimation: {
+          enabled: false,
+        },
       },
     },
 

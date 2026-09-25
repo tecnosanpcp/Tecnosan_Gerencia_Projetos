@@ -7,48 +7,42 @@ export default function TotalConsumptionGraph({ data = [] }) {
   const safeData = Array.isArray(data) ? data : [];
 
   const normalizedData = useMemo(() => {
-  return safeData.map((item) => {
-    const project =
-      item.project_name ||
-      item.projeto ||
-      item.project ||
-      "Sem projeto";
+    return safeData.map((item) => {
+      const project =
+        item.project_name || item.projeto || item.project || "Sem projeto";
 
-    const material =
-      item.material_name ||
-      item.material ||
-      item.nome_material ||
-      "Material";
+      const material =
+        item.material_name || item.material || item.nome_material || "Material";
 
-    const kg =
-      Number(
-        item.total_material_consumed ??
-          item.total_kg ??
-          item.consumed_kg ??
-          item.consumption_kg ??
-          item.kg ??
-          item.quantity_kg ??
-          0
-      ) || 0;
+      const kg =
+        Number(
+          item.total_material_consumed ??
+            item.total_kg ??
+            item.consumed_kg ??
+            item.consumption_kg ??
+            item.kg ??
+            item.quantity_kg ??
+            0,
+        ) || 0;
 
-    const value =
-      Number(
-        item.total_value ??
-          item.total_price ??
-          item.value ??
-          item.valor ??
-          item.cost ??
-          0
-      ) || 0;
+      const value =
+        Number(
+          item.total_value ??
+            item.total_price ??
+            item.value ??
+            item.valor ??
+            item.cost ??
+            0,
+        ) || 0;
 
-    return {
-      project,
-      material,
-      kg,
-      value,
-    };
-  });
-}, [safeData]);
+      return {
+        project,
+        material,
+        kg,
+        value,
+      };
+    });
+  }, [safeData]);
 
   const projects = useMemo(() => {
     return [...new Set(normalizedData.map((item) => item.project))];
@@ -64,16 +58,12 @@ export default function TotalConsumptionGraph({ data = [] }) {
 
       data: projects.map((project) => {
         const items = normalizedData.filter(
-          (item) =>
-            item.project === project &&
-            item.material === material
+          (item) => item.project === project && item.material === material,
         );
 
         return items.reduce(
-          (total, item) =>
-            total +
-            (metric === "kg" ? item.kg : item.value),
-          0
+          (total, item) => total + (metric === "kg" ? item.kg : item.value),
+          0,
         );
       }),
     }));
@@ -90,7 +80,13 @@ export default function TotalConsumptionGraph({ data = [] }) {
       background: "transparent",
       animations: {
         enabled: true,
-        speed: 300,
+        speed: 150,
+        animateGradually: {
+          enabled: false,
+        },
+        dynamicAnimation: {
+          enabled: false,
+        },
       },
     },
 
@@ -233,8 +229,6 @@ export default function TotalConsumptionGraph({ data = [] }) {
   return (
     <div className="h-full min-h-0 w-full">
       <div className="mb-2 flex items-start justify-between gap-3">
-        
-
         <div className="flex shrink-0 rounded-lg border border-[#DFE1E6] bg-[#F4F5F7] p-0.5">
           <button
             type="button"

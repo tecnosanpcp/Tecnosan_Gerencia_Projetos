@@ -503,7 +503,7 @@ function ChartCard({
       }}
       className={`relative ${
         def.fullWidth ? "lg:col-span-3" : ""
-      } h-full bg-white rounded border overflow-hidden transition-all duration-200 ${
+      } h-full bg-white rounded border overflow-hidden transition-colors duration-100 ${
         dragging ? "opacity-40 scale-[0.98]" : "opacity-100"
       } ${
         dropTarget

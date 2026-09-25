@@ -155,12 +155,12 @@ function Recipes() {
     return (
       <div className="min-h-screen w-full bg-[#F4F5F7] px-6 py-6 font-sans">
         <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-5">
-          <div className="h-[84px] animate-pulse rounded-lg border border-[#DFE1E6] bg-white" />
+          <div className="h-[84px] rounded-lg border border-[#DFE1E6] bg-white" />
 
           {[1, 2, 3, 4].map((item) => (
             <div
               key={item}
-              className="h-[72px] animate-pulse rounded-lg border border-[#DFE1E6] bg-white"
+              className="h-[72px]  rounded-lg border border-[#DFE1E6] bg-white"
             />
           ))}
         </div>

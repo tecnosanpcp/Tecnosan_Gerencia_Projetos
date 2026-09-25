@@ -83,6 +83,7 @@ const MaterialsWasteChart = () => {
               fill="#DE350B"
               radius={[4, 4, 0, 0]}
               barSize={28}
+              isAnimationActive={false}
             />
           </BarChart>
         </ResponsiveContainer>

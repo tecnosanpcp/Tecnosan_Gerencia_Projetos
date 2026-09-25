@@ -85,6 +85,7 @@ const MaterialsChart = () => {
               fill="#0052CC"
               radius={[4, 4, 0, 0]}
               barSize={28}
+              isAnimationActive={false}
             />
           </BarChart>
         </ResponsiveContainer>

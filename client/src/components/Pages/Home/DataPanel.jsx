@@ -7,13 +7,12 @@ function DataPanel({
   previousYear,
   onOpen,
 }) {
-  const hasComparison =
-    comparison !== undefined && comparison !== null;
+  const hasComparison = comparison !== undefined && comparison !== null;
 
   const isPositive = Number(comparison) >= 0;
 
   return (
-    <div className="group relative overflow-hidden rounded-[4px] border border-[#DFE1E6] bg-white shadow-[0_1px_3px_rgba(9,30,66,0.08)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(9,30,66,0.12)]">
+    <div className="group relative overflow-hidden rounded-[4px] border border-[#DFE1E6] bg-white shadow-[0_1px_3px_rgba(9,30,66,0.08)] transition-shadow duration-100 hover:shadow-[0_4px_12px_rgba(9,30,66,0.12)]">
       <div className="p-4 pl-[18px]">
         <div className="mb-2 flex items-center justify-between">
           <p className="m-0 text-[11px] font-bold uppercase tracking-[0.07em] text-[#5E6C84]">
@@ -61,11 +60,7 @@ function DataPanel({
                   flex items-center gap-1
                   text-[11px]
                   font-bold
-                  ${
-                    isPositive
-                      ? "text-[#00875A]"
-                      : "text-[#DE350B]"
-                  }
+                  ${isPositive ? "text-[#00875A]" : "text-[#DE350B]"}
                 `}
               >
                 {isPositive ? "↑" : "↓"}
@@ -82,9 +77,7 @@ function DataPanel({
                 Comparação
               </span>
 
-              <span className="text-[10px] text-[#97A0AF]">
-                — mês anterior
-              </span>
+              <span className="text-[10px] text-[#97A0AF]">— mês anterior</span>
             </div>
           )}
 

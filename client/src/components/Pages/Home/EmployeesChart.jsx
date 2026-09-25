@@ -110,6 +110,7 @@ const EmployeesChart = () => {
               barSize={22}
               fill="#0052CC"
               radius={[4, 4, 0, 0]}
+              isAnimationActive={false}
             />
 
             <Line

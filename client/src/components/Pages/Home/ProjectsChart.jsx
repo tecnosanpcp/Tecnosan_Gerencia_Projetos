@@ -99,6 +99,7 @@ const ProjectsChart = () => {
               fill="#0052CC"
               radius={[0, 4, 4, 0]}
               barSize={18}
+              isAnimationActive={false}
             >
               {data.map((entry, index) => (
                 <Cell
