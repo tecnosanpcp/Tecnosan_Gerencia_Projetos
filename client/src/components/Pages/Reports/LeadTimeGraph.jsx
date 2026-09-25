@@ -10,7 +10,7 @@ export default function LeadTimeGraph({ data = [] }) {
         item.component_name ||
         item.component ||
         item.nome_componente ||
-        "Componente"
+        "Componente",
     );
   }, [safeData]);
 
@@ -19,11 +19,11 @@ export default function LeadTimeGraph({ data = [] }) {
       (item) =>
         Number(
           item.meta_hours ??
-          item.target_hours ??
-          item.planned_hours ??
-          item.horas_meta ??
-          0
-        ) || 0
+            item.target_hours ??
+            item.planned_hours ??
+            item.horas_meta ??
+            0,
+        ) || 0,
     );
   }, [safeData]);
 
@@ -32,11 +32,11 @@ export default function LeadTimeGraph({ data = [] }) {
       (item) =>
         Number(
           item.real_hours ??
-          item.actual_hours ??
-          item.total_hours ??
-          item.horas_reais ??
-          0
-        ) || 0
+            item.actual_hours ??
+            item.total_hours ??
+            item.horas_reais ??
+            0,
+        ) || 0,
     );
   }, [safeData]);
 
@@ -103,7 +103,8 @@ export default function LeadTimeGraph({ data = [] }) {
 
     xaxis: {
       categories,
-
+      min: 0,
+      max: Math.min(7, categories.length - 1),
       labels: {
         style: {
           colors: "#5E6C84",
@@ -135,8 +136,7 @@ export default function LeadTimeGraph({ data = [] }) {
           fontFamily: "Inter, system-ui, sans-serif",
         },
 
-        formatter: (value) =>
-          `${Number(value).toLocaleString("pt-BR")} h`,
+        formatter: (value) => `${Number(value).toLocaleString("pt-BR")} h`,
       },
     },
 
@@ -180,8 +180,7 @@ export default function LeadTimeGraph({ data = [] }) {
       intersect: false,
 
       y: {
-        formatter: (value) =>
-          `${Number(value).toLocaleString("pt-BR")} h`,
+        formatter: (value) => `${Number(value).toLocaleString("pt-BR")} h`,
       },
 
       style: {
@@ -232,8 +231,6 @@ export default function LeadTimeGraph({ data = [] }) {
 
   return (
     <div className="h-full min-h-0 w-full">
-
-
       <div className="h-[calc(100%-48px)] min-h-[220px] w-full">
         {categories.length > 0 ? (
           <Chart
