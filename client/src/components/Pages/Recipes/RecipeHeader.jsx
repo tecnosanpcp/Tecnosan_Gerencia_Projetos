@@ -5,7 +5,7 @@ import AddComponenteRecipeModal from "./AddComponentRecipeModal";
 import AddEquipmentRecipeModal from "./AddEquipmentRecipeModal";
 import AddAccessoryTypeModal from "./AddAccessoryTypeModal";
 
-export default function RecipeHeader({ i }) {
+export default function RecipeHeader({ i, importAction }) {
   const [isAddModalVisible, setAddModalVisible] = useState({
     Material: false,
     Acessório: false,
@@ -201,7 +201,29 @@ export default function RecipeHeader({ i }) {
     "
           >
             {/* BUSCA */}
-
+            {importAction && (
+              <button
+                type="button"
+                onClick={importAction}
+                className="
+      inline-flex h-8
+      shrink-0
+      items-center justify-center
+      rounded-md
+      border border-[#DFE1E6]
+      bg-white
+      px-3
+      text-[11px]
+      font-semibold
+      text-[#172B4D]
+      transition
+      hover:bg-[#F4F5F7]
+      active:scale-[0.98]
+    "
+              >
+                Importar
+              </button>
+            )}
             <div className="w-[220px] shrink-0">
               <div className="relative flex w-full">
                 <svg

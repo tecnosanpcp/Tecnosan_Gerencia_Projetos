@@ -4,6 +4,7 @@ import { parseBRL } from "../../../utils/IntUtils";
 
 import RecipeTable from "./RecipeTable";
 import RecipeHeader from "./RecipeHeader";
+import ImportRecipeModal from "./ImportRecipeModal";
 
 import { listMaterials } from "@services/MaterialService.js";
 import { listAccessories } from "@services/AccessoriesServices.js";
@@ -18,6 +19,8 @@ function Recipes() {
   const [componentsExpanded, setComponentsExpanded] = useState(false);
   const [equipmentsExpanded, setEquipmentsExpanded] = useState(false);
 
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importType, setImportType] = useState("materials");
   const [searchMaterial, setSearchMaterial] = useState("");
   const [searchAccessory, setSearchAccessory] = useState("");
   const [searchComponent, setSearchComponent] = useState("");
@@ -36,11 +39,7 @@ function Recipes() {
   };
 
   const safeString = (value) => {
-    if (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ""
-    ) {
+    if (value === undefined || value === null || String(value).trim() === "") {
       return "-";
     }
 
@@ -71,7 +70,7 @@ function Recipes() {
         Material: safeString(item?.material_name),
         Descrição: safeString(item?.material_desc),
         "Valor Unitário": `R$ ${safeString(item?.value)} / ${safeString(
-          item?.uni
+          item?.uni,
         )}`,
       }));
     },
@@ -177,7 +176,7 @@ function Recipes() {
       materialsQuery.error,
       accessoriesQuery.error,
       componentsQuery.error,
-      equipmentsQuery.error
+      equipmentsQuery.error,
     );
 
     return (
@@ -220,19 +219,19 @@ function Recipes() {
   const normalizedEquipmentSearch = searchEquipment.trim().toLowerCase();
 
   const filterMaterials = materialsList.filter((item) =>
-    item.Material.toLowerCase().includes(normalizedMaterialSearch)
+    item.Material.toLowerCase().includes(normalizedMaterialSearch),
   );
 
   const filterAccessories = accessoriesList.filter((item) =>
-    item.Acessório.toLowerCase().includes(normalizedAccessorySearch)
+    item.Acessório.toLowerCase().includes(normalizedAccessorySearch),
   );
 
   const filterComponents = componentsList.filter((item) =>
-    item.Componente.toLowerCase().includes(normalizedComponentSearch)
+    item.Componente.toLowerCase().includes(normalizedComponentSearch),
   );
 
   const filterEquipments = equipmentsList.filter((item) =>
-    item.Equipamento.toLowerCase().includes(normalizedEquipmentSearch)
+    item.Equipamento.toLowerCase().includes(normalizedEquipmentSearch),
   );
 
   // =========================================================
@@ -243,6 +242,10 @@ function Recipes() {
     {
       label: "Material",
       description: "Materiais disponíveis e seus valores unitários.",
+      importAction: () => {
+        setImportType("materials");
+        setIsImportOpen(true);
+      },
       list: filterMaterials,
       total: materialsList.length,
       isExpand: materialsExpanded,
@@ -252,6 +255,10 @@ function Recipes() {
     {
       label: "Acessório",
       description: "Acessórios cadastrados no sistema.",
+      importAction: () => {
+        setImportType("accessories");
+        setIsImportOpen(true);
+      },
       list: filterAccessories,
       total: accessoriesList.length,
       isExpand: accessoriesExpanded,
@@ -278,17 +285,15 @@ function Recipes() {
     },
   ];
 
-    return (
+  return (
     <div className="h-full min-h-0 w-full overflow-hidden bg-[#F4F5F7] font-sans">
       <div className="h-full min-h-0 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-5 lg:px-6">
         <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-1 pb-5">
-
           {/* =================================================
               CABEÇALHO DA PÁGINA
           ================================================= */}
 
           <div className="flex min-h-[72px] flex-col justify-between gap-4 rounded-lg border border-[#DFE1E6] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)] sm:flex-row sm:items-center">
-
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#DEEBFF] text-[#0052CC]">
                 <svg
@@ -327,21 +332,23 @@ function Recipes() {
           </div>
 
           {/* =================================================
-              SEÇÕES DE RECEITAS
-          ================================================= */}
+    SEÇÕES DE RECEITAS
+================================================= */}
 
           {sections.map((section) => (
-            <div
-              key={section.label}
-              className="w-full"
-            >
-              <RecipeHeader i={section} />
+            <div key={section.label} className="w-full">
+              <RecipeHeader i={section} importAction={section.importAction} />
+
               <RecipeTable i={section} />
             </div>
           ))}
-
         </div>
       </div>
+      <ImportRecipeModal
+        isOpen={isImportOpen}
+        importType={importType}
+        onClose={() => setIsImportOpen(false)}
+      />
     </div>
   );
 }
