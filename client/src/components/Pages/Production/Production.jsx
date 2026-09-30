@@ -20,22 +20,16 @@ import { VerifyAuth } from "@services/AuthService.js";
 import { getComponentRecipe } from "@services/ComponentRecipes.js";
 import { getEmployeesComponents } from "@services/EmployeesComponentsServices.js";
 
-function generateWeek(weekOffset = 0) {
+function generateWeek(dayOffset = 0) {
   const today = new Date();
 
   today.setHours(0, 0, 0, 0);
-  today.setDate(today.getDate() + weekOffset * 7);
-
-  const dayOfWeek = today.getDay();
-
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - dayOfWeek);
-  startOfWeek.setHours(0, 0, 0, 0);
+  today.setDate(today.getDate() + dayOffset);
 
   return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(startOfWeek);
+    const day = new Date(today);
 
-    day.setDate(startOfWeek.getDate() + index);
+    day.setDate(today.getDate() + index);
     day.setHours(0, 0, 0, 0);
 
     return {
