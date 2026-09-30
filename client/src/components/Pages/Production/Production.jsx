@@ -24,7 +24,7 @@ function generateWeek(weekOffset = 0) {
   const today = new Date();
 
   today.setHours(0, 0, 0, 0);
-  today.setDate(today.getDate() + weekOffset);
+  today.setDate(today.getDate() + weekOffset * 7);
 
   const dayOfWeek = today.getDay();
 
