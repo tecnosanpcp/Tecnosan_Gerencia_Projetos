@@ -200,12 +200,15 @@ export default function ProjectTimeline({ searchTerm, times }) {
           >
             {/* Título do Projeto */}
             {!currentProject && (
-              <h2 className="text-lg font-bold text-gray-700 border-l-4 border-green-500 pl-2 mt-2">
-                {group.projectInfo.name || group.projectInfo.project_name}
-                <span className="text-xs font-normal text-gray-400 ml-2 uppercase border border-gray-200 rounded px-1">
+              <div className="flex items-center gap-2 border-t border-b border-[#B3D4FF] bg-[#E9F2FF] px-3 py-2">
+                <h2 className="m-0 text-[13px] font-semibold text-[#172B4D]">
+                  {group.projectInfo.name || group.projectInfo.project_name}
+                </h2>
+
+                <span className="text-[10px] font-medium uppercase text-[#6B778C]">
                   {group.projectInfo.status || "Status N/A"}
                 </span>
-              </h2>
+              </div>
             )}
 
             <div className="w-full max-w-[calc(100vw-280px)] overflow-x-auto pb-4 border border-gray-200 rounded-lg bg-white shadow-sm">

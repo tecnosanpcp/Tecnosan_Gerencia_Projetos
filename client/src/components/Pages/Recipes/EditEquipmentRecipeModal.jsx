@@ -1,5 +1,6 @@
 import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { parseBRL } from "../../../utils/IntUtils";
@@ -225,8 +226,8 @@ export default function EditEquipmentRecipeModal({
 
   if (!isVisible) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
+  return createPortal(
+    <div className="fixed inset-0 z-[9990] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
       <div className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
         <form
           className="flex min-h-0 flex-col"
@@ -485,6 +486,7 @@ export default function EditEquipmentRecipeModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

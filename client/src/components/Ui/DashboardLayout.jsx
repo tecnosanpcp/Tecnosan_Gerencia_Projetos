@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 export default function DashboardLayout({
   title,
@@ -8,26 +9,82 @@ export default function DashboardLayout({
   header,
   children,
 }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const sidebarWidth = sidebarCollapsed ? "48px" : "220px";
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F4F5F7] text-[#172B4D]">
       <div className="flex min-h-screen w-full">
         {/* Sidebar secundária de projetos */}
         {sidebar && (
           <aside
-            className="
-              hidden md:flex
-              w-[190px]
-              lg:w-[205px]
-              xl:w-[220px]
-              shrink-0
-              border-r border-[#DFE1E6]
-              bg-white
-              overflow-hidden
-            "
+              className="
+                relative
+                hidden
+                min-h-full
+                self-stretch
+                shrink-0
+                border-r
+                border-[#DFE1E6]
+                bg-white
+                md:flex
+                overflow-visible
+                transition-[width]
+                duration-200
+                ease-out
+              "
+            
+            style={{ width: sidebarWidth }}
           >
-            <div className="flex h-full w-full flex-col">
-              {sidebar}
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex h-full w-full flex-col overflow-hidden">
+                {sidebar}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+              aria-label={
+                sidebarCollapsed
+                  ? "Expandir barra lateral"
+                  : "Recolher barra lateral"
+              }
+              title={
+                sidebarCollapsed
+                  ? "Expandir barra lateral"
+                  : "Recolher barra lateral"
+              }
+              className="
+    absolute
+    right-0
+    top-1/2
+    z-20
+    flex
+    h-7
+    w-6
+    -translate-y-1/2
+    translate-x-1/2
+    items-center
+    justify-center
+    rounded-[3px]
+    border
+    border-[#DFE1E6]
+    bg-white
+    text-[#6B778C]
+    shadow-[0_1px_2px_rgba(9,30,66,0.12)]
+    transition-colors
+    duration-150
+    hover:bg-[#F4F5F7]
+    hover:text-[#172B4D]
+  "
+            >
+              {sidebarCollapsed ? (
+                <FiChevronRight size={14} strokeWidth={2} />
+              ) : (
+                <FiChevronLeft size={14} strokeWidth={2} />
+              )}
+            </button>
           </aside>
         )}
 

@@ -83,7 +83,7 @@ export default function Sidebar({
         left-0
         top-0
         bottom-0
-        z-[7000]
+        z-40
         flex
         flex-col
         bg-[#0052CC]

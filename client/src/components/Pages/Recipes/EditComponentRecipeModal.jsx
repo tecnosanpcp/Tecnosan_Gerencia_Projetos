@@ -239,8 +239,8 @@ export default function EditComponentRecipeModal({
   if (!isVisible || !component) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
-      <div className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-6 backdrop-blur-[2px]">
+  <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
         <form
           className="flex min-h-0 flex-col"
           onSubmit={(e) => {

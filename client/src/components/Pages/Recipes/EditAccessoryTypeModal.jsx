@@ -83,7 +83,7 @@ export default function EditAccessoryTypeModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
-      <div className="w-full max-w-[460px] overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
+      <div className="w-full max-w-[620px] overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
         {/* HEADER */}
         <div className="flex items-center justify-between border-b border-[#DFE1E6] px-5 py-4">
           <div>
