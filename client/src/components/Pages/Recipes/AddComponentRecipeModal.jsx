@@ -18,6 +18,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
 
   const [materials, setMaterials] = useState([]);
   const [materialsList, setMaterialsList] = useState([]);
+  const [materialsToAdd, setMaterialsToAdd] = useState([]);
   const [materialsQuantity, setMaterialsQuantity] = useState([]);
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
     setMen("");
     setHours("");
     setMaterialsList([]);
+    setMaterialsToAdd([]);
     setMaterialsQuantity([]);
     setVisible(false);
   };
@@ -71,17 +73,16 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
       const recipe_component = await createComponentRecipe(
         componenteRecipeName,
         Number(men),
-        Number(hours)
+        Number(hours),
       );
 
-      const component_recipe_id =
-        recipe_component[0].component_recipe_id;
+      const component_recipe_id = recipe_component[0].component_recipe_id;
 
       for (const m of materialsQuantity) {
         await createCompRecipeMat(
           component_recipe_id,
           m.id,
-          Number(m.quantity)
+          Number(m.quantity),
         );
       }
 
@@ -105,11 +106,10 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
-      <div className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
-
+    <div className="fixed inset-0 z-[8000] flex items-center justify-center bg-[#091E42]/45 p-6 backdrop-blur-[2px]">
+      <div className="flex h-full w-[1100px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)  ]">
         <form
-          className="flex min-h-0 flex-col"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
@@ -144,26 +144,23 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
           </div>
 
           {/* BODY */}
-          <div className="min-h-0 space-y-5 overflow-y-auto px-5 py-5">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-5">
+            <div className="shrink-0 space-y-5">
+              {/* DADOS DO COMPONENTE */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* NOME */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                    Nome <span className="text-[#DE350B]">*</span>
+                  </label>
 
-            {/* DADOS DO COMPONENTE */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-              {/* NOME */}
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                  Nome <span className="text-[#DE350B]">*</span>
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Digite o nome do componente"
-                  value={componenteRecipeName}
-                  onChange={(e) =>
-                    setComponentRecipeName(e.target.value)
-                  }
-                  required
-                  className="
+                  <input
+                    type="text"
+                    placeholder="Digite o nome do componente"
+                    value={componenteRecipeName}
+                    onChange={(e) => setComponentRecipeName(e.target.value)}
+                    required
+                    className="
                     h-9 w-full rounded-md
                     border border-[#DFE1E6]
                     bg-white px-3
@@ -175,114 +172,127 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                     focus:ring-2
                     focus:ring-[#DEEBFF]
                   "
+                  />
+                </div>
+
+                {/* HOMENS */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                      Qtd. Homens <span className="text-[#DE350B]">*</span>
+                    </label>
+
+                    <input
+                      type="number"
+                      placeholder="Ex: 2"
+                      value={men}
+                      onChange={(e) => setMen(e.target.value)}
+                      min="1"
+                      required
+                      className="
+                      h-9 w-full rounded-md
+                      border border-[#DFE1E6]
+                      bg-white px-3
+                      text-xs text-[#172B4D]
+                      outline-none
+                      transition
+                      placeholder:text-[#97A0AF]
+                      focus:border-[#4C9AFF]
+                      focus:ring-2
+                      focus:ring-[#DEEBFF]
+                    "
+                    />
+                  </div>
+
+                  {/* HORAS */}
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                      Qtd. Horas <span className="text-[#DE350B]">*</span>
+                    </label>
+
+                    <input
+                      type="number"
+                      placeholder="Ex: 1.5"
+                      value={hours}
+                      onChange={(e) => setHours(e.target.value)}
+                      step="0.1"
+                      min="0"
+                      required
+                      className="
+                      h-9 w-full rounded-md
+                      border border-[#DFE1E6]
+                      bg-white px-3
+                      text-xs text-[#172B4D]
+                      outline-none
+                      transition
+                      placeholder:text-[#97A0AF]
+                      focus:border-[#4C9AFF]
+                      focus:ring-2
+                      focus:ring-[#DEEBFF]
+                    "
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* MATERIAIS */}
+              <div>
+                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                  Materiais <span className="text-[#DE350B]">*</span>
+                </label>
+
+                <SelectMenu
+                  variant="full"
+                  options={materials
+                    .filter((m) => !materialsList.includes(m.material_id))
+                    .map((m) => ({
+                      id: m.material_id,
+                      label: m.material_name,
+                    }))}
+                  selectedOption={materialsToAdd}
+                  setSelectedOption={setMaterialsToAdd}
+                  closeOnSelect={false}
+                  searchable
+                  searchPlaceholder="Pesquisar material..."
+                  confirmOnEnter
+                  onConfirmSelection={(selected) => {
+                    setMaterialsList((prev) => [
+                      ...prev,
+                      ...selected.filter((id) => !prev.includes(id)),
+                    ]);
+
+                    setMaterialsToAdd([]);
+                  }}
                 />
               </div>
-
-              {/* HOMENS */}
-              <div className="grid grid-cols-2 gap-4">
-
-                <div>
-                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                    Qtd. Homens <span className="text-[#DE350B]">*</span>
-                  </label>
-
-                  <input
-                    type="number"
-                    placeholder="Ex: 2"
-                    value={men}
-                    onChange={(e) => setMen(e.target.value)}
-                    min="1"
-                    required
-                    className="
-                      h-9 w-full rounded-md
-                      border border-[#DFE1E6]
-                      bg-white px-3
-                      text-xs text-[#172B4D]
-                      outline-none
-                      transition
-                      placeholder:text-[#97A0AF]
-                      focus:border-[#4C9AFF]
-                      focus:ring-2
-                      focus:ring-[#DEEBFF]
-                    "
-                  />
-                </div>
-
-                {/* HORAS */}
-                <div>
-                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                    Qtd. Horas <span className="text-[#DE350B]">*</span>
-                  </label>
-
-                  <input
-                    type="number"
-                    placeholder="Ex: 1.5"
-                    value={hours}
-                    onChange={(e) => setHours(e.target.value)}
-                    step="0.1"
-                    min="0"
-                    required
-                    className="
-                      h-9 w-full rounded-md
-                      border border-[#DFE1E6]
-                      bg-white px-3
-                      text-xs text-[#172B4D]
-                      outline-none
-                      transition
-                      placeholder:text-[#97A0AF]
-                      focus:border-[#4C9AFF]
-                      focus:ring-2
-                      focus:ring-[#DEEBFF]
-                    "
-                  />
-                </div>
-              </div>
             </div>
-
-            {/* MATERIAIS */}
-            <div>
-              <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                Materiais <span className="text-[#DE350B]">*</span>
-              </label>
-
-              <SelectMenu
-                options={materials.map((m) => ({
-                  id: m.material_id,
-                  label: m.material_name,
-                }))}
-                selectedOption={materialsList}
-                setSelectedOption={setMaterialsList}
-              />
-            </div>
-
             {/* TABELA */}
-            <div className="overflow-hidden rounded-md border border-[#DFE1E6] bg-white">
-              <div className="overflow-x-auto">
+            <div className="mt-4 min-h-[360px] min-w-0 flex-1 overflow-hidden rounded-md border border-[#DFE1E6] bg-white">
+              <div className="h-full min-h-0 overflow-auto">
                 <table className="w-full table-fixed text-xs">
-
                   <thead className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
                     <tr>
-                      <th className="w-[20%] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      <th className="w-[20%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                         Material
                       </th>
 
-                      <th className="w-[23%] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      <th className="w-[23%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                         Descrição
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                         Valor Unitário
                       </th>
 
-                      <th className="w-[14%] px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      <th className="w-[14%] px-3 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                         Quantidade
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                         Valor Total
                       </th>
 
-                      <th className="w-[13%] px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      <th className="w-[13%] px-3 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                         Ação
                       </th>
                     </tr>
@@ -292,37 +302,38 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                     {materialsList.length > 0 ? (
                       materialsList.map((id) => {
                         const found = materials.find(
-                          (m) => m.material_id === id
+                          (m) => m.material_id === id,
                         );
 
                         const quantity =
-                          materialsQuantity.find(
-                            (m) => m.id === id
-                          )?.quantity || 0;
+                          materialsQuantity.find((m) => m.id === id)
+                            ?.quantity || 0;
 
-                        const unitValue = found
-                          ? Number(found.value)
-                          : 0;
+                        const unitValue = found ? Number(found.value) : 0;
 
                         const totalItem = quantity * unitValue;
 
                         return (
                           <tr
                             key={id}
-                            className="border-b border-[#F0F1F3] last:border-b-0 hover:bg-[#FAFBFC]"
+                            className={`border-b border-[#DFE1E6] last:border-b-0 transition-colors ${
+                              materialsList.indexOf(id) % 2 === 0
+                                ? "bg-white hover:bg-[#EBECF0]"
+                                : "bg-[#F4F5F7] hover:bg-[#EBECF0]"
+                            }`}
                           >
                             {/* MATERIAL */}
-                            <td className="truncate px-3 py-2 text-left text-[11px] font-medium text-[#172B4D]">
+                            <td className="truncate px-3 py-1 text-left text-[11px] font-medium text-[#172B4D]">
                               {found?.material_name ?? "-"}
                             </td>
 
                             {/* DESCRIÇÃO */}
-                            <td className="truncate px-3 py-2 text-left text-[11px] text-[#6B778C]">
+                            <td className="truncate px-3 py-1 text-left text-[11px] text-[#6B778C]">
                               {found?.material_desc ?? "-"}
                             </td>
 
                             {/* VALOR UNITÁRIO */}
-                            <td className="px-3 py-2 text-left text-[11px] text-[#42526E]">
+                            <td className="px-3 py-1  text-left text-[11px] text-[#42526E]">
                               {unitValue.toLocaleString("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",
@@ -330,7 +341,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                             </td>
 
                             {/* QUANTIDADE */}
-                            <td className="px-3 py-2 text-center">
+                            <td className="px-3 py-1 text-center">
                               <input
                                 type="number"
                                 min="0"
@@ -348,9 +359,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                                 "
                                 value={quantity}
                                 onChange={(e) => {
-                                  const newValue = Number(
-                                    e.target.value
-                                  );
+                                  const newValue = Number(e.target.value);
 
                                   setMaterialsQuantity((prev) =>
                                     prev.map((m) =>
@@ -359,15 +368,15 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                                             ...m,
                                             quantity: newValue,
                                           }
-                                        : m
-                                    )
+                                        : m,
+                                    ),
                                   );
                                 }}
                               />
                             </td>
 
                             {/* VALOR TOTAL */}
-                            <td className="px-3 py-2 text-left text-[11px] font-medium text-[#172B4D]">
+                            <td className="px-3 py-1 text-left text-[11px] font-medium text-[#172B4D]">
                               {totalItem.toLocaleString("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",
@@ -375,14 +384,12 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                             </td>
 
                             {/* AÇÃO */}
-                            <td className="px-3 py-2 text-center">
+                            <td className="px-3 py-1 text-center">
                               <button
                                 type="button"
                                 onClick={() => {
                                   setMaterialsList(
-                                    materialsList.filter(
-                                      (i) => i !== id
-                                    )
+                                    materialsList.filter((i) => i !== id),
                                   );
                                 }}
                                 className="
@@ -418,9 +425,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
             {/* TOTAL */}
             <div className="flex justify-end">
               <div className="rounded-md border border-[#DFE1E6] bg-[#FAFBFC] px-4 py-2">
-                <span className="mr-2 text-[11px] text-[#6B778C]">
-                  Total:
-                </span>
+                <span className="mr-2 text-[11px] text-[#6B778C]">Total:</span>
 
                 <span className="text-xs font-semibold text-[#172B4D]">
                   {totalValue.toLocaleString("pt-BR", {

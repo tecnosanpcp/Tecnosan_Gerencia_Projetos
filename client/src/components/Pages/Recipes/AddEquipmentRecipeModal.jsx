@@ -11,16 +11,12 @@ import { vwComponentRecipeMaterials } from "@services/ViewsService.js";
 import { createEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { createEquipRecipeCompRecipe } from "@services/EquipRecipeCompRecipe.js";
 
-export default function AddEquipmentRecipeModal({
-  isVisible,
-  setVisible,
-}) {
+export default function AddEquipmentRecipeModal({ isVisible, setVisible }) {
   const [equipmentRecipeName, setEquipmentRecipeName] = useState("");
   const [componentsRecipes, setComponentsRecipes] = useState([]);
   const [componentsRecipeList, setComponentRecipeList] = useState([]);
-  const [componentsRecipeQuantity, setComponentsRecipeQuantity] = useState(
-    []
-  );
+  const [componentsRecipeToAdd, setComponentsRecipeToAdd] = useState([]);
+  const [componentsRecipeQuantity, setComponentsRecipeQuantity] = useState([]);
 
   const queryClient = useQueryClient();
 
@@ -54,32 +50,27 @@ export default function AddEquipmentRecipeModal({
   const clearStates = () => {
     setEquipmentRecipeName("");
     setComponentRecipeList([]);
+    setComponentsRecipeToAdd([]);
     setComponentsRecipeQuantity([]);
     setVisible(false);
   };
 
   const handleSave = async () => {
     try {
-      if (
-        componentsRecipeList.length === 0 ||
-        equipmentRecipeName === ""
-      ) {
+      if (componentsRecipeList.length === 0 || equipmentRecipeName === "") {
         alert("Preencha todos os dados");
         return null;
       }
 
-      const recipe_equipment = await createEquipmentRecipe(
-        equipmentRecipeName
-      );
+      const recipe_equipment = await createEquipmentRecipe(equipmentRecipeName);
 
-      const equipment_recipe_id =
-        recipe_equipment[0].equipment_recipe_id;
+      const equipment_recipe_id = recipe_equipment[0].equipment_recipe_id;
 
       for (const er_cr of componentsRecipeQuantity) {
         await createEquipRecipeCompRecipe(
           equipment_recipe_id,
           er_cr.id,
-          er_cr.quantity
+          er_cr.quantity,
         );
       }
 
@@ -87,21 +78,14 @@ export default function AddEquipmentRecipeModal({
 
       queryClient.invalidateQueries(["equipments"]);
     } catch (err) {
-      console.error(
-        "Erro ao salvar lista de componentes",
-        err
-      );
+      console.error("Erro ao salvar lista de componentes", err);
     }
   };
 
   const totalValue = componentsRecipeList.reduce((acc, id) => {
-    const item = componentsRecipes.find(
-      (m) => m.component_recipe_id === id
-    );
+    const item = componentsRecipes.find((m) => m.component_recipe_id === id);
 
-    const qtyObj = componentsRecipeQuantity.find(
-      (q) => q.id === id
-    );
+    const qtyObj = componentsRecipeQuantity.find((q) => q.id === id);
 
     const price = item ? Number(item.total_value) : 0;
     const quantity = qtyObj ? Number(qtyObj.quantity) : 0;
@@ -113,9 +97,9 @@ export default function AddEquipmentRecipeModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
-      <div className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
+      <div className="flex h-full w-[1100px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
         <form
-          className="flex min-h-0 flex-col"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
@@ -129,8 +113,7 @@ export default function AddEquipmentRecipeModal({
               </h2>
 
               <p className="mt-0.5 text-[11px] text-[#6B778C]">
-                Cadastre uma receita e associe os componentes
-                necessários.
+                Cadastre uma receita e associe os componentes necessários.
               </p>
             </div>
 
@@ -151,24 +134,23 @@ export default function AddEquipmentRecipeModal({
           </div>
 
           {/* BODY */}
-          <div className="min-h-0 space-y-5 overflow-y-auto px-5 py-5">
-            {/* CAMPOS PRINCIPAIS */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* NOME */}
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                  Nome <span className="text-[#DE350B]">*</span>
-                </label>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-5">
+            <div className="shrink-0 space-y-5">
+              {/* CAMPOS PRINCIPAIS */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* NOME */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                    Nome <span className="text-[#DE350B]">*</span>
+                  </label>
 
-                <input
-                  type="text"
-                  placeholder="Digite o nome da receita"
-                  value={equipmentRecipeName}
-                  onChange={(e) =>
-                    setEquipmentRecipeName(e.target.value)
-                  }
-                  required
-                  className="
+                  <input
+                    type="text"
+                    placeholder="Digite o nome da receita"
+                    value={equipmentRecipeName}
+                    onChange={(e) => setEquipmentRecipeName(e.target.value)}
+                    required
+                    className="
                     h-9 w-full rounded-md
                     border border-[#DFE1E6]
                     bg-white px-3
@@ -180,60 +162,77 @@ export default function AddEquipmentRecipeModal({
                     focus:ring-2
                     focus:ring-[#DEEBFF]
                   "
-                />
-              </div>
+                  />
+                </div>
 
-              {/* COMPONENTES */}
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                  Componentes{" "}
-                  <span className="text-[#DE350B]">*</span>
-                </label>
+                {/* COMPONENTES */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                    Componentes <span className="text-[#DE350B]">*</span>
+                  </label>
 
-                <SelectMenu
-                  options={componentsRecipes.map((m) => ({
-                    id: m.component_recipe_id,
-                    label: m.recipe_name,
-                  }))}
-                  selectedOption={componentsRecipeList}
-                  setSelectedOption={setComponentRecipeList}
-                />
+                  <SelectMenu
+                    variant="full"
+                    options={componentsRecipes
+                      .filter(
+                        (m) =>
+                          !componentsRecipeList.includes(m.component_recipe_id),
+                      )
+                      .map((m) => ({
+                        id: m.component_recipe_id,
+                        label: m.recipe_name,
+                      }))}
+                    selectedOption={componentsRecipeToAdd}
+                    setSelectedOption={setComponentsRecipeToAdd}
+                    closeOnSelect={false}
+                    searchable
+                    searchPlaceholder="Pesquisar componente..."
+                    confirmOnEnter
+                    onConfirmSelection={(selected) => {
+                      setComponentRecipeList((prev) => [
+                        ...prev,
+                        ...selected.filter((id) => !prev.includes(id)),
+                      ]);
+
+                      setComponentsRecipeToAdd([]);
+                    }}
+                  />
+                </div>
               </div>
             </div>
-
             {/* TABELA */}
-            <div className="overflow-hidden rounded-lg border border-[#DFE1E6] bg-white">
+            <div className="mt-4 min-h-[360px] min-w-0 flex-1 overflow-hidden rounded-lg border border-[#DFE1E6] bg-white">
               <div className="border-b border-[#DFE1E6] bg-[#F4F5F7] px-4 py-2.5">
                 <p className="text-[11px] font-semibold text-[#172B4D]">
                   Componentes selecionados
                 </p>
               </div>
 
-              <div className="max-h-[380px] overflow-auto">
+              <div className="h-full min-h-0 overflow-auto">
                 <table className="w-full table-fixed">
                   <thead className="sticky top-0 z-10 bg-white">
                     <tr className="border-b border-[#DFE1E6]">
-                      <th className="w-[25%] px-3 py-2 text-left text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="w-[25%] px-3 py-1 text-left text-[10px] font-semibold text-[#5E6C84]">
                         Componente
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-center text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-center text-[10px] font-semibold text-[#5E6C84]">
                         Horas-Homem
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-center text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-center text-[10px] font-semibold text-[#5E6C84]">
                         Valor Unitário
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-center text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-center text-[10px] font-semibold text-[#5E6C84]">
                         Quantidade
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-center text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-center text-[10px] font-semibold text-[#5E6C84]">
                         Valor Total
                       </th>
 
-                      <th className="w-[15%] px-3 py-2 text-center text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="w-[15%] px-3 py-1 text-center text-[10px] font-semibold text-[#5E6C84]">
                         Ação
                       </th>
                     </tr>
@@ -252,97 +251,83 @@ export default function AddEquipmentRecipeModal({
                     ) : (
                       componentsRecipeList.map((id) => {
                         const found = componentsRecipes.find(
-                          (m) =>
-                            m.component_recipe_id === id
+                          (m) => m.component_recipe_id === id,
                         );
 
-                        const qtdFind =
-                          componentsRecipeQuantity.find(
-                            (c) => c.id == id
-                          );
+                        const qtdFind = componentsRecipeQuantity.find(
+                          (c) => c.id == id,
+                        );
 
                         return (
                           <tr
                             key={id}
-                            className="border-b border-[#F0F1F2] last:border-b-0 hover:bg-[#F8F9FA]"
+                            className={`border-b border-[#DFE1E6] last:border-b-0 transition-colors ${
+                              componentsRecipeList.indexOf(id) % 2 === 0
+                                ? "bg-white hover:bg-[#EBECF0]"
+                                : "bg-[#F4F5F7] hover:bg-[#EBECF0]"
+                            }`}
                           >
-                            <td className="truncate px-3 py-2 text-left text-[11px] text-[#172B4D]">
+                            <td className="truncate px-3 py-1 text-left text-[10px] text-[#172B4D]">
                               {found?.recipe_name ?? "-"}
                             </td>
 
-                            <td className="px-3 py-2 text-center text-[11px] text-[#42526E]">
+                            <td className="px-3 py-1 text-center text-[10px] text-[#42526E]">
                               {found?.horas_homem ?? "-"}
                             </td>
 
-                            <td className="px-3 py-2 text-center text-[11px] text-[#42526E]">
-                              {parseBRL(found?.total_value) ??
-                                parseBRL(0)}
+                            <td className="px-3 py-1 text-center text-[10px] text-[#42526E]">
+                              {parseBRL(found?.total_value) ?? parseBRL(0)}
                             </td>
 
-                            <td className="px-3 py-2 text-center">
+                            <td className="px-3 py-1 text-center">
                               <input
                                 type="number"
                                 min="0"
                                 className="
-                                  h-8 w-20 rounded-md
-                                  border border-[#DFE1E6]
-                                  bg-white px-2
-                                  text-center text-[11px]
-                                  text-[#172B4D]
-                                  outline-none
-                                  focus:border-[#4C9AFF]
-                                  focus:ring-2
-                                  focus:ring-[#DEEBFF]
-                                "
+                                h-6 w-12 rounded
+                                border border-[#DFE1E6]
+                                text-center text-[9.7px]
+                                outline-none
+                                focus:border-[#4C9AFF]
+                              "
                                 value={
                                   componentsRecipeQuantity.find(
-                                    (m) => m.id === id
+                                    (m) => m.id === id,
                                   )?.quantity || ""
                                 }
                                 onChange={(e) => {
-                                  const newValue =
-                                    e.target.value;
+                                  const newValue = e.target.value;
 
-                                  setComponentsRecipeQuantity(
-                                    (prev) =>
-                                      prev.map((m) =>
-                                        m.id === id
-                                          ? {
-                                              ...m,
-                                              quantity:
-                                                parseInt(
-                                                  newValue
-                                                ) || 0,
-                                            }
-                                          : m
-                                      )
+                                  setComponentsRecipeQuantity((prev) =>
+                                    prev.map((m) =>
+                                      m.id === id
+                                        ? {
+                                            ...m,
+                                            quantity: parseInt(newValue) || 0,
+                                          }
+                                        : m,
+                                    ),
                                   );
                                 }}
                               />
                             </td>
 
-                            <td className="px-3 py-2 text-center text-[11px] font-medium text-[#172B4D]">
+                            <td className="px-3 py-1 text-center text-[11px] font-medium text-[#172B4D]">
                               {parseBRL(
-                                qtdFind?.quantity *
-                                  found?.total_value
+                                qtdFind?.quantity * found?.total_value,
                               ) ?? parseBRL(0)}
                             </td>
 
-                            <td className="px-3 py-2 text-center">
+                            <td className="px-3 py-1 text-center">
                               <button
                                 type="button"
                                 onClick={() => {
                                   setComponentRecipeList(
-                                    componentsRecipeList.filter(
-                                      (i) => i != id
-                                    )
+                                    componentsRecipeList.filter((i) => i != id),
                                   );
 
-                                  setComponentsRecipeQuantity(
-                                    (prev) =>
-                                      prev.filter(
-                                        (item) => item.id != id
-                                      )
+                                  setComponentsRecipeQuantity((prev) =>
+                                    prev.filter((item) => item.id != id),
                                   );
                                 }}
                                 className="
@@ -371,9 +356,7 @@ export default function AddEquipmentRecipeModal({
           {/* FOOTER */}
           <div className="flex items-center justify-end gap-3 border-t border-[#DFE1E6] bg-[#FAFBFC] px-5 py-3">
             <div className="mr-auto rounded-md border border-[#DFE1E6] bg-white px-3 py-1.5">
-              <span className="text-[10px] text-[#6B778C]">
-                Total
-              </span>
+              <span className="text-[10px] text-[#6B778C]">Total</span>
 
               <span className="ml-2 text-xs font-semibold text-[#172B4D]">
                 {parseBRL(totalValue)}

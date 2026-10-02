@@ -150,9 +150,7 @@ export default function RecipeTable({ i }) {
   const toggleRow = (row, index) => {
     const id = getRowId(row, index);
 
-    setExpandedRow((current) =>
-      current === id ? null : id
-    );
+    setExpandedRow((current) => (current === id ? null : id));
   };
 
   const currentModalConfig = modalLabel[i?.label] || {
@@ -179,15 +177,13 @@ export default function RecipeTable({ i }) {
         pos_opt="Excluir"
         func={async () => {
           await currentModalConfig.deleteFunc(
-            selectedRow?.ID ?? selectedRow?.id
+            selectedRow?.ID ?? selectedRow?.id,
           );
 
           updateModalDeleteVisible(i.label, false);
         }}
         isVisible={modalDeleteVisible[i.label] || false}
-        setVisible={() =>
-          updateModalDeleteVisible(i.label, false)
-        }
+        setVisible={() => updateModalDeleteVisible(i.label, false)}
         style="waring"
       />
 
@@ -212,7 +208,7 @@ export default function RecipeTable({ i }) {
                             {col.replaceAll("_", " ")}
                           </span>
                         </th>
-                      )
+                      ),
                   )}
 
                   <th className="w-[125px] px-3 text-center">
@@ -239,7 +235,9 @@ export default function RecipeTable({ i }) {
                           ${
                             expanded
                               ? "bg-[#DEEBFF]"
-                              : "bg-white hover:bg-[#F4F5F7]"
+                              : idx % 2 === 0
+                                ? "bg-white hover:bg-[#EBECF0]"
+                                : "bg-[#F4F5F7] hover:bg-[#EBECF0]"
                           }
                         `}
                       >
@@ -264,21 +262,18 @@ export default function RecipeTable({ i }) {
                                   {val ?? "-"}
                                 </span>
                               </td>
-                            )
+                            ),
                         )}
 
                         {/* AÇÕES */}
                         <td className="px-2">
                           <div className="flex items-center justify-center gap-1">
                             {/* VISUALIZAR */}
-                            
 
                             {/* EDITAR */}
                             <button
                               type="button"
-                              onClick={() =>
-                                openEditModal(i.label, row)
-                              }
+                              onClick={() => openEditModal(i.label, row)}
                               className="
                                 flex
                                 h-7
@@ -300,10 +295,7 @@ export default function RecipeTable({ i }) {
                               type="button"
                               onClick={() => {
                                 setSelectedRow(row);
-                                updateModalDeleteVisible(
-                                  i.label,
-                                  true
-                                );
+                                updateModalDeleteVisible(i.label, true);
                               }}
                               className="
                                 flex
@@ -356,8 +348,7 @@ export default function RecipeTable({ i }) {
         {/* RODAPÉ */}
         <div className="flex h-9 items-center justify-between border-t border-[#DFE1E6] bg-[#F4F5F7] px-3">
           <span className="text-[10px] text-[#5E6C84]">
-            {list.length}{" "}
-            {list.length === 1 ? "registro" : "registros"}
+            {list.length} {list.length === 1 ? "registro" : "registros"}
           </span>
 
           <span className="text-[10px] text-[#97A0AF]">
@@ -368,4 +359,3 @@ export default function RecipeTable({ i }) {
     </>
   );
 }
-

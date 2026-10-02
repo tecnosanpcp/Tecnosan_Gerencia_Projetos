@@ -21,17 +21,14 @@ export default function EditEquipmentRecipeModal({
   setVisible,
   equipment,
 }) {
-  const [equipmentRecipeName, setEquipmentRecipeName] =
-    useState("");
+  const [equipmentRecipeName, setEquipmentRecipeName] = useState("");
 
-  const [componentsRecipes, setComponentsRecipes] =
-    useState([]);
+  const [componentsRecipes, setComponentsRecipes] = useState([]);
 
-  const [componentsRecipeList, setComponentRecipeList] =
-    useState([]);
+  const [componentsRecipeList, setComponentRecipeList] = useState([]);
+  const [componentsRecipeToAdd, setComponentsRecipeToAdd] = useState([]);
 
-  const [componentsRecipeQuantity, setComponentsRecipeQuantity] =
-    useState([]);
+  const [componentsRecipeQuantity, setComponentsRecipeQuantity] = useState([]);
 
   const [quantityBackUp, setQuantityBackUp] = useState([]);
 
@@ -60,19 +57,14 @@ export default function EditEquipmentRecipeModal({
       if (!equipment) return;
 
       const nome =
-        equipment?.Equipamento ||
-        equipment?.["Nome do Equipamento"] ||
-        "";
+        equipment?.Equipamento || equipment?.["Nome do Equipamento"] || "";
 
       setEquipmentRecipeName(nome);
 
       if (!equipment?.ID) return;
 
       try {
-        const data =
-          await readEquipRecipeCompRecipeById(
-            equipment.ID
-          );
+        const data = await readEquipRecipeCompRecipeById(equipment.ID);
 
         let IDs = [];
         let quantity = [];
@@ -92,10 +84,7 @@ export default function EditEquipmentRecipeModal({
           setComponentsRecipeQuantity(quantity);
         }
       } catch (error) {
-        console.error(
-          "Erro ao carregar itens da receita:",
-          error
-        );
+        console.error("Erro ao carregar itens da receita:", error);
       }
     };
 
@@ -106,9 +95,7 @@ export default function EditEquipmentRecipeModal({
 
   useEffect(() => {
     setComponentsRecipeQuantity((prev) => {
-      const existingIds = new Set(
-        prev.map((item) => item.id)
-      );
+      const existingIds = new Set(prev.map((item) => item.id));
 
       const newItems = componentsRecipeList
         .filter((id) => !existingIds.has(id))
@@ -124,6 +111,7 @@ export default function EditEquipmentRecipeModal({
   const clearStates = () => {
     setEquipmentRecipeName("");
     setComponentRecipeList([]);
+    setComponentsRecipeToAdd([]);
     setComponentsRecipeQuantity([]);
     setVisible(false);
   };
@@ -135,62 +123,45 @@ export default function EditEquipmentRecipeModal({
         return;
       }
 
-      if (
-        !equipmentRecipeName ||
-        componentsRecipeList.length <= 0
-      ) {
+      if (!equipmentRecipeName || componentsRecipeList.length <= 0) {
         alert("Preencha todos os dados obrigatórios.");
         return;
       }
 
-      await updateEquipmentRecipe(
-        equipment.ID,
-        equipmentRecipeName
-      );
+      await updateEquipmentRecipe(equipment.ID, equipmentRecipeName);
 
       const quantities = componentsRecipeList.map((id) => {
-        const item = componentsRecipeQuantity.find(
-          (q) => q.id === id
-        );
+        const item = componentsRecipeQuantity.find((q) => q.id === id);
 
         return {
           id,
-          quantity: item
-            ? Number(item.quantity)
-            : 1,
+          quantity: item ? Number(item.quantity) : 1,
         };
       });
 
       for (const item of quantities) {
-        const old = quantityBackUp.find(
-          (b) => b.id === item.id
-        );
+        const old = quantityBackUp.find((b) => b.id === item.id);
 
         if (!old) {
           await createEquipRecipeCompRecipe(
             equipment.ID,
             item.id,
-            item.quantity
+            item.quantity,
           );
         } else if (old.quantity !== item.quantity) {
           await updateEquipRecipeCompRecipe(
             equipment.ID,
             item.id,
-            item.quantity
+            item.quantity,
           );
         }
       }
 
       for (const oldItem of quantityBackUp) {
-        const stillExists = quantities.some(
-          (e) => e.id === oldItem.id
-        );
+        const stillExists = quantities.some((e) => e.id === oldItem.id);
 
         if (!stillExists) {
-          await deleteEquipRecipeCompRecipe(
-            equipment.ID,
-            oldItem.id
-          );
+          await deleteEquipRecipeCompRecipe(equipment.ID, oldItem.id);
         }
       }
 
@@ -201,36 +172,25 @@ export default function EditEquipmentRecipeModal({
     }
   };
 
-  const totalValue = componentsRecipeList.reduce(
-    (acc, id) => {
-      const item = componentsRecipes.find(
-        (c) => c.component_recipe_id === id
-      );
+  const totalValue = componentsRecipeList.reduce((acc, id) => {
+    const item = componentsRecipes.find((c) => c.component_recipe_id === id);
 
-      const qtyObj = componentsRecipeQuantity.find(
-        (q) => q.id === id
-      );
+    const qtyObj = componentsRecipeQuantity.find((q) => q.id === id);
 
-      const price = item
-        ? Number(item.total_value)
-        : 0;
+    const price = item ? Number(item.total_value) : 0;
 
-      const quantity = qtyObj
-        ? Number(qtyObj.quantity)
-        : 0;
+    const quantity = qtyObj ? Number(qtyObj.quantity) : 0;
 
-      return acc + price * quantity;
-    },
-    0
-  );
+    return acc + price * quantity;
+  }, 0);
 
   if (!isVisible) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[9990] flex items-center justify-center bg-[#091E42]/45 p-4 backdrop-blur-[2px]">
-      <div className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
+      <div className="flex h-full w-[1100px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)  ]">
         <form
-          className="flex min-h-0 flex-col"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             handleEdit();
@@ -263,23 +223,22 @@ export default function EditEquipmentRecipeModal({
           </div>
 
           {/* BODY */}
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
-            {/* DADOS PRINCIPAIS */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                  Nome <span className="text-[#DE350B]">*</span>
-                </label>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-5">
+            <div className="shrink-0 space-y-4">
+              {/* DADOS PRINCIPAIS */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                    Nome <span className="text-[#DE350B]">*</span>
+                  </label>
 
-                <input
-                  type="text"
-                  placeholder="Nome do equipamento"
-                  value={equipmentRecipeName}
-                  onChange={(e) =>
-                    setEquipmentRecipeName(e.target.value)
-                  }
-                  required
-                  className="
+                  <input
+                    type="text"
+                    placeholder="Nome do equipamento"
+                    value={equipmentRecipeName}
+                    onChange={(e) => setEquipmentRecipeName(e.target.value)}
+                    required
+                    className="
                     h-9 w-full rounded-md
                     border border-[#DFE1E6]
                     px-3 text-xs
@@ -288,52 +247,69 @@ export default function EditEquipmentRecipeModal({
                     focus:ring-2
                     focus:ring-[#DEEBFF]
                   "
-                />
-              </div>
+                  />
+                </div>
 
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
-                  Componentes <span className="text-[#DE350B]">*</span>
-                </label>
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                    Componentes <span className="text-[#DE350B]">*</span>
+                  </label>
 
-                <SelectMenu
-                  options={componentsRecipes.map((m) => ({
-                    id: m.component_recipe_id,
-                    label: m.recipe_name,
-                  }))}
-                  selectedOption={componentsRecipeList}
-                  setSelectedOption={setComponentRecipeList}
-                />
+                  <SelectMenu
+                    options={componentsRecipes
+                      .filter(
+                        (m) =>
+                          !componentsRecipeList.includes(m.component_recipe_id),
+                      )
+                      .map((m) => ({
+                        id: m.component_recipe_id,
+                        label: m.recipe_name,
+                      }))}
+                    selectedOption={componentsRecipeToAdd}
+                    setSelectedOption={setComponentsRecipeToAdd}
+                    searchable
+                    searchPlaceholder="Pesquisar componente..."
+                    keepOpenOnSelect
+                    confirmOnEnter
+                    onConfirmSelection={(selected) => {
+                      setComponentRecipeList((prev) => [
+                        ...prev,
+                        ...selected.filter((id) => !prev.includes(id)),
+                      ]);
+
+                      setComponentsRecipeToAdd([]);
+                    }}
+                  />
+                </div>
               </div>
             </div>
-
             {/* TABELA */}
-            <div className="overflow-hidden rounded-lg border border-[#DFE1E6]">
-              <div className="max-h-[360px] overflow-auto">
+            <div className="mt-4 min-h-[360px] min-w-0 flex-1 overflow-hidden rounded-lg border border-[#DFE1E6]">
+              <div className="h-full min-h-0 overflow-auto">
                 <table className="w-full text-left">
                   <thead className="sticky top-0 z-10 bg-[#F4F5F7]">
                     <tr className="border-b border-[#DFE1E6]">
-                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="px-3 py-1 text-[10px] font-semibold text-[#5E6C84]">
                         Componente
                       </th>
 
-                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="px-3 py-1 text-[10px] font-semibold text-[#5E6C84]">
                         Horas-Homem
                       </th>
 
-                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="px-3 py-1 text-[10px] font-semibold text-[#5E6C84]">
                         Valor Unitário
                       </th>
 
-                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="px-3 py-1 text-[10px] font-semibold text-[#5E6C84]">
                         Quantidade
                       </th>
 
-                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="px-3 py-1 text-[10px] font-semibold text-[#5E6C84]">
                         Total
                       </th>
 
-                      <th className="px-3 py-2 text-[10px] font-semibold text-[#5E6C84]">
+                      <th className="px-3 py-1 text-[10px] font-semibold text-[#5E6C84]">
                         Ação
                       </th>
                     </tr>
@@ -345,72 +321,64 @@ export default function EditEquipmentRecipeModal({
                         return null;
                       }
 
-                      const found =
-                        componentsRecipes.find(
-                          (m) =>
-                            m.component_recipe_id === id
-                        );
+                      const found = componentsRecipes.find(
+                        (m) => m.component_recipe_id === id,
+                      );
 
-                      const qtdObj =
-                        componentsRecipeQuantity.find(
-                          (c) => c.id === id
-                        );
+                      const qtdObj = componentsRecipeQuantity.find(
+                        (c) => c.id === id,
+                      );
 
-                      const currentQtd = qtdObj
-                        ? qtdObj.quantity
-                        : "";
+                      const currentQtd = qtdObj ? qtdObj.quantity : "";
 
                       return (
                         <tr
                           key={id}
                           className="
-                            border-b border-[#F0F1F3]
+                            border-b
+                            border-[#F0F1F3]
                             last:border-b-0
-                            hover:bg-[#FAFBFC]
+                            odd:bg-white
+                            even:bg-[#F4F5F7]
+                            hover:bg-[#EBECF0]
                           "
                         >
-                          <td className="px-3 py-2 text-[11px] font-medium text-[#172B4D]">
+                          <td className="px-3 py-1 text-[10px] font-medium text-[#172B4D]">
                             {found?.recipe_name ?? "-"}
                           </td>
 
-                          <td className="px-3 py-2 text-[10px] text-[#6B778C]">
+                          <td className="px-3 py-1 text-[9.7px] text-[#6B778C]">
                             {found?.horas_homem ?? "-"}
                           </td>
 
-                          <td className="px-3 py-2 text-[10px] text-[#42526E]">
+                          <td className="px-3 py-1 text-[9.7px] text-[#42526E]">
                             {parseBRL(found?.total_value)}
                           </td>
 
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-1">
                             <input
                               type="number"
                               min="0"
                               value={currentQtd}
                               onChange={(e) => {
-                                const value =
-                                  e.target.value;
+                                const value = e.target.value;
 
-                                setComponentsRecipeQuantity(
-                                  (prev) =>
-                                    prev.map((m) =>
-                                      m.id === id
-                                        ? {
-                                            ...m,
-                                            quantity:
-                                              value === ""
-                                                ? 0
-                                                : Number(
-                                                    value
-                                                  ),
-                                          }
-                                        : m
-                                    )
+                                setComponentsRecipeQuantity((prev) =>
+                                  prev.map((m) =>
+                                    m.id === id
+                                      ? {
+                                          ...m,
+                                          quantity:
+                                            value === "" ? 0 : Number(value),
+                                        }
+                                      : m,
+                                  ),
                                 );
                               }}
                               className="
-                                h-7 w-16 rounded
+                                h-6 w-12 rounded
                                 border border-[#DFE1E6]
-                                text-center text-[10px]
+                                text-center text-[9.7px]
                                 outline-none
                                 focus:border-[#4C9AFF]
                               "
@@ -419,8 +387,7 @@ export default function EditEquipmentRecipeModal({
 
                           <td className="px-3 py-2 text-[10px] font-medium text-[#172B4D]">
                             {parseBRL(
-                              (currentQtd || 0) *
-                                (found?.total_value || 0)
+                              (currentQtd || 0) * (found?.total_value || 0),
                             )}
                           </td>
 
@@ -428,12 +395,8 @@ export default function EditEquipmentRecipeModal({
                             <button
                               type="button"
                               onClick={() =>
-                                setComponentRecipeList(
-                                  (prev) =>
-                                    prev.filter(
-                                      (item) =>
-                                        item !== id
-                                    )
+                                setComponentRecipeList((prev) =>
+                                  prev.filter((item) => item !== id),
                                 )
                               }
                               className="text-[10px] font-medium text-[#DE350B] hover:underline"
@@ -487,6 +450,6 @@ export default function EditEquipmentRecipeModal({
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

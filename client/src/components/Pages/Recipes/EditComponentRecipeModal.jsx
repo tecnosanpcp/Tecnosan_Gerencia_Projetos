@@ -35,8 +35,11 @@ export default function EditComponentRecipeModal({
 
   const [materials, setMaterials] = useState([]);
   const [materialsList, setMaterialsList] = useState([]);
+  const [materialsToAdd, setMaterialsToAdd] = useState([]);
   const [materialsQuantity, setMaterialsQuantity] = useState([]);
   const [materialsQuantityBackUp, setMaterialsQuantityBackUp] = useState([]);
+  const [componentsRecipeToAdd, setComponentsRecipeToAdd] = useState([]);
+  const [componentsRecipeList, setComponentRecipeList] = useState([]);
 
   const queryClient = useQueryClient();
 
@@ -66,8 +69,7 @@ export default function EditComponentRecipeModal({
 
       const rawFunc = component["Total Funcionários"];
       const rawHoras = component["Total Horas"];
-      const rawManHours =
-        component["Horas-Homens"] || component["Horas Homem"];
+      const rawManHours = component["Horas-Homens"] || component["Horas Homem"];
 
       let valFunc = 1;
       let valHoras = 0;
@@ -80,9 +82,7 @@ export default function EditComponentRecipeModal({
         valHoras = Number(rawManHours);
       }
 
-      setTotalEmployees(
-        isNaN(valFunc) || valFunc <= 0 ? 1 : valFunc
-      );
+      setTotalEmployees(isNaN(valFunc) || valFunc <= 0 ? 1 : valFunc);
 
       setTotalHours(isNaN(valHoras) ? 0 : valHoras);
 
@@ -138,6 +138,7 @@ export default function EditComponentRecipeModal({
     setTotalEmployees(1);
     setTotalHours(0);
     setMaterialsList([]);
+    setMaterialsToAdd([]);
     setMaterialsQuantity([]);
     setMaterialsQuantityBackUp([]);
     setVisible(false);
@@ -166,7 +167,7 @@ export default function EditComponentRecipeModal({
         component.ID,
         componenteRecipeName,
         safeEmployees,
-        safeHours
+        safeHours,
       );
 
       const quantities = materialsList.map((id) => {
@@ -179,35 +180,20 @@ export default function EditComponentRecipeModal({
       });
 
       for (const item of quantities) {
-        const old = materialsQuantityBackUp.find(
-          (x) => x.id === item.id
-        );
+        const old = materialsQuantityBackUp.find((x) => x.id === item.id);
 
         if (!old) {
-          await createCompRecipeMat(
-            component.ID,
-            item.id,
-            item.quantity
-          );
+          await createCompRecipeMat(component.ID, item.id, item.quantity);
         } else if (old.quantity !== item.quantity) {
-          await updateCompRecipeMat(
-            component.ID,
-            item.id,
-            item.quantity
-          );
+          await updateCompRecipeMat(component.ID, item.id, item.quantity);
         }
       }
 
       for (const oldItem of materialsQuantityBackUp) {
-        const stillExists = quantities.some(
-          (x) => x.id === oldItem.id
-        );
+        const stillExists = quantities.some((x) => x.id === oldItem.id);
 
         if (!stillExists) {
-          await deleteCompRecipeMat(
-            component.ID,
-            oldItem.id
-          );
+          await deleteCompRecipeMat(component.ID, oldItem.id);
         }
       }
 
@@ -220,18 +206,12 @@ export default function EditComponentRecipeModal({
   };
 
   const totalValue = materialsList.reduce((acc, id) => {
-    const material = materials.find(
-      (m) => m.material_id === id
-    );
+    const material = materials.find((m) => m.material_id === id);
 
-    const itemQty = materialsQuantity.find(
-      (q) => q.id === id
-    );
+    const itemQty = materialsQuantity.find((q) => q.id === id);
 
     const price = material ? Number(material.value) : 0;
-    const quantity = itemQty
-      ? Number(itemQty.quantity)
-      : 0;
+    const quantity = itemQty ? Number(itemQty.quantity) : 0;
 
     return acc + price * quantity;
   }, 0);
@@ -240,9 +220,9 @@ export default function EditComponentRecipeModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/45 p-6 backdrop-blur-[2px]">
-  <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)]">
+      <div className="flex h-full w-[1100px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)  ]">
         <form
-          className="flex min-h-0 flex-col"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
@@ -275,7 +255,7 @@ export default function EditComponentRecipeModal({
           </div>
 
           {/* BODY */}
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="flex min-h-0 flex-1 flex-col space-y-4 overflow-y-auto px-5 py-5">
             {/* DADOS PRINCIPAIS */}
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-6">
@@ -287,9 +267,7 @@ export default function EditComponentRecipeModal({
                   type="text"
                   placeholder="Nome do componente"
                   value={componenteRecipeName}
-                  onChange={(e) =>
-                    setComponentRecipeName(e.target.value)
-                  }
+                  onChange={(e) => setComponentRecipeName(e.target.value)}
                   required
                   className="
                     h-9 w-full rounded-md
@@ -312,9 +290,7 @@ export default function EditComponentRecipeModal({
                   type="number"
                   min="1"
                   value={totalEmployees}
-                  onChange={(e) =>
-                    setTotalEmployees(e.target.value)
-                  }
+                  onChange={(e) => setTotalEmployees(e.target.value)}
                   required
                   className="
                     h-9 w-full rounded-md
@@ -338,9 +314,7 @@ export default function EditComponentRecipeModal({
                   min="0"
                   step="0.01"
                   value={totalHours}
-                  onChange={(e) =>
-                    setTotalHours(e.target.value)
-                  }
+                  onChange={(e) => setTotalHours(e.target.value)}
                   required
                   className="
                     h-9 w-full rounded-md
@@ -362,18 +336,33 @@ export default function EditComponentRecipeModal({
               </label>
 
               <SelectMenu
-                options={(materials || []).map((m) => ({
-                  id: m.material_id,
-                  label: m.material_name,
-                }))}
-                selectedOption={materialsList}
-                setSelectedOption={setMaterialsList}
+                variant="full"
+                options={(materials || [])
+                  .filter((m) => !materialsList.includes(m.material_id))
+                  .map((m) => ({
+                    id: m.material_id,
+                    label: m.material_name,
+                  }))}
+                selectedOption={materialsToAdd}
+                setSelectedOption={setMaterialsToAdd}
+                closeOnSelect={false}
+                searchable
+                searchPlaceholder="Pesquisar material..."
+                confirmOnEnter
+                onConfirmSelection={(selected) => {
+                  setMaterialsList((prev) => [
+                    ...prev,
+                    ...selected.filter((id) => !prev.includes(id)),
+                  ]);
+
+                  setMaterialsToAdd([]);
+                }}
               />
             </div>
 
             {/* TABELA */}
-            <div className="overflow-hidden rounded-lg border border-[#DFE1E6]">
-              <div className="max-h-[330px] overflow-auto">
+            <div className="mt-4 min-h-[360px] min-w-0 flex-1 overflow-hidden rounded-lg border border-[#DFE1E6]">
+              <div className="h-full min-h-0 overflow-auto">
                 <table className="w-full text-left">
                   <thead className="sticky top-0 z-10 bg-[#F4F5F7]">
                     <tr className="border-b border-[#DFE1E6]">
@@ -402,94 +391,83 @@ export default function EditComponentRecipeModal({
                     {materialsList.map((id) => {
                       if (!materials?.length) return null;
 
-                      const mat = materials.find(
-                        (m) => m.material_id === id
-                      );
+                      const mat = materials.find((m) => m.material_id === id);
 
-                      const objQty = materialsQuantity.find(
-                        (m) => m.id === id
-                      );
+                      const objQty = materialsQuantity.find((m) => m.id === id);
 
-                      const currentQtd = objQty
-                        ? objQty.quantity
-                        : 0;
+                      const currentQtd = objQty ? objQty.quantity : 0;
 
-                      const unitValue =
-                        Number(mat?.value) || 0;
+                      const unitValue = Number(mat?.value) || 0;
 
                       return (
                         <tr
                           key={id}
-                          className="border-b border-[#F0F1F3] last:border-b-0 hover:bg-[#FAFBFC]"
+                          className="
+                            border-b
+                            border-[#F0F1F3]
+                            last:border-b-0
+                            odd:bg-white
+                            even:bg-[#F4F5F7]
+                            hover:bg-[#EBECF0]
+                          "
                         >
-                          <td className="px-3 py-2 text-[11px] font-medium text-[#172B4D]">
+                          <td className="px-3 py-1 text-[11px] font-medium text-[#172B4D]">
                             {mat?.material_name ?? "-"}
                           </td>
 
-                          <td className="px-3 py-2 text-[10px] text-[#6B778C]">
+                          <td className="px-3 py-1 text-[10px] text-[#6B778C]">
                             {mat?.material_desc ?? "-"}
                           </td>
 
-                          <td className="px-3 py-2 text-[10px] text-[#42526E]">
+                          <td className="px-3 py-1 text-[10px] text-[#42526E]">
                             {parseBRL(unitValue)}
                           </td>
 
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-1">
                             <input
                               type="number"
                               min="0"
                               value={currentQtd}
                               onChange={(e) => {
                                 const val = e.target.value;
-                                const newValue =
-                                  val === ""
-                                    ? 0
-                                    : Number(val);
+                                const newValue = val === "" ? 0 : Number(val);
 
-                                setMaterialsQuantity(
-                                  (prev) =>
-                                    prev.map((m) =>
-                                      m.id === id
-                                        ? {
-                                            ...m,
-                                            quantity:
-                                              newValue,
-                                          }
-                                        : m
-                                    )
+                                setMaterialsQuantity((prev) =>
+                                  prev.map((m) =>
+                                    m.id === id
+                                      ? {
+                                          ...m,
+                                          quantity: newValue,
+                                        }
+                                      : m,
+                                  ),
                                 );
                               }}
                               className="
-                                h-7 w-16 rounded
+                                h-6 w-12 rounded
                                 border border-[#DFE1E6]
-                                text-center text-[10px]
+                                text-center text-[9.7px]
                                 outline-none
                                 focus:border-[#4C9AFF]
                               "
+                              
                             />
                           </td>
 
-                          <td className="px-3 py-2 text-[10px] font-medium text-[#172B4D]">
-                            {parseBRL(
-                              currentQtd * unitValue
-                            )}
+                          <td className="px-3 py-1 text-[10px] font-medium text-[#172B4D]">
+                            {parseBRL(currentQtd * unitValue)}
                           </td>
 
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-1">
                             <button
                               type="button"
                               onClick={() => {
                                 setMaterialsList((list) =>
-                                  list.filter(
-                                    (x) => x !== id
-                                  )
+                                  list.filter((x) => x !== id),
                                 );
 
-                                setMaterialsQuantity(
-                                  (prev) =>
-                                    prev.filter(
-                                      (x) => x.id !== id
-                                    )
+                                setMaterialsQuantity((prev) =>
+                                  prev.filter((x) => x.id !== id),
                                 );
                               }}
                               className="text-[10px] font-medium text-[#DE350B] hover:underline"
