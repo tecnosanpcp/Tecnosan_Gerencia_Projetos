@@ -201,31 +201,38 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
   }
 
   return (
-    <div className="flex flex-col gap-8 w-full pb-4">
+    <div className="flex flex-col w-full">
       {displayGroups.map((projName) => {
         const loans = groupedData[projName] || [];
         const isCurrentProject = selectedProjectName === projName;
 
         return (
-          <div key={projName} className="flex flex-col gap-2">
+          <div key={projName} className="flex flex-col ">
             {!currentProject?.id && (
-              <div className="flex items-center border-t border-b border-[#B3D4FF] bg-[#E9F2FF] px-3 py-2">
-                <h2 className="m-0 text-[13px] font-semibold text-[#172B4D]">
+              <div className="flex items-center border-t border-b border-[#B3D4FF] bg-[#E9F2FF] px-3 py-1">
+                <h2 className="m-0 text-[12px] font-semibold text-[#172B4D]">
                   {projName}
                 </h2>
               </div>
             )}
 
-            <div className="overflow-visible rounded-lg border border-gray-200 shadow-sm bg-white">
+            <div className="overflow-visible border border-[#DFE1E6] bg-white">
               <table className="w-full project-equipments text-center text-xs">
-                <thead>
-                  <tr className="text-left bg-[#DBEBFF]">
-                    <th className="first:rounded-tl-lg pl-2 py-2 w-1/3">
+                <thead className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
+                  <tr>
+                    <th className="w-1/4 px-3 py-1 text-left text-[8px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Acessório
                     </th>
-                    <th className="w-1/4">Movimentação (Resp.)</th>
-                    <th className="w-1/4">Datas</th>
-                    <th className="last:rounded-tr-lg text-center w-24">
+
+                    <th className="w-1/4 px-3 py-1 text-left text-[8px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      Movimentação
+                    </th>
+
+                    <th className="w-1/4 px-3 py-1 text-left text-[8px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      Datas
+                    </th>
+
+                    <th className="w-24 px-3 py-1 text-center text-[8px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Ações
                     </th>
                   </tr>
@@ -248,7 +255,7 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                         className={`transition-colors last:border-0 ${rowClass}`}
                       >
                         {/* 1. ACESSÓRIO */}
-                        <td className="pl-2 text-left py-2 font-medium">
+                        <td className="px-3 py-1 text-left text-[11px] font-medium text-[#172B4D]">
                           <div className="flex items-center gap-2">
                             {isReturned && (
                               <FaHistory className="text-gray-400" />
@@ -258,7 +265,7 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                         </td>
 
                         {/* 2. RESPONSÁVEIS */}
-                        <td className="text-left p-1">
+                        <td className="px-3 py-1 text-left">
                           {isReturning ? (
                             <SelectMenu
                               variant="full"
@@ -303,7 +310,7 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                         </td>
 
                         {/* 3. DATAS */}
-                        <td className="text-left pr-2">
+                        <td className="px-3 py-1.5 text-left">
                           {isReturning ? (
                             <input
                               type="date"
@@ -337,9 +344,9 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                         </td>
 
                         {/* 4. AÇÕES */}
-                        <td className="text-center">
+                        <td className="px-3 py-1.5 text-center">
                           {isReturned ? (
-                            <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-200 px-2 py-1 rounded">
+                            <span className="rounded-md bg-[#EBECF0] px-2 py-1 text-[10px] font-medium text-[#6B778C]">
                               Devolvido
                             </span>
                           ) : isReturning ? (
@@ -366,7 +373,15 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                                   returned_at: getTodayDate(),
                                 });
                               }}
-                              className="text-red-600 hover:text-red-800 font-bold text-[10px] uppercase border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-all"
+                              className="
+                                rounded-md
+                                px-2 py-1
+                                text-[10px]
+                                font-medium
+                                text-[#DE350B]
+                                transition
+                                hover:bg-[#FFEBE6]
+                              "
                             >
                               Devolver
                             </button>
@@ -378,7 +393,7 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
 
                   {/* ADICIONAR (Footer) */}
                   {isCurrentProject && !returningId && (
-                    <tr className="bg-blue-50 border-t-2 border-blue-100">
+                    <tr className="border-t border-[#B3D4FF] bg-[#E9F2FF]">
                       <td className="pl-2 py-2 text-left">
                         <SelectMenu
                           variant="full"
@@ -426,7 +441,16 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                       <td className="text-left pr-2">
                         <input
                           type="date"
-                          className="bg-white border border-gray-300 rounded p-1 w-full text-xs focus:outline-none focus:border-blue-500 h-[34px]"
+                          className="
+                            h-8 w-full rounded-md
+                            border border-[#DFE1E6]
+                            bg-white px-2
+                            text-[11px] text-[#172B4D]
+                            outline-none
+                            focus:border-[#4C9AFF]
+                            focus:ring-2
+                            focus:ring-[#DEEBFF]
+                          "
                           value={newLoan.taken_at}
                           onChange={(e) =>
                             setNewLoan({ ...newLoan, taken_at: e.target.value })
