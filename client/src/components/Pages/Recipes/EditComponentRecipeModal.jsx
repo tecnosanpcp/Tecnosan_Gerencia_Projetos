@@ -461,6 +461,7 @@ export default function EditComponentRecipeModal({
                             />
                           </td>
 
+
                           <td className="px-3 py-1 text-[10px] font-medium text-[#172B4D]">
                             {parseBRL(currentQtd * unitValue)}
                           </td>
