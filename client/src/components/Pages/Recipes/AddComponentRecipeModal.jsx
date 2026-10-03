@@ -316,11 +316,10 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                         return (
                           <tr
                             key={id}
-                            className={`border-b border-[#DFE1E6] last:border-b-0 transition-colors ${
-                              materialsList.indexOf(id) % 2 === 0
+                            className={`border-b border-[#DFE1E6] last:border-b-0 transition-colors ${materialsList.indexOf(id) % 2 === 0
                                 ? "bg-white hover:bg-[#EBECF0]"
                                 : "bg-[#F4F5F7] hover:bg-[#EBECF0]"
-                            }`}
+                              }`}
                           >
                             {/* MATERIAL */}
                             <td className="truncate px-3 py-1 text-left text-[11px] font-medium text-[#172B4D]">
@@ -343,8 +342,27 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                             {/* QUANTIDADE */}
                             <td className="px-3 py-1 text-center">
                               <input
-                                type="number"
-                                min="0"
+                                type="text"
+                                inputMode="decimal"
+                                value={quantity}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  if (!/^\d*\.?\d*$/.test(value)) {
+                                    return;
+                                  }
+
+                                  setMaterialsQuantity((prev) =>
+                                    prev.map((m) =>
+                                      m.id === id
+                                        ? {
+                                          ...m,
+                                          quantity: value,
+                                        }
+                                        : m,
+                                    ),
+                                  );
+                                }}
                                 className="
                                   h-7 w-20 rounded-md
                                   border border-[#DFE1E6]
@@ -357,21 +375,6 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
                                   focus:ring-2
                                   focus:ring-[#DEEBFF]
                                 "
-                                value={quantity}
-                                onChange={(e) => {
-                                  const newValue = Number(e.target.value);
-
-                                  setMaterialsQuantity((prev) =>
-                                    prev.map((m) =>
-                                      m.id === id
-                                        ? {
-                                            ...m,
-                                            quantity: newValue,
-                                          }
-                                        : m,
-                                    ),
-                                  );
-                                }}
                               />
                             </td>
 

@@ -425,20 +425,28 @@ export default function EditComponentRecipeModal({
 
                           <td className="px-3 py-1">
                             <input
-                              type="number"
-                              min="0"
+                              type="text"
+                              inputMode="decimal"
                               value={currentQtd}
+                              onKeyDown={(e) => {
+                                if (e.key === ",") {
+                                  e.preventDefault();
+                                }
+                              }}
                               onChange={(e) => {
-                                const val = e.target.value;
-                                const newValue = val === "" ? 0 : Number(val);
+                                const value = e.target.value;
+
+                                if (!/^\d*(\.\d*)?$/.test(value)) {
+                                  return;
+                                }
 
                                 setMaterialsQuantity((prev) =>
                                   prev.map((m) =>
                                     m.id === id
                                       ? {
-                                          ...m,
-                                          quantity: newValue,
-                                        }
+                                        ...m,
+                                        quantity: value,
+                                      }
                                       : m,
                                   ),
                                 );
@@ -450,7 +458,6 @@ export default function EditComponentRecipeModal({
                                 outline-none
                                 focus:border-[#4C9AFF]
                               "
-                              
                             />
                           </td>
 
