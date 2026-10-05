@@ -171,7 +171,7 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
 
   const confirmReturn = async (movementId) => {
     if (!returnForm.received_by) return alert("Informe quem recebeu.");
-    if (!returnForm.returned_at) return alert("Informe a data.");
+    if (!returnForm.returned_at) {return alert("Informe a data da devolução.");}
 
     try {
       await returnAccessory(

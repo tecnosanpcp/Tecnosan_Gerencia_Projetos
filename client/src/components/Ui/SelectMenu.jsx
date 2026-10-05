@@ -179,13 +179,13 @@ function SelectMenu({
       {/* botão */}
       <button
         type="button"
-        className="col-start-1 row-start-1 flex min-h-9 items-center justify-between rounded-md border border-[#DFE1E6] bg-white px-3 py-1.5 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
+        className="col-start-1 row-start-1 flex items-center justify-between  border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
         onClick={toggleOpen}
       >
         <span className="truncate">
           {selectedOption.length === 0
-            ? "Selecione os materiais"
-            : selectedOption.length === 1
+            ? "Responsável"
+            : selectedOption.length === 1 
               ? getLabelById(selectedOption[0])
               : `${selectedOption.length} materiais selecionados`}
         </span>

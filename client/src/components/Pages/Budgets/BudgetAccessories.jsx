@@ -12,13 +12,7 @@ import {
 
 import SelectMenu from "../../Ui/SelectMenu";
 
-import {
-  FaHistory,
-  FaEdit,
-  FaTrash,
-  FaCheck,
-  FaTimes,
-} from "react-icons/fa";
+import { FaHistory, FaEdit, FaTrash, FaCheck, FaTimes } from "react-icons/fa";
 
 function formatDateTime(dateStr) {
   if (!dateStr) return "-";
@@ -66,19 +60,18 @@ export default function BudgetAccessories({
     taken_by_id: "",
     taken_at: getTodayDate(),
     received_by_id: "",
-    returned_at: getTodayDate(),
+    returned_at: "",
   });
 
   const loadData = async () => {
     try {
       const userAuth = await VerifyAuth();
 
-      const [loansData, accessoriesData, employeesData] =
-        await Promise.all([
-          listBudgetHistory(),
-          listAccessories(),
-          listEmployees(),
-        ]);
+      const [loansData, accessoriesData, employeesData] = await Promise.all([
+        listBudgetHistory(),
+        listAccessories(),
+        listEmployees(),
+      ]);
 
       setActiveLoans(loansData || []);
       setAllAccessories(accessoriesData || []);
@@ -90,7 +83,7 @@ export default function BudgetAccessories({
         setPlan((prev) => ({
           ...prev,
           taken_by_id: defaultUser,
-          received_by_id: defaultUser,
+          received_by_id: "",
         }));
       }
     } catch (error) {
@@ -136,10 +129,7 @@ export default function BudgetAccessories({
       const empId = String(emp.user_id || emp.id);
 
       const label =
-        emp.name ||
-        emp.user_name ||
-        emp.employee_name ||
-        "Colaborador";
+        emp.name || emp.user_name || emp.employee_name || "Colaborador";
 
       if (empId) {
         uniqueMap.set(empId, {
@@ -161,24 +151,16 @@ export default function BudgetAccessories({
 
       filtered = filtered.filter(
         (loan) =>
-          (loan.accessory_name || "")
-            .toLowerCase()
-            .includes(term) ||
-          (loan.taken_by_name || "")
-            .toLowerCase()
-            .includes(term) ||
-          (loan.budget_name || "")
-            .toLowerCase()
-            .includes(term)
+          (loan.accessory_name || "").toLowerCase().includes(term) ||
+          (loan.taken_by_name || "").toLowerCase().includes(term) ||
+          (loan.budget_name || "").toLowerCase().includes(term),
       );
     }
 
     if (currentBudget?.id) {
       const targetId = String(currentBudget.id);
 
-      filtered = filtered.filter(
-        (loan) => String(loan.budget_id) === targetId
-      );
+      filtered = filtered.filter((loan) => String(loan.budget_id) === targetId);
     }
 
     filtered.forEach((loan) => {
@@ -192,16 +174,14 @@ export default function BudgetAccessories({
     });
 
     if (currentBudget?.id) {
-      const name =
-        currentBudget.name || currentBudget.budget_name;
+      const name = currentBudget.name || currentBudget.budget_name;
 
       if (name && !groups[name]) {
         groups[name] = [];
       }
     } else if (allBudgets.length > 0 && !searchTerm) {
       allBudgets.forEach((budget) => {
-        const budgetName =
-          budget.name || budget.budget_name;
+        const budgetName = budget.name || budget.budget_name;
 
         if (budgetName && !groups[budgetName]) {
           groups[budgetName] = [];
@@ -210,17 +190,10 @@ export default function BudgetAccessories({
     }
 
     return groups;
-  }, [
-    activeLoans,
-    searchTerm,
-    currentBudget,
-    allBudgets,
-  ]);
+  }, [activeLoans, searchTerm, currentBudget, allBudgets]);
 
   const refreshData = async () => {
-    const [updatedHistory] = await Promise.all([
-      listBudgetHistory(),
-    ]);
+    const [updatedHistory] = await Promise.all([listBudgetHistory()]);
 
     setActiveLoans(updatedHistory || []);
   };
@@ -230,20 +203,15 @@ export default function BudgetAccessories({
       return alert("Erro: Selecione um orçamento.");
     }
 
-    if (
-      !plan.accessory_id ||
-      !plan.taken_by_id ||
-      !plan.taken_at ||
-      !plan.received_by_id ||
-      !plan.returned_at
-    ) {
-      return alert("Preencha todos os campos.");
+    if (!plan.accessory_id || !plan.taken_by_id || !plan.taken_at) {
+      return alert("Preencha o acessório, quem retira e a data da retirada.");
     }
 
-    if (new Date(plan.returned_at) < new Date(plan.taken_at)) {
-      return alert(
-        "A devolução não pode ser antes da retirada."
-      );
+    if (
+      plan.returned_at &&
+      new Date(plan.returned_at) < new Date(plan.taken_at)
+    ) {
+      return alert("A devolução não pode ser antes da retirada.");
     }
 
     try {
@@ -253,14 +221,14 @@ export default function BudgetAccessories({
         plan.taken_by_id,
         plan.taken_at,
         plan.received_by_id,
-        plan.returned_at
+        plan.returned_at,
       );
 
       setPlan((prev) => ({
         ...prev,
         accessory_id: "",
         taken_at: getTodayDate(),
-        returned_at: getTodayDate(),
+        returned_at: "",
       }));
 
       refreshData();
@@ -281,9 +249,7 @@ export default function BudgetAccessories({
       accessory_id: String(loan.accessory_id),
       taken_by_user_id: String(loan.taken_by_user_id),
       taken_at: isoDateToField(loan.taken_at),
-      received_by_user_id: String(
-        loan.received_by_user_id
-      ),
+      received_by_user_id: String(loan.received_by_user_id),
       returned_at: isoDateToField(loan.returned_at),
     });
   };
@@ -319,11 +285,7 @@ export default function BudgetAccessories({
   };
 
   const handleDelete = async (movementId) => {
-    if (
-      window.confirm(
-        "Remover este item do planejamento?"
-      )
-    ) {
+    if (window.confirm("Remover este item do planejamento?")) {
       try {
         await deleteBudgetLoan(movementId);
 
@@ -341,20 +303,13 @@ export default function BudgetAccessories({
 
   let displayGroups = Object.keys(groupedData);
 
-  const selectedBudgetName =
-    currentBudget?.name ||
-    currentBudget?.budget_name;
+  const selectedBudgetName = currentBudget?.name || currentBudget?.budget_name;
 
   if (currentBudget?.id && selectedBudgetName) {
     displayGroups = [selectedBudgetName];
   }
 
-  const renderSelect = ({
-    selected,
-    options,
-    placeholder,
-    onChange,
-  }) => (
+  const renderSelect = ({ selected, options, placeholder, onChange }) => (
     <SelectMenu
       variant="full"
       maxSelections={1}
@@ -373,17 +328,13 @@ export default function BudgetAccessories({
   );
 
   return (
-    <div className="flex w-full flex-col gap-5 pb-2">
+    <div className="flex w-full flex-col gap-5">
       {displayGroups.map((groupName) => {
         const loans = groupedData[groupName] || [];
-        const isCurrentBudget =
-          selectedBudgetName === groupName;
+        const isCurrentBudget = selectedBudgetName === groupName;
 
         return (
-          <div
-            key={groupName}
-            className="flex w-full flex-col gap-2"
-          >
+          <div key={groupName} className="flex w-full flex-col gap-2">
             {!currentBudget?.id && (
               <div className="flex items-center justify-between rounded-lg border border-[#DFE1E6] bg-white px-3 py-2">
                 <h2 className="text-sm font-semibold text-[#172B4D]">
@@ -391,15 +342,12 @@ export default function BudgetAccessories({
                 </h2>
 
                 <span className="rounded-full bg-[#F4F5F7] px-2 py-1 text-[10px] font-semibold text-[#5E6C84]">
-                  {loans.length}{" "}
-                  {loans.length === 1
-                    ? "item"
-                    : "itens"}
+                  {loans.length} {loans.length === 1 ? "item" : "itens"}
                 </span>
               </div>
             )}
 
-            <div className="w-full overflow-x-auto rounded-lg border border-[#DFE1E6] bg-white">
+            <div className="w-full overflow-x-auto border border-[#DFE1E6] bg-white">
               <table className="w-full min-w-[850px] table-fixed border-collapse">
                 <colgroup>
                   <col className="w-[25%]" />
@@ -412,27 +360,27 @@ export default function BudgetAccessories({
 
                 <thead>
                   <tr className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
-                    <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Item
                     </th>
 
-                    <th className="px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Quem Retira
                     </th>
 
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Retirada
                     </th>
 
-                    <th className="px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Quem Devolve
                     </th>
 
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Devolução
                     </th>
 
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                    <th className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Ações
                     </th>
                   </tr>
@@ -440,8 +388,7 @@ export default function BudgetAccessories({
 
                 <tbody>
                   {loans.map((loan) => {
-                    const isEditing =
-                      editingId === loan.movement_id;
+                    const isEditing = editingId === loan.movement_id;
 
                     return (
                       <tr
@@ -452,14 +399,12 @@ export default function BudgetAccessories({
                             : "bg-white hover:bg-[#F4F5F7]"
                         }`}
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-1.5 py-2">
                           {isEditing ? (
                             renderSelect({
-                              selected:
-                                editForm.accessory_id,
-                              options:
-                                accessoryOptions,
-                              placeholder:"Selecionar item...",
+                              selected: editForm.accessory_id,
+                              options: accessoryOptions,
+                              placeholder: "Selecionar item...",
                               onChange: (id) =>
                                 setEditForm((prev) => ({
                                   ...prev,
@@ -490,11 +435,9 @@ export default function BudgetAccessories({
                         <td className="px-2 py-2">
                           {isEditing ? (
                             renderSelect({
-                              selected:
-                                editForm.taken_by_user_id,
-                              options:
-                                employeeOptions,
-                              placeholder:"Selecionar...",
+                              selected: editForm.taken_by_user_id,
+                              options: employeeOptions,
+                              placeholder: "Selecionar...",
                               onChange: (id) =>
                                 setEditForm((prev) => ({
                                   ...prev,
@@ -512,21 +455,18 @@ export default function BudgetAccessories({
                           {isEditing ? (
                             <input
                               type="date"
-                              className="h-8 w-full rounded-md border border-[#DFE1E6] bg-white px-2 text-[10px] text-[#172B4D] outline-none focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30"
+                              className="h-9 w-[110px] border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
                               value={editForm.taken_at}
                               onChange={(e) =>
                                 setEditForm((prev) => ({
                                   ...prev,
-                                  taken_at:
-                                    e.target.value,
+                                  taken_at: e.target.value,
                                 }))
                               }
                             />
                           ) : (
                             <span className="text-[11px] text-[#5E6C84]">
-                              {formatDateTime(
-                                loan.taken_at
-                              )}
+                              {formatDateTime(loan.taken_at)}
                             </span>
                           )}
                         </td>
@@ -534,22 +474,18 @@ export default function BudgetAccessories({
                         <td className="px-2 py-2">
                           {isEditing ? (
                             renderSelect({
-                              selected:
-                                editForm.received_by_user_id,
-                              options:
-                                employeeOptions,
-                              placeholder:"Selecionar...",
+                              selected: editForm.received_by_user_id,
+                              options: employeeOptions,
+                              placeholder: "Selecionar...",
                               onChange: (id) =>
                                 setEditForm((prev) => ({
                                   ...prev,
-                                  received_by_user_id:
-                                    id,
+                                  received_by_user_id: id,
                                 })),
                             })
                           ) : (
                             <span className="text-[11px] text-[#5E6C84]">
-                              {loan.received_by_name ||
-                                "-"}
+                              {loan.received_by_name || "-"}
                             </span>
                           )}
                         </td>
@@ -558,21 +494,18 @@ export default function BudgetAccessories({
                           {isEditing ? (
                             <input
                               type="date"
-                              className="h-8 w-full rounded-md border border-[#DFE1E6] bg-white px-2 text-[10px] text-[#172B4D] outline-none focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30"
+                              className="h-9 w-[110px] border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
                               value={editForm.returned_at}
                               onChange={(e) =>
                                 setEditForm((prev) => ({
                                   ...prev,
-                                  returned_at:
-                                    e.target.value,
+                                  returned_at: e.target.value,
                                 }))
                               }
                             />
                           ) : (
                             <span className="text-[11px] text-[#5E6C84]">
-                              {formatDateTime(
-                                loan.returned_at
-                              )}
+                              {formatDateTime(loan.returned_at)}
                             </span>
                           )}
                         </td>
@@ -582,11 +515,7 @@ export default function BudgetAccessories({
                             <div className="flex items-center justify-center gap-1">
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleUpdate(
-                                    loan.movement_id
-                                  )
-                                }
+                                onClick={() => handleUpdate(loan.movement_id)}
                                 className="flex h-7 w-7 items-center justify-center rounded-md bg-[#E3FCEF] text-[#00875A] transition hover:bg-[#ABF5D1]"
                                 title="Salvar"
                               >
@@ -595,9 +524,7 @@ export default function BudgetAccessories({
 
                               <button
                                 type="button"
-                                onClick={
-                                  cancelEditing
-                                }
+                                onClick={cancelEditing}
                                 className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FFEBE6] text-[#DE350B] transition hover:bg-[#FFBDAD]"
                                 title="Cancelar"
                               >
@@ -609,9 +536,7 @@ export default function BudgetAccessories({
                               <div className="flex items-center justify-center gap-1">
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    startEditing(loan)
-                                  }
+                                  onClick={() => startEditing(loan)}
                                   className="flex h-7 w-7 items-center justify-center rounded-md text-[#5E6C84] transition hover:bg-[#DEEBFF] hover:text-[#0052CC]"
                                   title="Editar"
                                 >
@@ -620,11 +545,7 @@ export default function BudgetAccessories({
 
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    handleDelete(
-                                      loan.movement_id
-                                    )
-                                  }
+                                  onClick={() => handleDelete(loan.movement_id)}
                                   className="flex h-7 w-7 items-center justify-center rounded-md text-[#5E6C84] transition hover:bg-[#FFEBE6] hover:text-[#DE350B]"
                                   title="Excluir"
                                 >
@@ -640,11 +561,11 @@ export default function BudgetAccessories({
 
                   {isCurrentBudget && !editingId && (
                     <tr className="border-t border-[#DFE1E6] bg-[#F7F8FA]">
-                      <td className="px-3 py-2">
+                      <td className="px-1.5 py-2">
                         {renderSelect({
                           selected: plan.accessory_id,
                           options: accessoryOptions,
-                          placeholder:"Selecionar item...",
+                          placeholder: "Selecionar item...",
                           onChange: (id) =>
                             setPlan((prev) => ({
                               ...prev,
@@ -657,7 +578,7 @@ export default function BudgetAccessories({
                         {renderSelect({
                           selected: plan.taken_by_id,
                           options: employeeOptions,
-                          placeholder:"Selecionar...",
+                          placeholder: "Selecionar...",
                           onChange: (id) =>
                             setPlan((prev) => ({
                               ...prev,
@@ -669,13 +590,12 @@ export default function BudgetAccessories({
                       <td className="px-2 py-2">
                         <input
                           type="date"
-                          className="h-8 w-full rounded-md border border-[#DFE1E6] bg-white px-2 text-[10px] text-[#172B4D] outline-none focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30"
-                          value={plan.taken_at}
+                          className="h-9 w-[110px] border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
+                          value={plan.taken_at} 
                           onChange={(e) =>
                             setPlan((prev) => ({
                               ...prev,
-                              taken_at:
-                                e.target.value,
+                              taken_at: e.target.value,
                             }))
                           }
                         />
@@ -683,8 +603,7 @@ export default function BudgetAccessories({
 
                       <td className="px-2 py-2">
                         {renderSelect({
-                          selected:
-                            plan.received_by_id,
+                          selected: plan.received_by_id,
                           options: employeeOptions,
                           placeholder: "Selecionar...",
                           onChange: (id) =>
@@ -698,13 +617,12 @@ export default function BudgetAccessories({
                       <td className="px-2 py-2">
                         <input
                           type="date"
-                          className="h-8 w-full rounded-md border border-[#DFE1E6] bg-white px-2 text-[10px] text-[#172B4D] outline-none focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30"
+                          className="h-9 w-[110px] border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
                           value={plan.returned_at}
                           onChange={(e) =>
                             setPlan((prev) => ({
                               ...prev,
-                              returned_at:
-                                e.target.value,
+                              returned_at: e.target.value,
                             }))
                           }
                         />
@@ -722,19 +640,15 @@ export default function BudgetAccessories({
                     </tr>
                   )}
 
-                  {loans.length === 0 &&
-                    !isCurrentBudget && (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-10 text-center"
-                        >
-                          <p className="text-sm font-medium text-[#172B4D]">
-                            Nenhum planejamento encontrado
-                          </p>
-                        </td>
-                      </tr>
-                    )}
+                  {loans.length === 0 && !isCurrentBudget && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center">
+                        <p className="text-sm font-medium text-[#172B4D]">
+                          Nenhum planejamento encontrado
+                        </p>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -744,9 +658,7 @@ export default function BudgetAccessories({
 
       {displayGroups.length === 0 && (
         <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-[#DFE1E6] bg-white">
-          <p className="text-sm text-[#5E6C84]">
-            Nenhum dado encontrado.
-          </p>
+          <p className="text-sm text-[#5E6C84]">Nenhum dado encontrado.</p>
         </div>
       )}
     </div>
