@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
+import { VerifyAuth } from "@services/AuthService.js";
 
 const items = [
   {
@@ -29,10 +31,7 @@ const items = [
   },
 ];
 
-export default function Sidebar({
-  collapsed,
-  onCollapsedChange,
-}) {
+export default function Sidebar({ collapsed, onCollapsedChange }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,6 +39,25 @@ export default function Sidebar({
     location.pathname.startsWith("/projects") ||
       location.pathname.startsWith("/budgets"),
   );
+
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    let mounted = true;
+
+    const loadUser = async () => {
+      const authenticatedUser = await VerifyAuth();
+
+      if (mounted) {
+        setUser(authenticatedUser);
+      }
+    };
+
+    loadUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const logout = () => {
     sessionStorage.removeItem("loginPermission");
@@ -141,9 +159,7 @@ export default function Sidebar({
           >
             Controle de
             <br />
-            <span className="font-normal opacity-85">
-              Produção
-            </span>
+            <span className="font-normal opacity-85">Produção</span>
           </span>
         )}
       </div>
@@ -198,11 +214,7 @@ export default function Sidebar({
               overflow-hidden
               transition-colors
 
-              ${
-                collapsed
-                  ? "justify-center px-0"
-                  : "justify-start px-3"
-              }
+              ${collapsed ? "justify-center px-0" : "justify-start px-3"}
 
               ${
                 isProjectsActive
@@ -232,20 +244,14 @@ export default function Sidebar({
 
             {!collapsed && (
               <>
-                <span className="flex-1 truncate text-left">
-                  Projetos
-                </span>
+                <span className="flex-1 truncate text-left">Projetos</span>
 
                 <span
                   className={`
                     shrink-0
                     transition-transform
                     duration-200
-                    ${
-                      projectsOpen
-                        ? "rotate-180"
-                        : "rotate-0"
-                    }
+                    ${projectsOpen ? "rotate-180" : "rotate-0"}
                   `}
                 >
                   <ChevronIcon />
@@ -297,9 +303,7 @@ export default function Sidebar({
                   />
                 )}
 
-                <span className="truncate">
-                  Projetos
-                </span>
+                <span className="truncate">Projetos</span>
               </button>
 
               <button
@@ -340,9 +344,7 @@ export default function Sidebar({
                   />
                 )}
 
-                <span className="truncate">
-                  Orçamentos
-                </span>
+                <span className="truncate">Orçamentos</span>
               </button>
             </div>
           )}
@@ -392,43 +394,44 @@ export default function Sidebar({
             rounded-md
             overflow-hidden
 
-            ${
-              collapsed
-                ? "justify-center px-0"
-                : "px-2.5"
-            }
+            ${collapsed ? "justify-center px-0" : "px-2.5"}
           `}
         >
           <div
             className="
-              w-[30px]
-              h-[30px]
-              shrink-0
-              rounded-full
-              bg-[#FF991F]
-              border-2
-              border-white/40
-              flex
-              items-center
-              justify-center
-              text-[11px]
-              font-bold
-            "
+    w-[30px]
+    h-[30px]
+    shrink-0
+    rounded-full
+    bg-[#FF991F]
+    border-2
+    border-white/40
+    flex
+    items-center
+    justify-center
+    text-[11px]
+    font-bold
+    text-white
+  "
           >
-            AD
+            {(user?.user_name || user?.email || "Usuário")
+              .charAt(0)
+              .toUpperCase()}
           </div>
 
           {!collapsed && (
             <div className="min-w-0">
               <p className="m-0 text-xs font-semibold truncate">
-                Admin
+                {user?.user_name || user?.email || "Usuário"}
               </p>
 
               <p className="m-0 text-[11px] text-white/60 truncate">
-                Administrador
+                {user?.email || "Usuário autenticado"}
               </p>
             </div>
           )}
+
+          
         </div>
 
         {/* Sair */}
@@ -451,29 +454,19 @@ export default function Sidebar({
             text-[13px]
             transition-colors
 
-            ${
-              collapsed
-                ? "justify-center px-0"
-                : "justify-start px-2.5"
-            }
+            ${collapsed ? "justify-center px-0" : "justify-start px-2.5"}
           `}
         >
           <LogoutIcon />
 
-          {!collapsed && (
-            <span>Sair</span>
-          )}
+          {!collapsed && <span>Sair</span>}
         </button>
 
         {/* Recolher */}
         <button
           type="button"
           onClick={toggleSidebar}
-          title={
-            collapsed
-              ? "Expandir menu"
-              : "Recolher menu"
-          }
+          title={collapsed ? "Expandir menu" : "Recolher menu"}
           className={`
             w-full
             h-9
@@ -489,20 +482,12 @@ export default function Sidebar({
             text-[12px]
             transition-colors
 
-            ${
-              collapsed
-                ? "justify-center px-0"
-                : "justify-start px-2.5"
-            }
+            ${collapsed ? "justify-center px-0" : "justify-start px-2.5"}
           `}
         >
-          <CollapseIcon
-            collapsed={collapsed}
-          />
+          <CollapseIcon collapsed={collapsed} />
 
-          {!collapsed && (
-            <span>Recolher menu</span>
-          )}
+          {!collapsed && <span>Recolher menu</span>}
         </button>
       </div>
     </aside>
@@ -513,13 +498,7 @@ export default function Sidebar({
    ITEM DA SIDEBAR
 ========================= */
 
-function SidebarItem({
-  label,
-  icon,
-  active,
-  collapsed,
-  onClick,
-}) {
+function SidebarItem({ label, icon, active, collapsed, onClick }) {
   return (
     <button
       type="button"
@@ -541,11 +520,7 @@ function SidebarItem({
         transition-colors
         mb-0.5
 
-        ${
-          collapsed
-            ? "justify-center px-0"
-            : "justify-start px-3"
-        }
+        ${collapsed ? "justify-center px-0" : "justify-start px-3"}
 
         ${
           active
@@ -569,15 +544,9 @@ function SidebarItem({
         />
       )}
 
-      <span className="shrink-0 flex">
-        {icon}
-      </span>
+      <span className="shrink-0 flex">{icon}</span>
 
-      {!collapsed && (
-        <span className="truncate">
-          {label}
-        </span>
-      )}
+      {!collapsed && <span className="truncate">{label}</span>}
     </button>
   );
 }
@@ -662,13 +631,7 @@ function ProjectsIcon() {
 function ProductionIcon() {
   return (
     <Svg>
-      <circle
-        cx="9"
-        cy="9"
-        r="7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
 
       <path
         d="M9 5v4l3 2"
@@ -706,13 +669,7 @@ function ReportsIcon() {
 function EmployeesIcon() {
   return (
     <Svg>
-      <circle
-        cx="7"
-        cy="6"
-        r="3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <circle cx="7" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
 
       <path
         d="M1 16c0-2.76 2.24-5 5-5h2c2.76 0 5 2.24 5 5M13 6c0-1.1.9-2 2-2M14 11c1.66 0 3 1.34 3 3v2"
@@ -761,11 +718,7 @@ function CollapseIcon({ collapsed }) {
   return (
     <Svg>
       <path
-        d={
-          collapsed
-            ? "M7 3l6 6-6 6M13 9H3"
-            : "M11 3L5 9l6 6M5 9h10"
-        }
+        d={collapsed ? "M7 3l6 6-6 6M13 9H3" : "M11 3L5 9l6 6M5 9h10"}
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
@@ -804,41 +757,13 @@ function BrandIcon() {
       fill="none"
       aria-hidden="true"
     >
-      <rect
-        x="1"
-        y="1"
-        width="6"
-        height="6"
-        rx="1"
-        fill="#0052CC"
-      />
+      <rect x="1" y="1" width="6" height="6" rx="1" fill="#0052CC" />
 
-      <rect
-        x="9"
-        y="1"
-        width="6"
-        height="6"
-        rx="1"
-        fill="#0052CC"
-      />
+      <rect x="9" y="1" width="6" height="6" rx="1" fill="#0052CC" />
 
-      <rect
-        x="1"
-        y="9"
-        width="6"
-        height="6"
-        rx="1"
-        fill="#0052CC"
-      />
+      <rect x="1" y="9" width="6" height="6" rx="1" fill="#0052CC" />
 
-      <rect
-        x="9"
-        y="9"
-        width="6"
-        height="6"
-        rx="1"
-        fill="#0052CC"
-      />
+      <rect x="9" y="9" width="6" height="6" rx="1" fill="#0052CC" />
     </svg>
   );
 }

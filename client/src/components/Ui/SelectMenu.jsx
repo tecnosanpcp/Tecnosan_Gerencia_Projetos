@@ -21,6 +21,7 @@ function SelectMenu({
   const containerRef = useRef(null);
   const menuRef = useRef(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [menuPlacement, setMenuPlacement] = useState("bottom");
 
   // =========================
   // MEMO
@@ -64,11 +65,12 @@ function SelectMenu({
       const rect = containerRef.current.getBoundingClientRect();
 
       setCoords({
-        top: rect.bottom + window.scrollY,
+        top: rect.top + window.scrollY,
         left: rect.left + window.scrollX,
         width: rect.width,
       });
 
+      setMenuPlacement("bottom");
       setSearchTerm("");
     }
 
@@ -167,7 +169,50 @@ function SelectMenu({
   // =========================
   // RENDER
   // =========================
+  useEffect(() => {
+    if (!isOpen || !menuRef.current || !containerRef.current) {
+      return;
+    }
 
+    const updateMenuPosition = () => {
+      const triggerRect = containerRef.current.getBoundingClientRect();
+      const menuRect = menuRef.current.getBoundingClientRect();
+
+      const spaceBelow = window.innerHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+
+      const shouldOpenAbove =
+        spaceBelow < menuRect.height + 8 && spaceAbove >= menuRect.height + 8;
+
+      if (shouldOpenAbove) {
+        setMenuPlacement("top");
+
+        setCoords({
+          top: triggerRect.top + window.scrollY - menuRect.height - 4,
+          left: triggerRect.left + window.scrollX,
+          width: triggerRect.width,
+        });
+      } else {
+        setMenuPlacement("bottom");
+
+        setCoords({
+          top: triggerRect.bottom + window.scrollY + 4,
+          left: triggerRect.left + window.scrollX,
+          width: triggerRect.width,
+        });
+      }
+    };
+
+    updateMenuPosition();
+
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [isOpen, filteredOptions.length, selectedOption.length, searchTerm]);
   return (
     <div ref={containerRef} className={`relative grid ${widthClass}`}>
       {/* largura fantasma */}
@@ -182,10 +227,10 @@ function SelectMenu({
         className="col-start-1 row-start-1 flex items-center justify-between  border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
         onClick={toggleOpen}
       >
-        <span className="truncate">
+        <span className="truncate px-1 text-s text-[#172B4D]">
           {selectedOption.length === 0
-            ? "Responsável"
-            : selectedOption.length === 1 
+            ? "Selecionar"
+            : selectedOption.length === 1
               ? getLabelById(selectedOption[0])
               : `${selectedOption.length} materiais selecionados`}
         </span>
@@ -201,7 +246,7 @@ function SelectMenu({
               left: coords.left,
               width: coords.width,
             }}
-            className="absolute mt-1 max-h-[40vh] overflow-auto bg-white p-1 shadow-xl rounded-md z-[9999] text-gray-700 whitespace-nowrap border border-gray-100"
+            className="absolute -translate-y-full -mt-1 max-h-[40vh] overflow-auto bg-white p-1 shadow-xl rounded-md z-[9999] text-gray-700 whitespace-nowrap border border-gray-100"
           >
             {searchable && (
               <div className="sticky top-0 z-10 mb-1 border-b border-[#DFE1E6] bg-white p-1">

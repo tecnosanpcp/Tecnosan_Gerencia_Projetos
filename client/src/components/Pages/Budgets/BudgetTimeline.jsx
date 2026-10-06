@@ -221,7 +221,7 @@ export default function BudgetTimeline({
   if (groupedTimelines.length === 0) {
     return (
       <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-[#DFE1E6] bg-white">
-        <p className="text-sm text-[#5E6C84]">
+        <p className="text-sm text-[#5E6C84]">  
           Nenhum dado encontrado para exibição.
         </p>
       </div>
@@ -229,14 +229,14 @@ export default function BudgetTimeline({
   }
 
   return (
-    <div className="flex w-full flex-col gap-5 pb-2">
+    <div className="flex w-full flex-col pb-2">
       {groupedTimelines.map((group) => (
         <div
           key={group.budgetInfo.id || group.budgetInfo.budget_id}
-          className="flex w-full flex-col gap-2"
+          className="flex w-full flex-col"
         >
           {!currentBudget && (
-            <div className="flex items-center justify-between rounded-lg border border-[#DFE1E6] bg-white px-3 py-2">
+            <div className="flex items-center justify-between border border-[#DFE1E6] bg-white px-3 py-2">
               <h2 className="truncate text-sm font-semibold text-[#172B4D]">
                 {group.budgetInfo.name || group.budgetInfo.budget_name}
               </h2>
@@ -247,7 +247,7 @@ export default function BudgetTimeline({
             </div>
           )}
 
-          <div className="w-full overflow-x-auto rounded-lg border border-[#DFE1E6] bg-white">
+          <div className="w-full overflow-x-auto border border-[#DFE1E6] bg-white">
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-[#DFE1E6] bg-[#F4F5F7]">

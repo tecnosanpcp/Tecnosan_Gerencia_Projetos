@@ -11,20 +11,15 @@ function AlertModal({
   const bnt_style = style === "waring" ? "bnt-red" : "bnt-blue";
 
   const handleKeyDown = (event) => {
-    if (event.key !== "Enter") return;
-
-    const target = event.target;
-
-    if (
-      target &&
-      (target.tagName === "BUTTON" ||
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT" ||
-        target.isContentEditable)
-    ) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setVisible(false);
       return;
     }
+
+    if (event.key !== "Enter") return;
+
+    if (event.target?.tagName === "TEXTAREA") return;
 
     event.preventDefault();
     func?.();
@@ -47,13 +42,9 @@ function AlertModal({
       >
         {/* Cabeçalho / conteúdo */}
         <div className="flex flex-col gap-2">
-          <h1 className="text-[18px] font-semibold text-[#172B4D]">
-            {title}
-          </h1>
+          <h1 className="text-[18px] font-semibold text-[#172B4D]">{title}</h1>
 
-          <p className="text-sm leading-6 text-[#5E6C84]">
-            {body}
-          </p>
+          <p className="text-sm leading-6 text-[#5E6C84]">{body}</p>
         </div>
 
         {/* Ações */}

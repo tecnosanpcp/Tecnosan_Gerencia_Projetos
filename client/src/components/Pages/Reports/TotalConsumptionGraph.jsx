@@ -122,7 +122,7 @@ export default function TotalConsumptionGraph({ data = [] }) {
           fontSize: "10px",
           fontFamily: "Inter, system-ui, sans-serif",
         },
-        rotate: -35,
+        rotate: 0,
         trim: true,
       },
       axisBorder: {

@@ -216,7 +216,7 @@ export default function ProjectTimeline({ searchTerm, times }) {
               </div>
             )}
 
-            <div className="w-full max-w-[calc(100vw-280px)] overflow-x-auto pb-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <div className="w-full max-w-[calc(100vw-280px)] overflow-x-auto  border border-gray-200  bg-white shadow-sm">
               <table className="w-full text-sm text-left border-collapse whitespace-nowrap">
                 {/* CABEÇALHO COM DATAS DO PROJETO */}
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">

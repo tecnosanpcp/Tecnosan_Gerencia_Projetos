@@ -171,7 +171,9 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
 
   const confirmReturn = async (movementId) => {
     if (!returnForm.received_by) return alert("Informe quem recebeu.");
-    if (!returnForm.returned_at) {return alert("Informe a data da devolução.");}
+    if (!returnForm.returned_at) {
+      return alert("Informe a data da devolução.");
+    }
 
     try {
       await returnAccessory(
@@ -352,7 +354,20 @@ export default function ProjectAccessoriesTable({ searchTerm, onRefresh }) {
                           ) : isReturning ? (
                             <div className="flex justify-center gap-2">
                               <button
+                                type="button"
+                                autoFocus
                                 onClick={() => confirmReturn(loan.movement_id)}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    confirmReturn(loan.movement_id);
+                                  }
+
+                                  if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    setReturningId(null);
+                                  }
+                                }}
                                 className="text-green-600 hover:text-green-800"
                               >
                                 <FaCheck size={16} />

@@ -33,7 +33,11 @@ const ProjectsChart = () => {
 
     fetchData();
   }, []);
-
+  
+  const formatProjectName = (name) => {
+    if (!name) return "";
+    return name.length > 18 ? `${name.slice(0, 18)}...` : name;
+  };
   return (
     <div className="w-full h-full min-h-0 flex flex-col">
       <div className="flex-1 w-full min-h-0">
@@ -70,6 +74,7 @@ const ProjectsChart = () => {
               dataKey="projeto"
               type="category"
               width={125}
+              tickFormatter={formatProjectName}
               tick={{
                 fontSize: 10,
                 fill: "#5E6C84",
@@ -87,8 +92,7 @@ const ProjectsChart = () => {
               contentStyle={{
                 border: "1px solid #DFE1E6",
                 borderRadius: "6px",
-                boxShadow:
-                  "0 4px 12px rgba(9, 30, 66, 0.15)",
+                boxShadow: "0 4px 12px rgba(9, 30, 66, 0.15)",
                 fontSize: "12px",
               }}
             />
@@ -105,9 +109,7 @@ const ProjectsChart = () => {
                 <Cell
                   key={`project-cell-${index}`}
                   fill={
-                    entry.progresso_percentual >= 100
-                      ? "#0747A6"
-                      : "#0052CC"
+                    entry.progresso_percentual >= 100 ? "#0747A6" : "#0052CC"
                   }
                 />
               ))}

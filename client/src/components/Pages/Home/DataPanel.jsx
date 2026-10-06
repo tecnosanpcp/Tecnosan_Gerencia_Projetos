@@ -12,7 +12,7 @@ function DataPanel({
   const isPositive = Number(comparison) >= 0;
 
   return (
-    <div className="group relative overflow-hidden rounded-[4px] border border-[#DFE1E6] bg-white shadow-[0_1px_3px_rgba(9,30,66,0.08)] transition-shadow duration-100 hover:shadow-[0_4px_12px_rgba(9,30,66,0.12)]">
+    <div className="group relative overflow-hidden rounded-[4px] border border-[#DFE1E6] bg-white">
       <div className="p-4 pl-[18px]">
         <div className="mb-2 flex items-center justify-between">
           <p className="m-0 text-[11px] font-bold uppercase tracking-[0.07em] text-[#5E6C84]">

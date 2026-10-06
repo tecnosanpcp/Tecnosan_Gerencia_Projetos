@@ -55,6 +55,8 @@ export default function BudgetAccessories({
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
+  const [selectedAccessoryIds, setSelectedAccessoryIds] = useState([]);
+
   const [plan, setPlan] = useState({
     accessory_id: "",
     taken_by_id: "",
@@ -203,7 +205,11 @@ export default function BudgetAccessories({
       return alert("Erro: Selecione um orçamento.");
     }
 
-    if (!plan.accessory_id || !plan.taken_by_id || !plan.taken_at) {
+    if (
+      selectedAccessoryIds.length === 0 ||
+      !plan.taken_by_id ||
+      !plan.taken_at
+    ) {
       return alert("Preencha o acessório, quem retira e a data da retirada.");
     }
 
@@ -215,18 +221,23 @@ export default function BudgetAccessories({
     }
 
     try {
-      await loanToBudget(
-        currentBudget.id,
-        plan.accessory_id,
-        plan.taken_by_id,
-        plan.taken_at,
-        plan.received_by_id,
-        plan.returned_at,
+      await Promise.all(
+        selectedAccessoryIds.map((accessoryId) =>
+          loanToBudget(
+            currentBudget.id,
+            accessoryId,
+            plan.taken_by_id,
+            plan.taken_at,
+            plan.received_by_id,
+            plan.returned_at,
+          ),
+        ),
       );
+
+      setSelectedAccessoryIds([]);
 
       setPlan((prev) => ({
         ...prev,
-        accessory_id: "",
         taken_at: getTodayDate(),
         returned_at: "",
       }));
@@ -336,7 +347,7 @@ export default function BudgetAccessories({
         return (
           <div key={groupName} className="flex w-full flex-col gap-2">
             {!currentBudget?.id && (
-              <div className="flex items-center justify-between rounded-lg border border-[#DFE1E6] bg-white px-3 py-2">
+              <div className="flex items-center justify-between border border-[#DFE1E6] bg-white px-3 py-2">
                 <h2 className="text-sm font-semibold text-[#172B4D]">
                   {groupName}
                 </h2>
@@ -562,16 +573,18 @@ export default function BudgetAccessories({
                   {isCurrentBudget && !editingId && (
                     <tr className="border-t border-[#DFE1E6] bg-[#F7F8FA]">
                       <td className="px-1.5 py-2">
-                        {renderSelect({
-                          selected: plan.accessory_id,
-                          options: accessoryOptions,
-                          placeholder: "Selecionar item...",
-                          onChange: (id) =>
-                            setPlan((prev) => ({
-                              ...prev,
-                              accessory_id: id,
-                            })),
-                        })}
+                        <SelectMenu
+                          variant="full"
+                          maxSelections={0}
+                          options={accessoryOptions}
+                          selectedOption={selectedAccessoryIds}
+                          setSelectedOption={setSelectedAccessoryIds}
+                          closeOnSelect={false}
+                          searchable={true}
+                          searchPlaceholder="Pesquisar acessório..."
+                          confirmOnEnter={true}
+                          placeholder="Selecionar acessórios..."
+                        />
                       </td>
 
                       <td className="px-2 py-2">
@@ -591,7 +604,7 @@ export default function BudgetAccessories({
                         <input
                           type="date"
                           className="h-9 w-[110px] border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
-                          value={plan.taken_at} 
+                          value={plan.taken_at}
                           onChange={(e) =>
                             setPlan((prev) => ({
                               ...prev,
@@ -632,6 +645,12 @@ export default function BudgetAccessories({
                         <button
                           type="button"
                           onClick={handleSavePlan}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              handleSavePlan();
+                            }
+                          }}
                           className="h-8 w-full rounded-md bg-[#0052CC] px-3 text-[10px] font-semibold text-white transition hover:bg-[#0747A6]"
                         >
                           Adicionar
