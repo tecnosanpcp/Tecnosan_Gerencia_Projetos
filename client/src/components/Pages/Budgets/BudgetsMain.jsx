@@ -10,11 +10,14 @@ import BudgetAccessories from "./BudgetAccessories";
 
 // Services
 import { readEquipmentRecipe } from "@services/EquipmentRecipesService.js";
+
+import { listBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js"
 import { getTasksTimeline, getEquipmentsTimeline, getProjectsTimeline } from "@services/ViewsSummary.js";
-import { createBudgetEquipment,listBudgetEquipments } from "@services/BudgetsEquipmentsService.js"
+
+
+import { createBudgetEquipment } from "@services/BudgetsEquipmentsService.js"
 import { VerifyAuth } from "@services/AuthService.js";
 import { vwEquipmentRecipesMaterialSummary, vwComponentRecipeMaterialsSummary } from "@services/ViewsService.js";
-import { listBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js"
 
 export default function BudgetsMain({ currentBudget, allBudgets }) {
   const [isVisible, setVisible] = useState(false);
@@ -46,17 +49,16 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     enabled: !!currentBudget || (allBudgets?.length > 0),
   });
 
-  const budgetEquipments = useQuery({
-    queryKey: ["recipesEquipmentsList", "all", currentBudget?.id],
-    queryFn: async () => {
-      if (!currentBudget.id) return []
-      return await listBudgetEquipments(currentBudget?.id)
-    },
-  })
-
   const recipesEquipmentsList = useQuery({
     queryKey: ["budgetEquipments"],
     queryFn: readEquipmentRecipe,
+  })
+
+  const Schedule = useQuery({
+    queryKey: ["componentsSchedule", currentBudget?.id],
+    queryFn: async (budget_id) =>{
+      return await listBudgetComponentSchedule(budget_id);
+    },
   })
 
   const renderView = () => {
@@ -65,8 +67,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
       allBudgets,
       searchTerm,
       groupedData: budgetDetailsQuery.data || [],
-      timelineTasks: [],
-      timelineEquipments: [],
+      Schedule: Schedule.data || [],
     };
 
     switch (view) {
@@ -77,7 +78,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     }
   };
 
-  useEffect(()=>console.log(budgetDetailsQuery.data), [budgetDetailsQuery])
+  useEffect(()=>console.log(Schedule.data), [Schedule])
   
   return(
   <React.Fragment>  

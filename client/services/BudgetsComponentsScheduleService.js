@@ -1,9 +1,9 @@
 import api from "./api.js";
 
-export const listBudgetComponentSchedule = async (budget_equipment_id) => {
+export const listBudgetComponentSchedule = async (budget_id) => {
   try {
-    const url = budget_equipment_id
-      ? `/budgets-components-schedule/equipment/${budget_equipment_id}`
+    const url = budget_id
+      ? `/budgets-components-schedule/equipment/${budget_id}`
       : "/budgets-components-schedule";
     const response = await api.get(url);
     return Array.isArray(response.data) ? response.data : [];

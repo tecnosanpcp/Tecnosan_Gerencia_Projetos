@@ -77,17 +77,8 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
     }
 
     const response = await pool.query(
-      `SELECT
-        b_er.quantity_plan,
-        vwrms.*
-      FROM budgets b
-      JOIN budgets_equipments_recipes b_er
-        ON b.budget_id = b_er.budget_id
-      JOIN vw_equipments_recipes_materials_summary vwrms
-        ON vwrms.equipment_recipe_id = b_er.equipment_recipe_id
-      WHERE 
-        b.budget_id = $1`,
-      [budget_id],
+      "SELECT * FROM vw_equipments_recipes_materials_summary WHERE budget_id = $1;",
+      [budget_id]
     );
     res.status(200).json(response.rows);
   } catch (error) {

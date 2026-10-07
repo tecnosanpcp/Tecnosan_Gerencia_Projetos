@@ -48,18 +48,50 @@ export const createBudgetComponentSchedule = async (req, res) => {
 
 export const listBudgetComponentSchedule = async (req, res) => {
   try {
-    const { budget_equipment_id } = req.params;
+    const { budget_id } = req.params;
 
-    const response = budget_equipment_id
+    const componentSchedule = budget_id
       ? await pool.query(
-          "SELECT * FROM budgets_components_schedule WHERE budget_equipment_id = $1 ORDER BY planned_start_at",
-          [budget_equipment_id],
+          "SELECT * FROM budgets_components_schedule WHERE budget_id = $1 ORDER BY planned_start_at",
+          [budget_id],
         )
       : await pool.query(
           "SELECT * FROM budgets_components_schedule ORDER BY planned_start_at",
         );
 
-    res.status(200).json(response.rows);
+    if (budget_id){
+      const equipmentsSchedule = await pool.query(
+        `SELECT
+          budget_equipment_id,
+          MIN(planned_start_at) AS "equipment_start_at",
+          MAX(planned_end_at) AS "equipment_end_at"
+        FROM budgets_components_schedule
+        GROUP BY 
+          budget_equipment_id;`
+      )
+
+      const budgetSchedule = await pool.query(
+        `SELECT
+          budget_id,
+          MIN(planned_start_at) AS "budget_start_at",
+          MAX(planned_end_at) AS "budget_end_at"
+        FROM budgets_components_schedule
+        WHERE budget_id = $1
+        GROUP BY 
+          budget_id;`,
+        [budget_id]
+      )
+
+      const response = {
+        components: componentSchedule.rows || [],
+        equipments: equipmentsSchedule.rows || [],
+        budgets: budgetSchedule.rows[0] || []
+      };
+
+      return res.status(200).json(response);
+    }
+
+    return res.status(200).json(componentSchedule.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro ao listar cronograma do orçamento" + error });

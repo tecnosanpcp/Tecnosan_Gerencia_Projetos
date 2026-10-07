@@ -12,7 +12,7 @@ const router = Router();
 
 router.post("/", createBudgetComponentSchedule);
 router.get("/", listBudgetComponentSchedule);
-router.get("/equipment/:budget_equipment_id", listBudgetComponentSchedule);
+router.get("/equipment/:budget_id", listBudgetComponentSchedule);
 router.put("/:id", updateBudgetComponentSchedule);
 // upsert por chave natural (budget_equipment_id, component_recipe_id),
 // para telas que editam data a data sem conhecer o "id" da linha
