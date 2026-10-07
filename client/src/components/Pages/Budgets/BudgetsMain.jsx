@@ -38,7 +38,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
         ]);
         results.push({
           budget_id: id,
-          budget_name: bud.budget_name,
+          budget_name: bud.name,
           status: bud.status,
           equipments: equipSummary || [],
           components: compSummary || []
@@ -56,8 +56,8 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
 
   const Schedule = useQuery({
     queryKey: ["componentsSchedule", currentBudget?.id],
-    queryFn: async (budget_id) =>{
-      return await listBudgetComponentSchedule(budget_id);
+    queryFn: async () =>{
+      return await listBudgetComponentSchedule(currentBudget?.id);
     },
   })
 
@@ -67,7 +67,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
       allBudgets,
       searchTerm,
       groupedData: budgetDetailsQuery.data || [],
-      Schedule: Schedule.data || [],
+      Schedule: Schedule?.data?.[0] || [],
     };
 
     switch (view) {
@@ -77,8 +77,6 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
       default: return <h1>Escolha uma tela</h1>;
     }
   };
-
-  useEffect(()=>console.log(Schedule.data), [Schedule])
   
   return(
   <React.Fragment>  

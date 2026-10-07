@@ -66,8 +66,10 @@ export const listBudgetComponentSchedule = async (req, res) => {
           MIN(planned_start_at) AS "equipment_start_at",
           MAX(planned_end_at) AS "equipment_end_at"
         FROM budgets_components_schedule
+        WHERE budget_id = $1
         GROUP BY 
-          budget_equipment_id;`
+          budget_equipment_id;`, 
+        [budget_id]
       )
 
       const budgetSchedule = await pool.query(
@@ -82,11 +84,11 @@ export const listBudgetComponentSchedule = async (req, res) => {
         [budget_id]
       )
 
-      const response = {
+      const response = [{
         components: componentSchedule.rows || [],
         equipments: equipmentsSchedule.rows || [],
         budgets: budgetSchedule.rows[0] || []
-      };
+      }];
 
       return res.status(200).json(response);
     }
