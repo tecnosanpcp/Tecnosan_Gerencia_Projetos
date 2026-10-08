@@ -430,8 +430,6 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
               </p>
             </div>
           )}
-
-          
         </div>
 
         {/* Sair */}
@@ -461,7 +459,39 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
 
           {!collapsed && <span>Sair</span>}
         </button>
+        {/* Bugs e Sugestões */}
+        <button
+          type="button"
+          onClick={() =>
+            window.open(
+              "https://docs.google.com/forms/d/e/1FAIpQLSed43VLcgi31Guzxz2re9Ftiz_WPcdJMveP08AyQvONaWqg-g/viewform",
+              "_blank",
+              "noopener,noreferrer",
+            )
+          }
+          title={collapsed ? "Bugs e Sugestões" : undefined}
+          className={`
+            w-full
+            h-9
+            flex
+            items-center
+            gap-2.5
+            rounded-md
+            border-0
+            bg-transparent
+            text-white/65
+            hover:bg-white/10
+            hover:text-white
+            text-[13px]
+            transition-colors
 
+            ${collapsed ? "justify-center px-0" : "justify-start px-2.5"}
+          `}
+        >
+          <FeedbackIcon />
+
+          {!collapsed && <span>Bugs e Sugestões</span>}
+        </button>
         {/* Recolher */}
         <button
           type="button"
@@ -699,7 +729,25 @@ function RecipesIcon() {
     </Svg>
   );
 }
+function FeedbackIcon() {
+  return (
+    <Svg>
+      <path
+        d="M3 3.5A1.5 1.5 0 0 1 4.5 2h9A1.5 1.5 0 0 1 15 3.5v7A1.5 1.5 0 0 1 13.5 12H9l-3.5 3v-3H4.5A1.5 1.5 0 0 1 3 10.5v-7Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
 
+      <path
+        d="M6 5.5h6M6 8.5h4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
 function LogoutIcon() {
   return (
     <Svg>
