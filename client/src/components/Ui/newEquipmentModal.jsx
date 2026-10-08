@@ -14,12 +14,16 @@ export default function NewEquipmentModal({
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (selectedRecipe.length === 0 || !quantity || parseInt(quantity) <= 0) {
-      alert("Selecione pelo menos uma receita e defina a quantidade.");
+    if (
+      selectedRecipe.length === 0 ||
+      !quantity ||
+      parseInt(quantity) <= 0
+    ) {
+      alert("Selecione uma receita e defina a quantidade.");
       return;
     }
 
-    onConfirm(selectedRecipe, parseInt(quantity));
+    onConfirm(selectedRecipe[0], parseInt(quantity));
     setSelectedRecipe([]);
     setQuantity("");
   };
@@ -41,7 +45,6 @@ export default function NewEquipmentModal({
             shadow-2xl
           "
         >
-          {/* Header */}
           <div className="flex items-center justify-between border-b border-[#DFE1E6] pb-4">
             <div>
               <h2 className="text-lg font-semibold text-[#172B4D]">
@@ -70,9 +73,7 @@ export default function NewEquipmentModal({
             </button>
           </div>
 
-          {/* Body */}
           <div className="mt-5 flex flex-col gap-5">
-            {/* Receita */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-[#172B4D]">
                 Selecione a Receita (Modelo)
@@ -81,7 +82,7 @@ export default function NewEquipmentModal({
               <SelectMenu
                 selectedOption={selectedRecipe}
                 setSelectedOption={setSelectedRecipe}
-                maxSelections={0}
+                maxSelections={1}
                 variant="full"
                 closeOnSelect={false}
                 searchable={true}
@@ -94,7 +95,6 @@ export default function NewEquipmentModal({
               />
             </div>
 
-            {/* Quantidade */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-[#172B4D]">
                 Escolha a Quantidade
@@ -126,7 +126,6 @@ export default function NewEquipmentModal({
             </div>
           </div>
 
-          {/* Footer */}
           <div className="mt-6 flex justify-end gap-3 border-t border-[#DFE1E6] pt-4">
             <button
               type="button"
