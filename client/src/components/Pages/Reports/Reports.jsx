@@ -709,7 +709,7 @@ export default function Reports() {
             CABEÇALHO
         ===================================================== */}
 
-        <section className="shrink-0 rounded-xl border border-[#DFE1E6] bg-white shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
+        <section className="shrink-0 rounded-sm border border-[#DFE1E6] bg-white shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
 
           <div className="flex flex-col gap-4 px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
 
@@ -885,7 +885,7 @@ export default function Reports() {
             ================================================= */}
 
             <div className="col-span-12 sm:col-span-6 xl:col-span-3">
-              <div className="h-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
+              <div className="h-full rounded border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
 
                 <div className="flex items-start justify-between">
 
@@ -924,7 +924,7 @@ export default function Reports() {
             ================================================= */}
 
             <div className="col-span-12 sm:col-span-6 xl:col-span-3">
-              <div className="h-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
+              <div className="h-full rounded border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
 
                 <div className="flex items-start justify-between">
 
@@ -963,7 +963,7 @@ export default function Reports() {
             ================================================= */}
 
             <div className="col-span-12 sm:col-span-6 xl:col-span-3">
-              <div className="h-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
+              <div className="h-full rounded border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
 
                 <div className="flex items-start justify-between">
 
@@ -1011,7 +1011,7 @@ export default function Reports() {
             ================================================= */}
 
             <div className="col-span-12 sm:col-span-6 xl:col-span-3">
-              <div className="h-full rounded-xl border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
+              <div className="h-full rounded border border-[#DFE1E6] bg-white p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)]">
 
                 <div className="flex items-start justify-between">
 

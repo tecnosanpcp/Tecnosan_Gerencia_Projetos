@@ -116,9 +116,8 @@ export default function TaskCard({
         group
         relative
         w-full
-        rounded-lg
+        rounded
         border-l-4
-        ${styles.border}
         ${styles.bg}
         p-3
         shadow-sm

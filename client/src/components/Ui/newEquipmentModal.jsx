@@ -14,12 +14,12 @@ export default function NewEquipmentModal({
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!selectedRecipe || !quantity || parseInt(quantity) <= 0) {
-      alert("Selecione uma receita e defina a quantidade.");
+    if (selectedRecipe.length === 0 || !quantity || parseInt(quantity) <= 0) {
+      alert("Selecione pelo menos uma receita e defina a quantidade.");
       return;
     }
 
-    onConfirm(selectedRecipe[0], parseInt(quantity));
+    onConfirm(selectedRecipe, parseInt(quantity));
     setSelectedRecipe([]);
     setQuantity("");
   };
@@ -81,8 +81,12 @@ export default function NewEquipmentModal({
               <SelectMenu
                 selectedOption={selectedRecipe}
                 setSelectedOption={setSelectedRecipe}
-                maxSelections={1}
+                maxSelections={0}
                 variant="full"
+                closeOnSelect={false}
+                searchable={true}
+                searchPlaceholder="Pesquisar receita..."
+                confirmOnEnter={true}
                 options={recipesList.map((recipe) => ({
                   id: recipe.equipment_recipe_id,
                   label: `${recipe.recipe_name} (${recipe.total_hours || 0}h)`,

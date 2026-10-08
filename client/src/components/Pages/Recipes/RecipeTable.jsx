@@ -27,6 +27,7 @@ export default function RecipeTable({ i }) {
     Equipamento: false,
   });
 
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [editType, setEditType] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
@@ -147,6 +148,44 @@ export default function RecipeTable({ i }) {
     return expandedRow === getRowId(row, index);
   };
 
+  const isRowSelected = (row, index) =>
+    selectedRowIds.includes(getRowId(row, index));
+
+  const toggleRowSelection = (row, index) => {
+    const id = getRowId(row, index);
+
+    setSelectedRowIds((current) =>
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id],
+    );
+  };
+
+  const allRowsSelected =
+    list.length > 0 &&
+    list.every((row, index) => selectedRowIds.includes(getRowId(row, index)));
+
+  const toggleSelectAll = () => {
+    if (allRowsSelected) {
+      setSelectedRowIds([]);
+      return;
+    }
+
+    setSelectedRowIds(list.map((row, index) => getRowId(row, index)));
+  };
+
+  const selectedRows = list.filter((row, index) =>
+    selectedRowIds.includes(getRowId(row, index)),
+  );
+
+  const openDeleteModal = (rows) => {
+    setSelectedRow(rows[0] || null);
+
+    setSelectedRowIds(rows.map((row, index) => getRowId(row, index)));
+
+    updateModalDeleteVisible(i.label, true);
+  };
+
   const toggleRow = (row, index) => {
     const id = getRowId(row, index);
 
@@ -171,19 +210,41 @@ export default function RecipeTable({ i }) {
     <>
       {/* MODAL DE EXCLUSÃO */}
       <AlertModal
-        title={currentModalConfig.title}
-        body={currentModalConfig.body}
+        title={
+          selectedRows.length > 1
+            ? `Excluir ${selectedRows.length} ${i.label.toLowerCase()}s?`
+            : currentModalConfig.title
+        }
+        body={
+          selectedRows.length > 1
+            ? `Tem certeza que deseja excluir os ${selectedRows.length} itens selecionados? A ação não é reversível.`
+            : currentModalConfig.body
+        }
         neg_opt="Cancelar"
         pos_opt="Excluir"
         func={async () => {
-          await currentModalConfig.deleteFunc(
-            selectedRow?.ID ?? selectedRow?.id,
+          const rowsToDelete =
+            selectedRows.length > 0
+              ? selectedRows
+              : selectedRow
+                ? [selectedRow]
+                : [];
+
+          await Promise.all(
+            rowsToDelete.map((row) =>
+              currentModalConfig.deleteFunc(row?.ID ?? row?.id),
+            ),
           );
 
+          setSelectedRow(null);
+          setSelectedRowIds([]);
           updateModalDeleteVisible(i.label, false);
         }}
         isVisible={modalDeleteVisible[i.label] || false}
-        setVisible={() => updateModalDeleteVisible(i.label, false)}
+        setVisible={() => {
+          setSelectedRowIds([]);
+          updateModalDeleteVisible(i.label, false);
+        }}
         style="waring"
       />
 
@@ -192,11 +253,37 @@ export default function RecipeTable({ i }) {
 
       <div className="mt-4 flex max-h-[500px] w-full flex-col overflow-hidden border border-[#DFE1E6] bg-white">
         {/* CABEÇALHO DA TABELA */}
+        {selectedRows.length > 0 && (
+          <div className="flex h-10 items-center justify-between border-b border-[#DFE1E6] bg-[#DEEBFF] px-3">
+            <span className="text-[11px] font-semibold text-[#0052CC]">
+              {selectedRows.length} selecionado
+              {selectedRows.length === 1 ? "" : "s"}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => openDeleteModal(selectedRows)}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[#FFBDAD] bg-white px-2.5 text-[10px] font-semibold text-[#DE350B] transition hover:bg-[#FFEBE6]"
+            >
+              <FiTrash2 size={12} />
+              Excluir selecionados
+            </button>
+          </div>
+        )}
         {list.length > 0 && (
           <div className="min-h-0 w-full flex-1 overflow-auto">
             <table className="w-full min-w-[760px] table-fixed border-collapse">
               <thead className="sticky top-0 z-10">
                 <tr className="h-10 border-b border-[#C1C7D0] bg-[#F4F5F7]">
+                  <th className="w-10 px-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={allRowsSelected}
+                      onChange={toggleSelectAll}
+                      aria-label="Selecionar todos"
+                      className="h-3.5 w-3.5 accent-[#0052CC]"
+                    />
+                  </th>
                   {Object.keys(list[0]).map(
                     (col, index) =>
                       index > 0 && (
@@ -241,6 +328,15 @@ export default function RecipeTable({ i }) {
                           }
                         `}
                       >
+                        <td className="w-10 border-r border-[#DFE1E6] px-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isRowSelected(row, idx)}
+                            onChange={() => toggleRowSelection(row, idx)}
+                            aria-label={`Selecionar ${getRowId(row, idx)}`}
+                            className="h-3.5 w-3.5 accent-[#0052CC]"
+                          />
+                        </td>
                         {Object.values(row).map(
                           (val, colIndex) =>
                             colIndex > 0 && (
@@ -293,10 +389,7 @@ export default function RecipeTable({ i }) {
                             {/* EXCLUIR */}
                             <button
                               type="button"
-                              onClick={() => {
-                                setSelectedRow(row);
-                                updateModalDeleteVisible(i.label, true);
-                              }}
+                              onClick={() => openDeleteModal([row])}
                               className="
                                 flex
                                 h-7
