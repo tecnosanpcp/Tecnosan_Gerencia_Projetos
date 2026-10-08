@@ -402,7 +402,6 @@ export default function Production() {
             shrink-0
             flex-col
             overflow-hidden
-            rounded-xl
             border
             border-[#DFE1E6]
             bg-white
@@ -431,7 +430,7 @@ export default function Production() {
           />
         </section>
 
-        <div className="min-h-0 flex-1 overflow-hidden pt-3">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <ProductionBoard
             weekDays={weekDays}
             offset={offset}

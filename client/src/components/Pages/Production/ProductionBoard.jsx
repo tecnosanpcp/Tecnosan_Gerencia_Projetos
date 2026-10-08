@@ -556,7 +556,6 @@ export default function ProductionBoard({
           h-full
           w-full
           overflow-hidden
-          rounded-xl
           border
           border-[#DFE1E6]
           bg-white
