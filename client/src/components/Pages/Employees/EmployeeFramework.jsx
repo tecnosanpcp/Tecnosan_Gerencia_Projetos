@@ -79,7 +79,7 @@ export default function EmployeeFramework(props) {
       />
       <article
         className={[
-          "group flex min-w-0 flex-col overflow-hidden rounded-lg",
+          "group flex min-w-0 flex-col overflow-hidden rounded-[4px]",
           "border border-[#DFE1E6] bg-white",
           "transition-all duration-150",
           "hover:border-[#B3D4FF] hover:shadow-sm",

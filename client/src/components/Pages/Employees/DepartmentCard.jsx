@@ -43,7 +43,7 @@ function DepartmentCard({ id, name, onDepartmentChanged }) {
         department={name}
       />
 
-      <div className="group rounded-lg border border-[#DFE1E6] bg-white transition hover:border-[#C1C7D0] hover:bg-[#FAFBFC]">
+      <div className="group rounded-[4px] border border-[#DFE1E6] bg-white transition hover:border-[#C1C7D0] hover:bg-[#FAFBFC]">
         <div className="flex min-w-0 items-center gap-3 px-3 py-2.5">
           {/* ícone */}
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#EAE6FF] text-[#6554C0]">

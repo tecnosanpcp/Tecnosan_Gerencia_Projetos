@@ -345,7 +345,7 @@ export default function BudgetAccessories({
         const isCurrentBudget = selectedBudgetName === groupName;
 
         return (
-          <div key={groupName} className="flex w-full flex-col gap-2">
+          <div key={groupName} className="flex w-full flex-col ">
             {!currentBudget?.id && (
               <div className="flex items-center justify-between border border-[#DFE1E6] bg-white px-3 py-2">
                 <h2 className="text-sm font-semibold text-[#172B4D]">

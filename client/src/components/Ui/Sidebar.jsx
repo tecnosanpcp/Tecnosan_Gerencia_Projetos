@@ -137,7 +137,7 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
             w-7
             h-7
             shrink-0
-            rounded-md
+            rounded-[4px]
             bg-white
             flex
             items-center

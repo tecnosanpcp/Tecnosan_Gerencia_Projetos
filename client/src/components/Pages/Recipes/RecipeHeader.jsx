@@ -133,7 +133,7 @@ export default function RecipeHeader({ i, importAction }) {
 
       <div
         className={[
-          "w-full rounded-lg border border-[#DFE1E6] bg-white",
+          "w-full rounded-[4px] border border-[#DFE1E6] bg-white",
           "shadow-[0_1px_2px_rgba(9,30,66,0.08)]",
           i.isExpand ? "rounded-b-none border-b-0" : "",
         ].join(" ")}
@@ -166,7 +166,7 @@ export default function RecipeHeader({ i, importAction }) {
               className="
         flex h-7 w-7 shrink-0
         items-center justify-center
-        rounded-md
+        rounded-[4px]
         bg-[#DEEBFF]
         text-[#0052CC]
       "
@@ -209,7 +209,7 @@ export default function RecipeHeader({ i, importAction }) {
       inline-flex h-8
       shrink-0
       items-center justify-center
-      rounded-md
+      rounded-[4px]
       border border-[#DFE1E6]
       bg-white
       px-3
@@ -251,7 +251,7 @@ export default function RecipeHeader({ i, importAction }) {
                   placeholder={`Buscar ${i.label.toLowerCase()}...`}
                   className="
             h-8 w-full
-            rounded-md
+            rounded-[4px]
             border border-[#DFE1E6]
             bg-white
             pl-8 pr-8
@@ -296,7 +296,7 @@ export default function RecipeHeader({ i, importAction }) {
         shrink-0
         items-center justify-center
         gap-1.5
-        rounded-md
+        rounded-[4px]
         bg-[#0052CC]
         px-2.5
         text-[11px]

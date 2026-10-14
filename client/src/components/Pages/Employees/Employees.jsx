@@ -88,7 +88,7 @@ export default function Employees() {
       <main className="min-h-screen w-full bg-[#F4F5F7] font-sans text-[#172B4D] overflow-x-hidden">
         <div className="w-full px-4 py-4 sm:px-5 lg:px-6 xl:px-8">
           {/* HEADER */}
-          <section className="mb-4 rounded-lg border border-[#DFE1E6] bg-white shadow-sm">
+          <section className="mb-4 rounded-[4px] border border-[#DFE1E6] bg-white shadow-sm">
             <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#DEEBFF] text-[#0052CC]">
@@ -120,9 +120,9 @@ export default function Employees() {
           {/* CONTEÚDO */}
           <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
             {/* COLABORADORES */}
-            <section className="min-w-0 rounded-lg border border-[#DFE1E6] bg-white shadow-sm">
+            <section className="min-w-0 rounded-[4px] border border-[#DFE1E6] bg-white shadow-sm">
               {/* título + busca */}
-              <div className="flex flex-col gap-3 border-b border-[#DFE1E6] px-4 py-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3  px-4 py-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <FiUsers size={17} className="text-[#0052CC]" />
@@ -148,7 +148,7 @@ export default function Employees() {
                     value={employeeSearch}
                     onChange={(event) => setEmployeeSearch(event.target.value)}
                     placeholder="Pesquisar colaborador..."
-                    className="h-9 w-full rounded-md border border-[#DFE1E6] bg-white pl-9 pr-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
+                    className="h-9 w-full rounded-[4px] border border-[#DFE1E6] bg-white pl-9 pr-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
                   />
                 </div>
               </div>
@@ -192,8 +192,8 @@ export default function Employees() {
             </section>
 
             {/* DEPARTAMENTOS */}
-            <aside className="min-w-0 rounded-lg border border-[#DFE1E6] bg-white shadow-sm">
-              <div className="border-b border-[#DFE1E6] px-4 py-3">
+            <aside className="min-w-0 rounded-[4px] border border-[#DFE1E6] bg-white shadow-sm">
+              <div className=" px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function Employees() {
                       setDepartmentSearch(event.target.value)
                     }
                     placeholder="Pesquisar departamento..."
-                    className="h-9 w-full rounded-md border border-[#DFE1E6] bg-white pl-9 pr-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
+                    className="h-9 w-full rounded-[4px] border border-[#DFE1E6] bg-white pl-9 pr-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
                   />
                 </div>
               </div>

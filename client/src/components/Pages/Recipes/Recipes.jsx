@@ -293,9 +293,9 @@ function Recipes() {
               CABEÇALHO DA PÁGINA
           ================================================= */}
 
-          <div className="flex min-h-[72px] flex-col justify-between gap-4 rounded-lg border border-[#DFE1E6] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)] sm:flex-row sm:items-center">
+          <div className="flex min-h-[72px] flex-col justify-between gap-4 rounded-[4px] border border-[#DFE1E6] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)] sm:flex-row sm:items-center">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#DEEBFF] text-[#0052CC]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] bg-[#DEEBFF] text-[#0052CC]">
                 <svg
                   width="19"
                   height="19"
@@ -321,7 +321,7 @@ function Recipes() {
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <div className="rounded-md bg-[#F4F5F7] px-3 py-1.5 text-xs font-medium text-[#5E6C84]">
+              <div className="rounded-[4px] bg-[#F4F5F7] px-3 py-1.5 text-xs font-medium text-[#5E6C84]">
                 {materialsList.length +
                   accessoriesList.length +
                   componentsList.length +
