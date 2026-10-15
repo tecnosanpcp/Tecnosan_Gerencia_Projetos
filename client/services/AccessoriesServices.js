@@ -77,8 +77,8 @@ export const loanToBudget = async (budget_id, accessory_id, user_id, taken_at, r
     accessory_id, 
     user_id, 
     taken_at,
-    received_by_id: received_by_id || null,
-    returned_at: returned_at || null,    // Novo parametro
+    received_by_id, // Novo parametro
+    returned_at     // Novo parametro
   });
   return response.data;
 };

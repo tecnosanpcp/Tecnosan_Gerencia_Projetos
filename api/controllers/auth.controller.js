@@ -44,7 +44,7 @@ export async function Login(req, res) {
 
     // 2. Verifica se o usuário existe
     if (response.rowCount === 0) {
-      return res.status(401).json({ error: "E-mail não encontrado" });
+      return res.status(401).json({ error: "E-mail ou senha incorretos" });
     }
 
     const user = response.rows[0];
@@ -52,7 +52,7 @@ export async function Login(req, res) {
     // 3. Verifica a senha
     const passwordMatch = compareSync(pass.trim(), user.password);
     if (!passwordMatch) {
-      return res.status(401).json({ error: "Senha incorreta" });
+      return res.status(401).json({ error: "E-mail ou senha incorretos" });
     }
 
     // 4. Gera o token (Remova a senha do token por segurança)
