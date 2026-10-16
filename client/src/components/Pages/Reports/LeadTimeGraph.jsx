@@ -1,135 +1,272 @@
+import React, { useMemo } from "react";
 import Chart from "react-apexcharts";
-import PropTypes from "prop-types";
 
-const LeadTimeGraph = ({ data = [] }) => {
-  // Verificação de dados vazios com estilo padronizado (tracejado)
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full w-full bg-gray-50 rounded border border-dashed border-gray-200">
-        <p className="text-gray-400 text-sm">Nenhum dado encontrado para o gráfico.</p>
-      </div>
+export default function LeadTimeGraph({ data = [] }) {
+  const safeData = Array.isArray(data) ? data : [];
+
+  const categories = useMemo(() => {
+    return safeData.map(
+      (item) =>
+        item.component_name ||
+        item.component ||
+        item.nome_componente ||
+        "Componente",
     );
-  }
+  }, [safeData]);
 
-  const categories = data.map((d) => d.component_name);
-  const metaData = data.map((d) => Number(d.meta_hours) || 0);
-  const realData = data.map((d) => Number(d.real_hours) || 0);
+  const metaHours = useMemo(() => {
+    return safeData.map(
+      (item) =>
+        Number(
+          item.meta_hours ??
+            item.target_hours ??
+            item.planned_hours ??
+            item.horas_meta ??
+            0,
+        ) || 0,
+    );
+  }, [safeData]);
 
-  // Cálculo de largura dinâmica para scroll horizontal
-  // 70px por barra garante espaço suficiente para leitura
-  const calculatedWidth = categories.length * 70;
-  const containerWidth = calculatedWidth > 500 ? `${calculatedWidth}px` : "100%";
+  const realHours = useMemo(() => {
+    return safeData.map(
+      (item) =>
+        Number(
+          item.real_hours ??
+            item.actual_hours ??
+            item.total_hours ??
+            item.horas_reais ??
+            0,
+        ) || 0,
+    );
+  }, [safeData]);
 
-  // Lógica de Cores: Verde se (Real <= Meta), Vermelho se (Real > Meta)
-  const barColors = data.map((d) => {
-    const meta = Number(d.meta_hours) || 0;
-    const real = Number(d.real_hours) || 0;
-    return real > meta ? "#EF4444" : "#10B981"; 
-  });
+  const realColors = useMemo(() => {
+    return realHours.map((real, index) => {
+      const meta = metaHours[index] || 0;
 
-  const series = [
-    { name: "Tempo Real", type: "column", data: realData },
-    { name: "Meta (Lead Time)", type: "line", data: metaData },
-  ];
+      if (meta > 0 && real > meta) {
+        return "#DE350B";
+      }
+
+      return "#00875A";
+    });
+  }, [realHours, metaHours]);
 
   const options = {
     chart: {
       type: "line",
-      stacked: false,
-      toolbar: { show: false }, // Toolbar removida para limpar visual
-      zoom: { enabled: false },
-      fontFamily: "inherit",
+      toolbar: {
+        show: false,
+      },
+      fontFamily: "Inter, system-ui, sans-serif",
+      background: "transparent",
+      animations: {
+        enabled: true,
+        speed: 150,
+        animateGradually: {
+          enabled: false,
+        },
+        dynamicAnimation: {
+          enabled: false,
+        },
+      },
     },
+
+    colors: ["#00875A", "#0052CC"],
+
     stroke: {
-      width: [0, 3], // 0 para a coluna, 3 para a linha
-      curve: "straight",
-      dashArray: [0, 5], // Linha tracejada para a Meta
+      width: [0, 2],
+      curve: "smooth",
+      dashArray: [0, 6],
     },
-    // Título removido, pois o Reports.jsx já tem o H3 no card
-    title: {
-      text: undefined, 
+
+    markers: {
+      size: [0, 4],
+      strokeWidth: 2,
+      strokeColors: "#FFFFFF",
+      hover: {
+        size: 5,
+      },
     },
+
     plotOptions: {
       bar: {
-        columnWidth: "60%",
-        borderRadius: 3,
-        distributed: true, // Necessário para colorir cada barra individualmente (Verde/Vermelho)
+        columnWidth: "45%",
+        borderRadius: 4,
+        colors: {
+          ranges: realHours.map((value, index) => ({
+            from: value,
+            to: value,
+            color: realColors[index],
+          })),
+        },
       },
     },
-    // Combina as cores das barras com a cor da linha (Azul) no final
-    colors: [...barColors, "#3B82F6"], 
-    grid: {
-      borderColor: "#f3f4f6",
-      padding: { bottom: 10, left: 10, right: 10 }
-    },
+
     dataLabels: {
-      enabled: true,
-      enabledOnSeries: [0, 1], // Mostra labels em ambas as séries
-      formatter: (val) => val.toFixed(1),
-      style: { fontSize: "10px", colors: ["#444"] },
-      offsetY: -10,
+      enabled: false,
     },
+
     xaxis: {
-      categories: categories,
+      categories,
+      min: 0,
+      max: Math.min(7, categories.length - 1),
       labels: {
-        style: { fontSize: "10px", colors: "#666" },
-        rotate: -45,
-        trim: false,
-        maxHeight: 100, 
+        style: {
+          colors: "#5E6C84",
+          fontSize: "9px",
+          fontFamily: "Inter, system-ui, sans-serif",
+        },
+        rotate: 0,
+        trim: true,
+        hideOverlappingLabels: true,
+        maxHeight: 36,
       },
-      axisBorder: { show: true, color: "#e5e7eb" },
-      axisTicks: { show: false },
+
+      axisBorder: {
+        color: "#DFE1E6",
+      },
+
+      axisTicks: {
+        color: "#DFE1E6",
+      },
     },
+
     yaxis: {
-      labels: { 
-        style: { fontSize: "10px", colors: "#666" },
-        formatter: (val) => val.toFixed(0) 
+      min: 0,
+
+      labels: {
+        style: {
+          colors: "#5E6C84",
+          fontSize: "10px",
+          fontFamily: "Inter, system-ui, sans-serif",
+        },
+
+        formatter: (value) => `${Number(value).toLocaleString("pt-BR")} h`,
       },
-      title: { 
-          text: "Horas (h)",
-          style: { fontSize: "10px", fontWeight: 400, color: "#999" }
-      }
     },
+
+    grid: {
+      borderColor: "#EBECF0",
+      strokeDashArray: 3,
+
+      xaxis: {
+        lines: {
+          show: false,
+        },
+      },
+    },
+
     legend: {
-      show: true,
       position: "top",
       horizontalAlign: "right",
-      fontSize: "11px",
-      // Customização necessária porque 'distributed: true' esconde a legenda padrão da série de barras
-      showForSingleSeries: true,
-      customLegendItems: ["No Prazo", "Atrasado", "Meta"],
-      markers: { fillColors: ["#10B981", "#EF4444", "#3B82F6"], radius: 12 },
+
+      fontSize: "10px",
+      fontFamily: "Inter, system-ui, sans-serif",
+
+      labels: {
+        colors: "#5E6C84",
+      },
+
+      markers: {
+        width: 8,
+        height: 8,
+        radius: 4,
+      },
+
+      itemMargin: {
+        horizontal: 8,
+      },
     },
+
     tooltip: {
+      theme: "light",
+
       shared: true,
       intersect: false,
-      theme: "light",
-      y: { formatter: (y) => (typeof y !== "undefined" ? y.toFixed(1) + " h" : y) },
+
+      y: {
+        formatter: (value) => `${Number(value).toLocaleString("pt-BR")} h`,
+      },
+
+      style: {
+        fontFamily: "Inter, system-ui, sans-serif",
+        fontSize: "11px",
+      },
     },
-    markers: { size: 4, hover: { size: 6 } },
+
+    responsive: [
+      {
+        breakpoint: 768,
+
+        options: {
+          xaxis: {
+            labels: {
+              rotate: -45,
+              fontSize: "8px",
+            },
+          },
+
+          legend: {
+            position: "bottom",
+            horizontalAlign: "left",
+          },
+
+          plotOptions: {
+            bar: {
+              columnWidth: "55%",
+            },
+          },
+        },
+      },
+    ],
   };
 
+  const series = [
+    {
+      name: "Horas reais",
+      type: "column",
+      data: realHours,
+    },
+    {
+      name: "Meta",
+      type: "line",
+      data: metaHours,
+    },
+  ];
+
   return (
-    // Container limpo, ocupando 100% da altura disponível no pai
-    <div className="h-full w-full flex flex-col">
-      {/* Scroll Wrapper com as classes padronizadas */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-        <div style={{ minWidth: containerWidth, height: "100%", minHeight: "250px" }}>
+    <div className="h-full min-h-0 w-full">
+      <div className="h-[calc(100%-48px)] min-h-[220px] w-full">
+        {categories.length > 0 ? (
           <Chart
-            options={options}
+            options={{
+              ...options,
+              plotOptions: {
+                ...options.plotOptions,
+                bar: {
+                  ...options.plotOptions.bar,
+                  colors: {
+                    ranges: realHours.map((value, index) => ({
+                      from: value,
+                      to: value,
+                      color: realColors[index],
+                    })),
+                  },
+                },
+              },
+            }}
             series={series}
-            type="line" // Tipo principal
+            type="line"
             height="100%"
             width="100%"
           />
-        </div>
+        ) : (
+          <div className="flex h-full items-center justify-center text-[12px] text-[#97A0AF]">
+            Não há dados para exibir.
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-LeadTimeGraph.propTypes = {
-  data: PropTypes.array,
-};
-
-export default LeadTimeGraph;
+}

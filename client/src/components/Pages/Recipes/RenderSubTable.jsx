@@ -111,7 +111,7 @@ export default function RenderSubTable({ row, expandedRow, i }) {
               </h4>
             </div>
 
-            <div className="p-0">
+            <div className="max-h-[300px] overflow-auto">
               {loading ? (
                 <div className="p-4 text-center text-xs text-black">Carregando dados...</div>
               ) : mainData.length === 0 ? (
@@ -120,7 +120,7 @@ export default function RenderSubTable({ row, expandedRow, i }) {
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
-                  <thead>
+                  <thead className="sticky top-0 z-10">
                     {/* Cabeçalho da Tabela - Fonte Preta */}
                     <tr className="bg-gray-100 border-b border-gray-300 text-black text-xs uppercase tracking-wide font-bold">
                       <th className="px-4 py-2 border-r border-gray-200">Componente</th>

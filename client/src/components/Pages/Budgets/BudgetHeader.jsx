@@ -65,12 +65,23 @@ export default function BudgetHeader({ currentBudget }) {
   }, [currentBudget, budgetsSummary]);
 
   return (
-    <header className="card p-4">
-      <div className="flex gap-8 w-full">
+    <header
+      className="
+      border
+      border-[#DFE1E6]
+      bg-white
+      px-4
+      py-5
+      sm:px-5
+      lg:px-6
+      xl:px-7
+    "
+    >
+      <div className="flex items-center justify-between w-full">
         <h1 className="text-xl font-bold">
           {currentBudget?.name || "Gastos Totais (Geral)"}
         </h1>
-        <p className="text-xl font-bold text-blue-500">
+        <p className="text-xl font-bold text-blue-500 display-flex ">
           {summary.total_value.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",

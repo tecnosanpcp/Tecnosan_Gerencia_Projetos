@@ -14,8 +14,8 @@ const dbConfig = process.env.DATABASE_URL
   : {
       user: process.env.DB_USER,
       host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      password: process.env.DB_PASSWORD,
+      database: process.env.TECNOSAN,
+      password: process.env.POSTGRE,
       port: process.env.DB_PORT,
       ssl: false,
     };

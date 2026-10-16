@@ -39,7 +39,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://tecnosan-gerencia-projetos.vercel.app",
+      "https://read-me-tgp.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Adicione OPTIONS
     allowedHeaders: ["Content-Type", "Authorization"], // Adicione isso

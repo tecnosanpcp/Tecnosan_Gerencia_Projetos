@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+import {
+  FiChevronDown,
+  FiChevronRight,
+  FiEdit2,
+  FiTrash2,
+} from "react-icons/fi";
+
 import AlertModal from "../../Ui/AlertModal.jsx";
 import EditMaterialModal from "./EditMaterialModal.jsx";
 import EditComponentRecipeModal from "./EditComponentRecipeModal.jsx";
@@ -9,8 +16,8 @@ import RenderSubTable from "./RenderSubTable.jsx";
 import { deleteMaterial } from "@services/MaterialService.js";
 import { deleteComponentRecipe } from "@services/ComponentRecipes.js";
 import { deleteEquipmentRecipe } from "@services/EquipmentRecipesService.js";
-import { useQueryClient } from "@tanstack/react-query";
 import { deleteAccessory } from "@services/AccessoriesServices.js";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function RecipeTable({ i }) {
   const [modalDeleteVisible, setModalDeleteVisible] = useState({
@@ -20,10 +27,18 @@ export default function RecipeTable({ i }) {
     Equipamento: false,
   });
 
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [editType, setEditType] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
+
   const queryClient = useQueryClient();
+
+  /*
+   * A lista REAL continua vindo do componente pai através de i.list.
+   * Não fazemos nenhuma chamada de API aqui.
+   */
+  const list = Array.isArray(i?.list) ? i.list : [];
 
   const updateModalDeleteVisible = (key, value) => {
     setModalDeleteVisible((prev) => ({
@@ -35,32 +50,34 @@ export default function RecipeTable({ i }) {
   const modalLabel = {
     Material: {
       title: "Quer excluir esse material?",
-      body: "Tem certeza que quer excluir esse material? A ação não é reversivel",
+      body: "Tem certeza que quer excluir esse material? A ação não é reversível.",
       deleteFunc: async (id) => {
         await deleteMaterial(id);
         queryClient.invalidateQueries(["materials"]);
       },
     },
+
     Acessório: {
       title: "Quer excluir esse acessório?",
       body: "Tem certeza? Isso apagará o item do estoque físico.",
-      // Função CORRETA
       deleteFunc: async (id) => {
         await deleteAccessory(id);
         queryClient.invalidateQueries(["accessories"]);
       },
     },
+
     Componente: {
       title: "Quer excluir esse componente?",
-      body: "Tem certeza que quer excluir esse componente? A ação não é reversivel",
+      body: "Tem certeza que quer excluir esse componente? A ação não é reversível.",
       deleteFunc: async (id) => {
         await deleteComponentRecipe(id);
         queryClient.invalidateQueries(["components"]);
       },
     },
+
     Equipamento: {
       title: "Quer excluir esse equipamento?",
-      body: "Tem certeza que quer excluir esse equipamento? A ação não é reversivel",
+      body: "Tem certeza que quer excluir esse equipamento? A ação não é reversível.",
       deleteFunc: async (id) => {
         await deleteEquipmentRecipe(id);
         queryClient.invalidateQueries(["equipments"]);
@@ -83,6 +100,7 @@ export default function RecipeTable({ i }) {
             material={selectedRow}
           />
         );
+
       case "Acessório":
         return (
           <EditAccessoryTypeModal
@@ -91,6 +109,7 @@ export default function RecipeTable({ i }) {
             accessory={selectedRow}
           />
         );
+
       case "Componente":
         return (
           <EditComponentRecipeModal
@@ -99,6 +118,7 @@ export default function RecipeTable({ i }) {
             component={selectedRow}
           />
         );
+
       case "Equipamento":
         return (
           <EditEquipmentRecipeModal
@@ -107,105 +127,328 @@ export default function RecipeTable({ i }) {
             equipment={selectedRow}
           />
         );
+
       default:
         return null;
     }
   };
 
-  const isRowExpanded = (row) => expandedRow?.ID === row.ID;
-  const currentModalConfig = modalLabel[i.label] || {
-    title: "",
-    body: "",
-    deleteFunc: () => {},
+  /*
+   * Mantemos a identificação pela coluna ID do objeto original.
+   */
+  const getRowId = (row, index) =>
+    row?.ID ??
+    row?.id ??
+    row?.recipe_id ??
+    row?.component_recipe_id ??
+    row?.equipment_recipe_id ??
+    index;
+
+  const isRowExpanded = (row, index) => {
+    return expandedRow === getRowId(row, index);
   };
 
+  const isRowSelected = (row, index) =>
+    selectedRowIds.includes(getRowId(row, index));
+
+  const toggleRowSelection = (row, index) => {
+    const id = getRowId(row, index);
+
+    setSelectedRowIds((current) =>
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id],
+    );
+  };
+
+  const allRowsSelected =
+    list.length > 0 &&
+    list.every((row, index) => selectedRowIds.includes(getRowId(row, index)));
+
+  const toggleSelectAll = () => {
+    if (allRowsSelected) {
+      setSelectedRowIds([]);
+      return;
+    }
+
+    setSelectedRowIds(list.map((row, index) => getRowId(row, index)));
+  };
+
+  const selectedRows = list.filter((row, index) =>
+    selectedRowIds.includes(getRowId(row, index)),
+  );
+
+  const openDeleteModal = (rows) => {
+    setSelectedRow(rows[0] || null);
+
+    setSelectedRowIds(rows.map((row, index) => getRowId(row, index)));
+
+    updateModalDeleteVisible(i.label, true);
+  };
+
+  const toggleRow = (row, index) => {
+    const id = getRowId(row, index);
+
+    setExpandedRow((current) => (current === id ? null : id));
+  };
+
+  const currentModalConfig = modalLabel[i?.label] || {
+    title: "",
+    body: "",
+    deleteFunc: async () => {},
+  };
+
+  /*
+   * O componente só aparece quando o grupo estiver expandido,
+   * exatamente como no comportamento original.
+   */
+  if (i?.isExpand !== true) {
+    return null;
+  }
+
   return (
-    i.isExpand === true && (
-      <>
-        <AlertModal
-          title={currentModalConfig.title}
-          body={currentModalConfig.body}
-          neg_opt="Cancelar"
-          pos_opt="Excluir"
-          func={async () => {
-            await currentModalConfig.deleteFunc(selectedRow?.ID);
-            updateModalDeleteVisible(i.label, false); // Fecha o modal após deletar
-          }}
-          isVisible={modalDeleteVisible[i.label] || false}
-          setVisible={() => updateModalDeleteVisible(i.label, false)}
-          style="waring"
-        />
+    <>
+      {/* MODAL DE EXCLUSÃO */}
+      <AlertModal
+        title={
+          selectedRows.length > 1
+            ? `Excluir ${selectedRows.length} ${i.label.toLowerCase()}s?`
+            : currentModalConfig.title
+        }
+        body={
+          selectedRows.length > 1
+            ? `Tem certeza que deseja excluir os ${selectedRows.length} itens selecionados? A ação não é reversível.`
+            : currentModalConfig.body
+        }
+        neg_opt="Cancelar"
+        pos_opt="Excluir"
+        func={async () => {
+          const rowsToDelete =
+            selectedRows.length > 0
+              ? selectedRows
+              : selectedRow
+                ? [selectedRow]
+                : [];
 
-        {renderEditModal()}
+          await Promise.all(
+            rowsToDelete.map((row) =>
+              currentModalConfig.deleteFunc(row?.ID ?? row?.id),
+            ),
+          );
 
-        <div className="card mt-4">
-          {i.list.length === 0 ? (
-            <p className="text-gray-500 italic">Nenhum item cadastrado.</p>
-          ) : (
-            <table className="text-left border-collapse w-full">
-              <thead>
-                <tr className="border-b">
-                  {Object.keys(i.list[0]).map(
+          setSelectedRow(null);
+          setSelectedRowIds([]);
+          updateModalDeleteVisible(i.label, false);
+        }}
+        isVisible={modalDeleteVisible[i.label] || false}
+        setVisible={() => {
+          setSelectedRowIds([]);
+          updateModalDeleteVisible(i.label, false);
+        }}
+        style="waring"
+      />
+
+      {/* MODAL DE EDIÇÃO */}
+      {renderEditModal()}
+
+      <div className="mt-4 flex max-h-[500px] w-full flex-col overflow-hidden border border-[#DFE1E6] bg-white">
+        {/* CABEÇALHO DA TABELA */}
+        {selectedRows.length > 0 && (
+          <div className="flex h-10 items-center justify-between border-b border-[#DFE1E6] bg-[#DEEBFF] px-3">
+            <span className="text-[11px] font-semibold text-[#0052CC]">
+              {selectedRows.length} selecionado
+              {selectedRows.length === 1 ? "" : "s"}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => openDeleteModal(selectedRows)}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[#FFBDAD] bg-white px-2.5 text-[10px] font-semibold text-[#DE350B] transition hover:bg-[#FFEBE6]"
+            >
+              <FiTrash2 size={12} />
+              Excluir selecionados
+            </button>
+          </div>
+        )}
+        {list.length > 0 && (
+          <div className="min-h-0 w-full flex-1 overflow-auto">
+            <table className="w-full min-w-[760px] table-fixed border-collapse">
+              <thead className="sticky top-0 z-10">
+                <tr className="h-10 border-b border-[#C1C7D0] bg-[#F4F5F7]">
+                  <th className="w-10 px-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={allRowsSelected}
+                      onChange={toggleSelectAll}
+                      aria-label="Selecionar todos"
+                      className="h-3.5 w-3.5 accent-[#0052CC]"
+                    />
+                  </th>
+                  {Object.keys(list[0]).map(
                     (col, index) =>
                       index > 0 && (
-                        <th key={index} className="py-2 px-3 text-center">
-                          {col}
+                        <th
+                          key={col}
+                          className="border-r border-[#DFE1E6] px-3 py-1 text-left last:border-r-0"
+                        >
+                          <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                            {col.replaceAll("_", " ")}
+                          </span>
                         </th>
                       ),
                   )}
-                  <th className="border-b text-center">Ações</th>
+
+                  <th className="w-[125px] px-3 text-center">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      Ações
+                    </span>
+                  </th>
                 </tr>
               </thead>
+
               <tbody>
-                {i.list.map((row, idx) => (
-                  <React.Fragment key={idx}>
-                    <tr
-                      className={`border-b transition-colors ${isRowExpanded(row) ? "bg-blue-50" : "hover:bg-gray-100"}`}
-                    >
-                      {Object.values(row).map(
-                        (val, colIndex) =>
-                          colIndex > 0 && (
-                            <td key={colIndex} className="py-2 px-3">
-                              {val}
-                            </td>
-                          ),
-                      )}
-                      <td className="py-2 px-3 flex justify-center items-center gap-2">
-                        {i.label !== "Material" && i.label !== "Acessório" && (
-                          <button
-                            className={`p-1 rounded transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200`}
-                            onClick={() =>
-                              setExpandedRow(isRowExpanded(row) ? null : row)
-                            }
-                          >
-                            {isRowExpanded(row) ? "Ocultar" : "Visualizar"}
-                          </button>
+                {list.map((row, idx) => {
+                  const expanded = isRowExpanded(row, idx);
+
+                  return (
+                    <React.Fragment key={getRowId(row, idx)}>
+                      {/* LINHA PRINCIPAL */}
+                      <tr
+                        className={`
+                          h-8
+                          border-b
+                          border-[#DFE1E6]
+                          transition-colors
+                          ${
+                            expanded
+                              ? "bg-[#DEEBFF]"
+                              : idx % 2 === 0
+                                ? "bg-white hover:bg-[#EBECF0]"
+                                : "bg-[#F4F5F7] hover:bg-[#EBECF0]"
+                          }
+                        `}
+                      >
+                        <td className="w-10 border-r border-[#DFE1E6] px-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isRowSelected(row, idx)}
+                            onChange={() => toggleRowSelection(row, idx)}
+                            aria-label={`Selecionar ${getRowId(row, idx)}`}
+                            className="h-3.5 w-3.5 accent-[#0052CC]"
+                          />
+                        </td>
+                        {Object.values(row).map(
+                          (val, colIndex) =>
+                            colIndex > 0 && (
+                              <td
+                                key={colIndex}
+                                className="border-r border-[#DFE1E6] px-3 last:border-r-0"
+                              >
+                                <span
+                                  className={`
+                                    block truncate text-xs
+                                    ${
+                                      colIndex === 1
+                                        ? "font-medium text-[#172B4D]"
+                                        : "text-[#5E6C84]"
+                                    }
+                                  `}
+                                  title={String(val ?? "-")}
+                                >
+                                  {val ?? "-"}
+                                </span>
+                              </td>
+                            ),
                         )}
-                        <button
-                          className="bg-gray-100 p-1 rounded hover:bg-gray-200"
-                          onClick={() => openEditModal(i.label, row)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="bg-gray-100 p-1 rounded hover:bg-gray-200"
-                          onClick={() => {
-                            setSelectedRow(row);
-                            updateModalDeleteVisible(i.label, true);
-                          }}
-                        >
-                          Excluir
-                        </button>
-                      </td>
-                    </tr>
-                    <RenderSubTable row={row} expandedRow={expandedRow} i={i} />
-                  </React.Fragment>
-                ))}
+
+                        {/* AÇÕES */}
+                        <td className="px-2">
+                          <div className="flex items-center justify-center gap-1">
+                            {/* VISUALIZAR */}
+
+                            {/* EDITAR */}
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(i.label, row)}
+                              className="
+                                flex
+                                h-7
+                                w-7
+                                items-center
+                                justify-center
+                                text-[#5E6C84]
+                                transition-colors
+                                hover:bg-[#DEEBFF]
+                                hover:text-[#0052CC]
+                              "
+                              title="Editar"
+                            >
+                              <FiEdit2 size={13} />
+                            </button>
+
+                            {/* EXCLUIR */}
+                            <button
+                              type="button"
+                              onClick={() => openDeleteModal([row])}
+                              className="
+                                flex
+                                h-7
+                                w-7
+                                items-center
+                                justify-center
+                                text-[#5E6C84]
+                                transition-colors
+                                hover:bg-[#FFEBE6]
+                                hover:text-[#DE350B]
+                              "
+                              title="Excluir"
+                            >
+                              <FiTrash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* LINHA EXPANDIDA */}
+                      <RenderSubTable
+                        row={row}
+                        expandedRow={expandedRow}
+                        i={i}
+                      />
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
-          )}
+          </div>
+        )}
+
+        {/* ESTADO VAZIO */}
+        {list.length === 0 && (
+          <div className="flex min-h-[150px] items-center justify-center px-6">
+            <div className="text-center">
+              <p className="text-sm font-semibold text-[#172B4D]">
+                Nenhum item cadastrado
+              </p>
+
+              <p className="mt-1 text-xs text-[#5E6C84]">
+                Não existem registros para exibir nesta categoria.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* RODAPÉ */}
+        <div className="flex h-9 items-center justify-between border-t border-[#DFE1E6] bg-[#F4F5F7] px-3">
+          <span className="text-[10px] text-[#5E6C84]">
+            {list.length} {list.length === 1 ? "registro" : "registros"}
+          </span>
+
+          <span className="text-[10px] text-[#97A0AF]">
+            {i.label || "Lista"}
+          </span>
         </div>
-      </>
-    )
+      </div>
+    </>
   );
 }
