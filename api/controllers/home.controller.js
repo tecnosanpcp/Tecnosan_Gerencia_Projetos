@@ -28,7 +28,7 @@ export const getMaterialsConsumption = async (req, res) => {
         GROUP BY
           EXTRACT(MONTH FROM consumption_date)
         ORDER BY
-          EXTRACT(MONTH FROM consumption_date);`
+          EXTRACT(MONTH FROM consumption_date);`,
     );
 
     res.status(200).json(response.rows);
@@ -66,7 +66,7 @@ export const getMaterialsWaste = async (req, res) => {
         GROUP BY
           EXTRACT(MONTH FROM consumption_date)
         ORDER BY
-          EXTRACT(MONTH FROM consumption_date);`
+          EXTRACT(MONTH FROM consumption_date);`,
     );
 
     res.status(200).json(response.rows);
@@ -96,7 +96,7 @@ export const getProjectsEvolution = async (req, res) => {
         GROUP BY
           p.project_name
         ORDER BY
-          progresso_percentual DESC;`
+          progresso_percentual DESC;`,
     );
 
     res.status(200).json(response.rows);
@@ -166,47 +166,71 @@ export const getYearlyKPIs = async (req, res) => {
   try {
     // Pega o ano atual do sistema (Ex: 2026)
     // Se quiser forçar 2026 para testes, mude para: const targetYear = 2026;
-    const targetYear = new Date().getFullYear(); 
-
+    const targetYear = new Date().getFullYear();
+        // FIX: Buscar a data na tabela de cronograma do orçamento.
+        // FIX: Preservar a multiplicação das quantidades planejadas.
     const query = `
       WITH 
         -- Bloco A: Calcula o Planejado
         kpi_planejado AS (
-          SELECT 
-            COALESCE(SUM(plan.quantity_plan * recipe.quantity_plan), 0) AS valor
-          FROM 
-            equipment_recipes_component_recipes plan
-          JOIN 
-            component_recipes_materials recipe ON plan.component_recipe_id = recipe.component_recipe_id
-          WHERE 
-            EXTRACT(YEAR FROM plan.planned_start_at) = $1
+          SELECT
+            COALESCE(
+              SUM(ercr.quantity_plan * crm.quantity_plan),
+              0
+            ) AS valor
+          FROM budgets_components_schedule bcs
+          INNER JOIN budgets_equipments be
+            ON be.budget_equipment_id = bcs.budget_equipment_id
+          INNER JOIN equipment_recipes_component_recipes ercr
+            ON ercr.equipment_recipe_id = be.equipment_recipe_id
+            AND ercr.component_recipe_id = bcs.component_recipe_id
+          INNER JOIN component_recipes_materials crm
+            ON crm.component_recipe_id = bcs.component_recipe_id
+          WHERE
+            EXTRACT(YEAR FROM bcs.planned_start_at) = $1
         ),
 
         -- Bloco B: Calcula o Realizado (Consumo e Refugo)
-        kpi_realizado AS (
-          SELECT 
-            COALESCE(SUM(CASE WHEN consumption_type = 'consumido' THEN consumed_quantity ELSE 0 END), 0) AS processado,
-            COALESCE(SUM(CASE WHEN consumption_type = 'refugo' THEN consumed_quantity ELSE 0 END), 0) AS refugo
-          FROM 
-            components_materials
-          WHERE 
-            EXTRACT(YEAR FROM consumption_date) = $1
-        )
+            kpi_realizado AS (
+              SELECT
+                COALESCE(
+                  SUM(
+                    CASE
+                      WHEN consumption_type = 'consumido'
+                      THEN consumed_quantity
+                      ELSE 0
+                    END
+                  ),
+                  0
+                ) AS processado,
+                COALESCE(
+                  SUM(
+                    CASE
+                      WHEN consumption_type = 'refugo'
+                      THEN consumed_quantity
+                      ELSE 0
+                    END
+                  ),
+                  0
+                ) AS refugo
+              FROM components_materials
+              WHERE
+                EXTRACT(YEAR FROM consumption_date) = $1
+            )
 
-      -- Exibe o resultado final
-      SELECT 
-          $1::int AS ano_referencia,
-          (SELECT valor FROM kpi_planejado) AS planejado_kg,
-          (SELECT processado FROM kpi_realizado) AS processado_kg,
-          (SELECT refugo FROM kpi_realizado) AS refugo_kg;
-    `;
+          -- Exibe o resultado final
+          SELECT
+            $1::int AS ano_referencia,
+            (SELECT valor FROM kpi_planejado) AS planejado_kg,
+            (SELECT processado FROM kpi_realizado) AS processado_kg,
+            (SELECT refugo FROM kpi_realizado) AS refugo_kg;
+      `;
 
     // Executa a query passando o ano como parâmetro para segurança
     const response = await pool.query(query, [targetYear]);
 
     // Retorna o primeiro objeto: { ano_referencia: 2026, planejado_kg: 0, processado_kg: 272, refugo_kg: 37 }
     res.status(200).json(response.rows[0]);
-
   } catch (error) {
     console.error("Erro ao buscar KPIs anuais:", error);
     res.status(500).json({ error: "Erro no servidor interno" });
