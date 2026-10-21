@@ -3,15 +3,22 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FaTrash } from "react-icons/fa";
 
 import { upsertBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js";
-import { deleteRelation } from "@services/BudgetsEquipRecipesServices.js";
+// TODO: descomente quando o service existir e confirme o caminho do import
+// import { deleteRelation } from "@services/BudgetsEquipRecipesServices.js";
 
 import { formatDate, formatForInput } from "@utils/dateUtils.js";
+
+// Stub temporário: remova quando importar o deleteRelation real.
+const deleteRelation = async (budgetId, equipId) => {
+  console.warn("deleteRelation não importado", { budgetId, equipId });
+};
 
 function BudgetEquipmentTable({
   currentBudget,
   groupedData,
   searchTerm = "",
-  Schedule = []
+  timelineEquipments = [],
+  timelineTasks = [],
 }) {
   const queryClient = useQueryClient();
 
@@ -25,8 +32,7 @@ function BudgetEquipmentTable({
   };
 
   const deleteMutation = useMutation({
-    mutationFn: ({ budgetId, equipId }) =>
-      deleteRelation(budgetId, equipId),
+    mutationFn: ({ budgetId, equipId }) => deleteRelation(budgetId, equipId),
     onSuccess: invalidateAll,
   });
 
@@ -36,18 +42,20 @@ function BudgetEquipmentTable({
     onSuccess: invalidateAll,
   });
 
-  const handleInputChange = (componentId, field, value) => {
+  // A chave é composta (linha + componente) porque o mesmo equipamento
+  // pode aparecer mais de uma vez no orçamento.
+  const handleInputChange = (key, field, value) => {
     setModifiedData((prev) => ({
       ...prev,
-      [componentId]: {
-        ...prev[componentId],
+      [key]: {
+        ...prev[key],
         [field]: value,
       },
     }));
   };
 
-  const handleDateSave = (budgetEquipmentId, compId, type) => {
-    const newValue = modifiedData[compId]?.[type];
+  const handleDateSave = (budgetEquipmentId, compId, key, type) => {
+    const newValue = modifiedData[key]?.[type];
 
     if (!newValue) return;
 
@@ -59,19 +67,19 @@ function BudgetEquipmentTable({
     });
   };
 
-  const getInputValue = (componentId, field, originalDate) => {
-    if (modifiedData[componentId]?.[field] !== undefined) {
-      return modifiedData[componentId][field];
+  const getInputValue = (key, field, originalDate) => {
+    if (modifiedData[key]?.[field] !== undefined) {
+      return modifiedData[key][field];
     }
 
     return formatForInput(originalDate);
   };
 
-  const toggleRow = (equipmentId) => {
+  const toggleRow = (rowKey) => {
     setRowsExpand((prev) =>
-      prev.includes(equipmentId)
-        ? prev.filter((id) => id !== equipmentId)
-        : [...prev, equipmentId]
+      prev.includes(rowKey)
+        ? prev.filter((id) => id !== rowKey)
+        : [...prev, rowKey]
     );
   };
 
@@ -90,14 +98,19 @@ function BudgetEquipmentTable({
     );
   }
 
+  const thBase =
+    "px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]";
+  const dateInputClass =
+    "h-7 w-full rounded border border-[#DFE1E6] bg-white px-1 text-[10px] text-[#172B4D] outline-none transition focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30 disabled:bg-[#F4F5F7] disabled:text-[#8993A4]";
+
   return (
     <div className="flex w-full flex-col ">
       {groupedData.map((group) => {
+        const term = (searchTerm || "").toLowerCase();
+
         const filteredEquipments =
           group.equipments?.filter((equip) =>
-            equip?.recipe_name
-              ?.toLowerCase()
-              ?.includes(searchTerm?.toLowerCase())
+            (equip?.equipment_name || "").toLowerCase().includes(term)
           ) || [];
 
         return (
@@ -142,73 +155,46 @@ function BudgetEquipmentTable({
                     <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84] border border-t-0 border-r-0 border-[#DFE1E6]">
                       Equipamento
                     </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Início
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Fim
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Resina
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Roving
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Tecido KG
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Tec. CMD
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Catalizador
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Manta
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Resina ISO
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Valor
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                      Horas
-                    </th>
-                    <th className="px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84] border-r ">
-                      Ações
-                    </th>
+                    <th className={thBase}>Início</th>
+                    <th className={thBase}>Fim</th>
+                    <th className={thBase}>Resina</th>
+                    <th className={thBase}>Roving</th>
+                    <th className={thBase}>Tecido KG</th>
+                    <th className={thBase}>Tec. CMD</th>
+                    <th className={thBase}>Catalizador</th>
+                    <th className={thBase}>Manta</th>
+                    <th className={thBase}>Resina ISO</th>
+                    <th className={thBase}>Valor</th>
+                    <th className={thBase}>Horas</th>
+                    <th className={`${thBase} border-r `}>Ações</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredEquipments.map((equip) => {
+                  {filteredEquipments.map((equip, idx) => {
+                    // Chave única por linha (o mesmo equipamento pode se repetir)
+                    const rowKey =
+                      equip.budget_equipment_id ??
+                      `${equip.budget_id}-${equip.equipment_recipe_id}-${idx}`;
+
                     const timelineProj = timelineEquipments.find(
                       (te) =>
-                        te.equipment_recipe_id ==
-                        equip.equipment_recipe_id
+                        te.equipment_recipe_id == equip.equipment_recipe_id
                     );
 
-                    const isLocked =
-                      group.status !== "Em Planejamento";
-
-                    const isExpanded = rowsExpands.includes(
-                      equip.equipment_recipe_id
-                    );
+                    const isLocked = group.status !== "Em Planejamento";
+                    const isExpanded = rowsExpands.includes(rowKey);
 
                     const components =
                       group.components?.filter(
                         (c) =>
-                          c.equipment_recipe_id ==
-                          equip.equipment_recipe_id
+                          c.equipment_recipe_id == equip.equipment_recipe_id
                       ) || [];
 
                     return (
-                      <Fragment key={equip.budget_equipment_id}>
+                      <Fragment key={rowKey}>
                         <tr
-                          onClick={() =>
-                            toggleRow(equip.equipment_recipe_id)
-                          }
+                          onClick={() => toggleRow(rowKey)}
                           className={`group cursor-pointer border-b border-[#EBECF0] transition-colors ${
                             isExpanded
                               ? "bg-[#DEEBFF]/40"
@@ -229,23 +215,19 @@ function BudgetEquipmentTable({
 
                               <span
                                 className="truncate text-xs font-semibold text-[#172B4D]"
-                                title={equip.recipe_name}
+                                title={equip.equipment_name}
                               >
-                                {equip.recipe_name}
+                                {equip.equipment_name}
                               </span>
                             </div>
                           </td>
 
                           <td className="px-2 py-2 text-center text-[11px] text-[#5E6C84]">
-                            {formatDate(
-                              timelineProj?.equipment_start_at
-                            )}
+                            {formatDate(timelineProj?.equipment_start_at)}
                           </td>
 
                           <td className="px-2 py-2 text-center text-[11px] text-[#5E6C84]">
-                            {formatDate(
-                              timelineProj?.equipment_end_at
-                            )}
+                            {formatDate(timelineProj?.equipment_end_at)}
                           </td>
 
                           <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
@@ -292,14 +274,11 @@ function BudgetEquipmentTable({
                                   e.stopPropagation();
 
                                   if (
-                                    confirm(
-                                      `Remover ${equip.recipe_name}?`
-                                    )
+                                    confirm(`Remover ${equip.equipment_name}?`)
                                   ) {
                                     deleteMutation.mutate({
                                       budgetId: group.budget_id,
-                                      equipId:
-                                        equip.equipment_recipe_id,
+                                      equipId: equip.equipment_recipe_id,
                                     });
                                   }
                                 }}
@@ -312,27 +291,21 @@ function BudgetEquipmentTable({
                           </td>
                         </tr>
 
-                        {rowsExpands.includes(equip.budget_equipment_id) &&
-                          group.components
-                            .filter(
-                              (c) =>
-                                c.equipment_recipe_id ==
-                                equip.equipment_recipe_id,
-                            )
-                            .map((comp, index) => {
-                              const comp_tasks = Schedule.components.find(
-                                (t) =>
-                                  t.component_recipe_id ==
-                                  comp.component_recipe_id
-                              );
+                        {isExpanded &&
+                          components.map((comp, index) => {
+                            const compKey = `${rowKey}-${comp.component_recipe_id}`;
+
+                            const compTasks = timelineTasks.find(
+                              (t) =>
+                                t.component_recipe_id ==
+                                comp.component_recipe_id
+                            );
 
                             return (
                               <tr
-                                key={comp.component_recipe_id}
+                                key={compKey}
                                 className={`border-b border-[#EBECF0] ${
-                                  index % 2 === 0
-                                    ? "bg-[#FAFBFC]"
-                                    : "bg-white"
+                                  index % 2 === 0 ? "bg-[#FAFBFC]" : "bg-white"
                                 }`}
                               >
                                 <td className="px-3 py-2 pl-10 text-left">
@@ -344,15 +317,15 @@ function BudgetEquipmentTable({
                                 <td className="px-2 py-1.5">
                                   <input
                                     type="date"
-                                    className="h-7 w-full rounded border border-[#DFE1E6] bg-white px-1 text-[10px] text-[#172B4D] outline-none transition focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30 disabled:bg-[#F4F5F7] disabled:text-[#8993A4]"
+                                    className={dateInputClass}
                                     value={getInputValue(
-                                      comp.component_recipe_id,
+                                      compKey,
                                       "start",
                                       compTasks?.planned_start_at
                                     )}
                                     onChange={(e) =>
                                       handleInputChange(
-                                        comp.component_recipe_id,
+                                        compKey,
                                         "start",
                                         e.target.value
                                       )
@@ -361,6 +334,7 @@ function BudgetEquipmentTable({
                                       handleDateSave(
                                         equip.equipment_recipe_id,
                                         comp.component_recipe_id,
+                                        compKey,
                                         "start"
                                       )
                                     }
@@ -371,15 +345,15 @@ function BudgetEquipmentTable({
                                 <td className="px-2 py-1.5">
                                   <input
                                     type="date"
-                                    className="h-7 w-full rounded border border-[#DFE1E6] bg-white px-1 text-[10px] text-[#172B4D] outline-none transition focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30 disabled:bg-[#F4F5F7] disabled:text-[#8993A4]"
+                                    className={dateInputClass}
                                     value={getInputValue(
-                                      comp.component_recipe_id,
+                                      compKey,
                                       "end",
                                       compTasks?.planned_end_at
                                     )}
                                     onChange={(e) =>
                                       handleInputChange(
-                                        comp.component_recipe_id,
+                                        compKey,
                                         "end",
                                         e.target.value
                                       )
@@ -388,6 +362,7 @@ function BudgetEquipmentTable({
                                       handleDateSave(
                                         equip.equipment_recipe_id,
                                         comp.component_recipe_id,
+                                        compKey,
                                         "end"
                                       )
                                     }
@@ -441,10 +416,7 @@ function BudgetEquipmentTable({
 
                   {filteredEquipments.length === 0 && (
                     <tr>
-                      <td
-                        colSpan={13}
-                        className="px-4 py-10 text-center"
-                      >
+                      <td colSpan={13} className="px-4 py-10 text-center">
                         <p className="text-sm font-medium text-[#172B4D]">
                           Nenhum equipamento encontrado
                         </p>

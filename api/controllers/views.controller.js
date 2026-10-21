@@ -77,9 +77,26 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
     }
 
     const response = await pool.query(
-      "SELECT * FROM vw_equipments_recipes_materials_summary WHERE budget_id = $1;",
+      `SELECT 
+          be.equipment_recipe_id,
+          be.budget_id,
+          be.equipment_recipe_id,
+          be.equipment_name,
+          vw.resina,
+          vw.resina_iso,
+          vw.manta,
+          vw.roving,
+          vw.catalizador,
+          vw.tecido_kg,
+          vw.tecido_cmd,
+          vw.horas_homem,
+          vw.total_value
+       FROM budgets_equipments be
+       INNER JOIN vw_equipments_recipes_materials_summary vw ON vw.equipment_recipe_id = be.equipment_recipe_id
+       WHERE be.budget_id = $1;`,
       [budget_id]
     );
+
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(

@@ -9,14 +9,8 @@ import BudgetTimeline from "./BudgetTimeline";
 import BudgetAccessories from "./BudgetAccessories";
 
 // Services
-import {
-  getTasksTimeline,
-  getEquipmentsTimeline,
-  getProjectsTimeline,
-} from "@services/ViewsSummary.js";
 import { readEquipmentRecipe } from "@services/EquipmentRecipesService.js";
-import { createRelation } from "@services/BudgetsEquipRecipesServices.js";
-import { VerifyAuth } from "@services/AuthService.js";
+import { createBudgetEquipment } from "@services/BudgetsEquipmentsService.js";
 import {
   vwEquipmentRecipesMaterialSummary,
   vwComponentRecipeMaterialsSummary,
@@ -27,42 +21,13 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("equipments");
 
-  // ==========================================
-  // 1. QUERIES PADRONIZADAS (CACHE GLOBAL)
-  // ==========================================
-
-  const { data: userData } = useQuery({
-    queryKey: ["authUser"],
-    queryFn: VerifyAuth,
-    staleTime: Infinity,
-  });
-
-  const tasksQuery = useQuery({
-    queryKey: ["timelineTasks"],
-    queryFn: getTasksTimeline,
-  });
-
-  const equipTimelineQuery = useQuery({
-    queryKey: ["timelineEquipments"],
-    queryFn: getEquipmentsTimeline,
-  });
-
-  const budgetsTimelineQuery = useQuery({
-    queryKey: ["timelineBudgets"],
-    queryFn: getProjectsTimeline,
-  });
-
   const recipesQuery = useQuery({
     queryKey: ["equipmentRecipes"],
-    queryFn: readEquipmentRecipe,
-  });
+    queryFn: async ()=>{return await readEquipmentRecipe()}
+  })
 
-  // Query detalhada dos materiais do orçamento
   const budgetDetailsQuery = useQuery({
-    queryKey: [
-      "budgetDetails",
-      currentBudget?.id || currentBudget?.budget_id || "all",
-    ],
+    queryKey: ["budgetDetails", currentBudget?.id || "all"],
     queryFn: async () => {
       const budgetsToProcess = currentBudget
         ? [currentBudget]
@@ -75,6 +40,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
           vwEquipmentRecipesMaterialSummary(id),
           vwComponentRecipeMaterialsSummary(id),
         ]);
+        console.log[equipSummary, compSummary]
         results.push({
           budget_id: id,
           budget_name: bud.name,
@@ -88,28 +54,14 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     enabled: !!currentBudget || allBudgets?.length > 0,
   });
 
-  // ==========================================
-  // 2. MUTAÇÃO (CREATE RELATION)
-  // ==========================================
-  const addEquipMutation = useMutation({
-    mutationFn: ({ budgetId, recipeId, qty }) =>
-      createRelation(budgetId, recipeId, qty),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["budgetDetails"] });
-      queryClient.invalidateQueries({ queryKey: ["timelineTasks"] });
-      queryClient.invalidateQueries({ queryKey: ["timelineEquipments"] });
-      setVisible(false);
-    },
-  });
-
   const renderView = () => {
     const commonProps = {
       currentBudget,
       allBudgets,
       searchTerm,
       groupedData: budgetDetailsQuery.data || [],
-      timelineTasks: tasksQuery.data || [],
-      timelineEquipments: equipTimelineQuery.data || [],
+      timelineTasks: [],
+      timelineEquipments: [],
     };
 
     switch (view) {
@@ -128,6 +80,8 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
         return <h1>Escolha uma tela</h1>;
     }
   };
+
+  useEffect(()=>console.log(budgetDetailsQuery.data))
 
   return (
     <React.Fragment>
@@ -181,13 +135,11 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
       <NewEquipmentModal
         isVisible={isVisible}
         onClose={() => setVisible(false)}
-        onConfirm={(selectedRecipe, quantity) => {
-          addEquipMutation.mutate({
-            budgetId: currentBudget?.id || currentBudget?.budget_id,
-            recipeId: selectedRecipe,
-            qty: quantity,
-          });
-        }}
+        onConfirm={async (selectedRecipe, quantity) => {
+          for (let q = 0; q < quantity; q++) 
+            await createBudgetEquipment( currentBudget.id, selectedRecipe)
+          }
+        }
         recipesList={recipesQuery.data || []}
       />
     </React.Fragment>

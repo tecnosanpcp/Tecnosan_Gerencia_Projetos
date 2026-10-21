@@ -124,9 +124,6 @@ export const deleteBudgetEquipment = async (req, res) => {
   try {
     const { budget_equipment_id } = req.params;
 
-    // ON DELETE CASCADE em budgets_components_schedule cuida do cronograma
-    // vinculado; equipments.budget_equipment_id (se houver FK sem cascade)
-    // deve ser tratado antes, dependendo de como a FK foi criada.
     const response = await pool.query(
       `DELETE FROM budgets_equipments
        WHERE budget_equipment_id = $1
