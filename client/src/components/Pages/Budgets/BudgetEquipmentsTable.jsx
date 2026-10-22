@@ -4,14 +4,11 @@ import { FaTrash } from "react-icons/fa";
 
 import { upsertBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js";
 // TODO: descomente quando o service existir e confirme o caminho do import
-// import { deleteRelation } from "@services/BudgetsEquipRecipesServices.js";
+import { deleteBudgetEquipment } from "@services/BudgetsEquipmentsService.js";
 
 import { formatDate, formatForInput } from "@utils/dateUtils.js";
 
 // Stub temporário: remova quando importar o deleteRelation real.
-const deleteRelation = async (budgetId, equipId) => {
-  console.warn("deleteRelation não importado", { budgetId, equipId });
-};
 
 function BudgetEquipmentTable({
   currentBudget,
@@ -32,8 +29,16 @@ function BudgetEquipmentTable({
   };
 
   const deleteMutation = useMutation({
-    mutationFn: ({ budgetId, equipId }) => deleteRelation(budgetId, equipId),
-    onSuccess: invalidateAll,
+    mutationFn: (budgetEquipmentId) => deleteBudgetEquipment(budgetEquipmentId),
+
+    onSuccess: () => {
+      invalidateAll();
+    },
+
+    onError: (error) => {
+      console.error("Erro ao excluir equipamento:", error);
+      alert("Não foi possível excluir o equipamento.");
+    },
   });
 
   const dateMutation = useMutation({
@@ -277,10 +282,16 @@ function BudgetEquipmentTable({
                                   if (
                                     confirm(`Remover ${equip.equipment_name}?`)
                                   ) {
-                                    deleteMutation.mutate({
-                                      budgetId: group.budget_id,
-                                      equipId: equip.equipment_recipe_id,
-                                    });
+                                    if (!equip.budget_equipment_id) {
+                                      alert(
+                                        "Não foi possível identificar o equipamento.",
+                                      );
+                                      return;
+                                    }
+
+                                    deleteMutation.mutate(
+                                      equip.budget_equipment_id,
+                                    );
                                   }
                                 }}
                                 className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5E6C84] transition-colors hover:bg-[#FFEBE6] hover:text-[#DE350B]"
