@@ -16,6 +16,12 @@ import {
   vwComponentRecipeMaterialsSummary,
 } from "@services/ViewsService.js";
 
+import {
+  getTasksTimeline,
+  getEquipmentsTimeline,
+  getProjectsTimeline,
+} from "@services/ViewsSummary.js";
+
 export default function BudgetsMain({ currentBudget, allBudgets }) {
   const [isVisible, setVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,8 +29,25 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
 
   const recipesQuery = useQuery({
     queryKey: ["equipmentRecipes"],
-    queryFn: async ()=>{return await readEquipmentRecipe()}
-  })
+    queryFn: async () => {
+      return await readEquipmentRecipe();
+    },
+  });
+
+  const tasksQuery = useQuery({
+    queryKey: ["timelineTasks"],
+    queryFn: getTasksTimeline,
+  });
+
+  const equipTimelineQuery = useQuery({
+    queryKey: ["timelineEquipments"],
+    queryFn: getEquipmentsTimeline,
+  });
+
+  const budgetsTimelineQuery = useQuery({
+    queryKey: ["timelineBudgets"],
+    queryFn: getProjectsTimeline,
+  });
 
   const budgetDetailsQuery = useQuery({
     queryKey: ["budgetDetails", currentBudget?.id || "all"],
@@ -34,16 +57,16 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
         : allBudgets || [];
       const results = [];
       for (const bud of budgetsToProcess) {
-        const id = bud.id;
+        const id = bud.id || bud.budget_id;
         if (!id) continue;
         const [equipSummary, compSummary] = await Promise.all([
           vwEquipmentRecipesMaterialSummary(id),
           vwComponentRecipeMaterialsSummary(id),
         ]);
-        console.log[equipSummary, compSummary]
+        console.log[(equipSummary, compSummary)];
         results.push({
           budget_id: id,
-          budget_name: bud.name,
+          budget_name: bud.name || bud.budget_name,
           status: bud.status,
           equipments: equipSummary || [],
           components: compSummary || [],
@@ -60,8 +83,8 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
       allBudgets,
       searchTerm,
       groupedData: budgetDetailsQuery.data || [],
-      timelineTasks: [],
-      timelineEquipments: [],
+      timelineTasks: tasksQuery.data || [],
+      timelineEquipments: equipTimelineQuery.data || [],
     };
 
     switch (view) {
@@ -81,7 +104,7 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
     }
   };
 
-  useEffect(()=>console.log(budgetDetailsQuery.data))
+  useEffect(() => console.log(budgetDetailsQuery.data));
 
   return (
     <React.Fragment>
@@ -136,10 +159,9 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
         isVisible={isVisible}
         onClose={() => setVisible(false)}
         onConfirm={async (selectedRecipe, quantity) => {
-          for (let q = 0; q < quantity; q++) 
-            await createBudgetEquipment( currentBudget.id, selectedRecipe)
-          }
-        }
+          for (let q = 0; q < quantity; q++)
+            await createBudgetEquipment(currentBudget.id, selectedRecipe);
+        }}
         recipesList={recipesQuery.data || []}
       />
     </React.Fragment>

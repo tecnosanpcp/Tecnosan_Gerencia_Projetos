@@ -38,25 +38,23 @@ export const vwComponentRecipeMaterialsSummary = async (req, res) => {
     const { budget_id } = req.params;
 
     if (!budget_id) {
-      return res.start_date(400).json({ error: "Dados faltantes" });
+      return res.status(400).json({ error: "Dados faltantes" });
     }
 
     const response = await pool.query(
       `SELECT
-        er_cr.equipment_recipe_id,
-        er_cr.quantity_plan,
-        vwcrms.*
-      FROM budgets b
-      JOIN budgets_equipments_recipes b_er
-        ON b.budget_id = b_er.budget_id
-      JOIN equipment_recipes er
-        ON er.equipment_recipe_id = b_er.equipment_recipe_id
-      JOIN equipment_recipes_component_recipes er_cr
-        ON er_cr.equipment_recipe_id = er.equipment_recipe_id
-      JOIN vw_components_recipes_materials_summary vwcrms
-        ON vwcrms.component_recipe_id = er_cr.component_recipe_id
-      WHERE 
-        b.budget_id = $1`,
+      be.budget_equipment_id,
+      be.budget_id,
+      be.equipment_recipe_id,
+      er_cr.quantity_plan,
+      vwcrms.*
+   FROM budgets_equipments be
+   JOIN equipment_recipes_component_recipes er_cr
+     ON er_cr.equipment_recipe_id = be.equipment_recipe_id
+   JOIN vw_components_recipes_materials_summary vwcrms
+     ON vwcrms.component_recipe_id = er_cr.component_recipe_id
+   WHERE be.budget_id = $1
+   ORDER BY be.budget_equipment_id, er_cr.id`,
       [budget_id],
     );
     res.status(200).json(response.rows);
@@ -78,7 +76,7 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
 
     const response = await pool.query(
       `SELECT 
-          be.equipment_recipe_id,
+          be.budget_equipment_id,
           be.budget_id,
           be.equipment_recipe_id,
           be.equipment_name,
@@ -94,7 +92,7 @@ export const vwEquipmentRecipesMaterialSummary = async (req, res) => {
        FROM budgets_equipments be
        INNER JOIN vw_equipments_recipes_materials_summary vw ON vw.equipment_recipe_id = be.equipment_recipe_id
        WHERE be.budget_id = $1;`,
-      [budget_id]
+      [budget_id],
     );
 
     res.status(200).json(response.rows);

@@ -79,7 +79,7 @@ function BudgetEquipmentTable({
     setRowsExpand((prev) =>
       prev.includes(rowKey)
         ? prev.filter((id) => id !== rowKey)
-        : [...prev, rowKey]
+        : [...prev, rowKey],
     );
   };
 
@@ -110,7 +110,7 @@ function BudgetEquipmentTable({
 
         const filteredEquipments =
           group.equipments?.filter((equip) =>
-            (equip?.equipment_name || "").toLowerCase().includes(term)
+            (equip?.equipment_name || "").toLowerCase().includes(term),
           ) || [];
 
         return (
@@ -179,7 +179,7 @@ function BudgetEquipmentTable({
 
                     const timelineProj = timelineEquipments.find(
                       (te) =>
-                        te.equipment_recipe_id == equip.equipment_recipe_id
+                        te.equipment_recipe_id == equip.equipment_recipe_id,
                     );
 
                     const isLocked = group.status !== "Em Planejamento";
@@ -188,7 +188,8 @@ function BudgetEquipmentTable({
                     const components =
                       group.components?.filter(
                         (c) =>
-                          c.equipment_recipe_id == equip.equipment_recipe_id
+                          String(c.budget_equipment_id) ===
+                          String(equip.budget_equipment_id),
                       ) || [];
 
                     return (
@@ -298,7 +299,7 @@ function BudgetEquipmentTable({
                             const compTasks = timelineTasks.find(
                               (t) =>
                                 t.component_recipe_id ==
-                                comp.component_recipe_id
+                                comp.component_recipe_id,
                             );
 
                             return (
@@ -321,21 +322,21 @@ function BudgetEquipmentTable({
                                     value={getInputValue(
                                       compKey,
                                       "start",
-                                      compTasks?.planned_start_at
+                                      compTasks?.planned_start_at,
                                     )}
                                     onChange={(e) =>
                                       handleInputChange(
                                         compKey,
                                         "start",
-                                        e.target.value
+                                        e.target.value,
                                       )
                                     }
                                     onBlur={() =>
                                       handleDateSave(
-                                        equip.equipment_recipe_id,
+                                        equip.budget_equipment_id,
                                         comp.component_recipe_id,
                                         compKey,
-                                        "start"
+                                        "start",
                                       )
                                     }
                                     disabled={isLocked}
@@ -349,21 +350,21 @@ function BudgetEquipmentTable({
                                     value={getInputValue(
                                       compKey,
                                       "end",
-                                      compTasks?.planned_end_at
+                                      compTasks?.planned_end_at,
                                     )}
                                     onChange={(e) =>
                                       handleInputChange(
                                         compKey,
                                         "end",
-                                        e.target.value
+                                        e.target.value,
                                       )
                                     }
                                     onBlur={() =>
                                       handleDateSave(
-                                        equip.equipment_recipe_id,
+                                        equip.budget_equipment_id,
                                         comp.component_recipe_id,
                                         compKey,
-                                        "end"
+                                        "end",
                                       )
                                     }
                                     disabled={isLocked}

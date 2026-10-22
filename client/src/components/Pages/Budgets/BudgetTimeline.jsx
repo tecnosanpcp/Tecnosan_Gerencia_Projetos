@@ -14,6 +14,7 @@ export default function BudgetTimeline({
   currentBudget,
   allBudgets = [],
   searchTerm = "",
+  groupedData = [],
   timelineTasks = [],
   timelineEquipments = [],
   timelineBudgets = [],
@@ -56,7 +57,7 @@ export default function BudgetTimeline({
 
           const filtered = searchTerm
             ? mergedEquips.filter((equip) =>
-                (equip.recipe_name || "")
+                (equip.equipment_name || "")
                   .toLowerCase()
                   .includes(searchTerm.toLowerCase()),
               )
@@ -221,7 +222,7 @@ export default function BudgetTimeline({
   if (groupedTimelines.length === 0) {
     return (
       <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-[#DFE1E6] bg-white">
-        <p className="text-sm text-[#5E6C84]">  
+        <p className="text-sm text-[#5E6C84]">
           Nenhum dado encontrado para exibição.
         </p>
       </div>
@@ -268,21 +269,44 @@ export default function BudgetTimeline({
 
               <tbody>
                 {group.equipments.map((equip) => {
-                  const equipmentTasks = timelineTasks.filter(
-                    (task) =>
-                      String(task.equipment_recipe_id) ===
-                      String(equip.equipment_recipe_id),
+                  const budgetGroup = groupedData.find(
+                    (item) =>
+                      String(item.budget_id) ===
+                      String(group.budgetInfo.id || group.budgetInfo.budget_id),
                   );
 
+                  const equipmentTasks = (budgetGroup?.components || [])
+                    .filter(
+                      (comp) =>
+                        String(comp.budget_equipment_id) ===
+                        String(equip.budget_equipment_id),
+                    )
+                    .map((comp) => {
+                      const task = timelineTasks.find(
+                        (item) =>
+                          String(item.equipment_recipe_id) ===
+                            String(equip.equipment_recipe_id) &&
+                          String(item.component_recipe_id) ===
+                            String(comp.component_recipe_id),
+                      );
+
+                      return {
+                        ...task,
+                        ...comp,
+                        component_name:
+                          task?.component_name || comp.recipe_name,
+                      };
+                    });
+
                   return (
-                    <React.Fragment key={equip.equipment_recipe_id}>
+                    <React.Fragment key={equip.budget_equipment_id}>
                       <tr className="border-b border-[#EBECF0] bg-white">
                         <td className="sticky left-0 z-10 min-w-[190px] border-r border-[#DFE1E6] bg-white px-3 py-2">
                           <span
                             className="block max-w-[180px] truncate text-xs font-semibold text-[#172B4D]"
-                            title={equip.recipe_name}
+                            title={equip.equipment_name}
                           >
-                            {equip.recipe_name}
+                            {equip.equipment_name}
                           </span>
                         </td>
 
