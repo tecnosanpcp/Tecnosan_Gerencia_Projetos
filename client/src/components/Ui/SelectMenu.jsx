@@ -242,11 +242,14 @@ function SelectMenu({
           <div
             ref={menuRef}
             style={{
+              position: "fixed",
               top: coords.top,
               left: coords.left,
               width: coords.width,
+              height: "auto",
+              maxHeight: "240px",
             }}
-            className="absolute -translate-y-full -mt-1 max-h-[40vh] overflow-auto bg-white p-1 shadow-xl rounded-md z-[9999] text-gray-700 whitespace-nowrap border border-gray-100"
+            className="flex flex-col overflow-hidden bg-white p-1 shadow-xl rounded-md z-[9999] text-gray-700 border border-gray-100"
           >
             {searchable && (
               <div className="sticky top-0 z-10 mb-1 border-b border-[#DFE1E6] bg-white p-1">
@@ -280,7 +283,6 @@ function SelectMenu({
                   focus:ring-[#DEEBFF]
                 "
                 />
-                
               </div>
             )}
             {selectedOption.length > 0 && (
@@ -294,33 +296,35 @@ function SelectMenu({
                 Limpar Seleção
               </button>
             )}
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+              {filteredOptions.map((o) => {
+                {
+                  searchable && filteredOptions.length === 0 && (
+                    <div className="px-2 py-3 text-center text-xs text-[#6B778C]">
+                      Nenhum resultado encontrado.
+                    </div>
+                  );
+                }
+                const checked = selectedOption.includes(o.id);
 
-            {filteredOptions.map((o) => {
-              {
-                searchable && filteredOptions.length === 0 && (
-                  <div className="px-2 py-3 text-center text-xs text-[#6B778C]">
-                    Nenhum resultado encontrado.
-                  </div>
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    className="w-full flex items-center gap-2 text-left hover:bg-slate-200 p-1 rounded-md transition-colors"
+                    onClick={() => handleSelect(o.id)}
+                  >
+                    {checked ? (
+                      <FaCheck className="text-green-600 text-xs" />
+                    ) : (
+                      <span className="w-3" />
+                    )}
+                    <span className="truncate">{o.label}</span>
+                  </button>
                 );
-              }
-              const checked = selectedOption.includes(o.id);
+              })}
+            </div>
 
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  className="w-full flex items-center gap-2 text-left hover:bg-slate-200 p-1 rounded-md transition-colors"
-                  onClick={() => handleSelect(o.id)}
-                >
-                  {checked ? (
-                    <FaCheck className="text-green-600 text-xs" />
-                  ) : (
-                    <span className="w-3" />
-                  )}
-                  <span className="truncate">{o.label}</span>
-                </button>
-              );
-            })}
             {confirmOnEnter && (
               <div className="sticky bottom-0 border-t border-[#DFE1E6] bg-white px-2 py-2 text-center text-[10px] text-[#6B778C]">
                 {selectedOption.length > 0
