@@ -10,22 +10,45 @@ export default function NewEquipmentModal({
 }) {
   const [selectedRecipe, setSelectedRecipe] = useState([]);
   const [quantity, setQuantity] = useState(1);
+  // Impede novos envios enquanto os equipamentos estão sendo cadastrados.
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    // Evita cadastros duplicados por cliques consecutivos.
+    if (isSubmitting) return;
 
     if (
       selectedRecipe.length === 0 ||
       !quantity ||
-      parseInt(quantity) <= 0
+      parseInt(quantity, 10) <= 0
     ) {
       alert("Selecione uma receita e defina a quantidade.");
       return;
     }
 
-    onConfirm(selectedRecipe[0], parseInt(quantity));
-    setSelectedRecipe([]);
-    setQuantity("");
+    setIsSubmitting(true);
+
+    try {
+      // Aguarda o cadastro no backend e a atualização do React Query.
+      await onConfirm(selectedRecipe[0], parseInt(quantity, 10));
+
+      // Limpa os campos somente depois da operação concluída.
+      setSelectedRecipe([]);
+      setQuantity(1);
+
+      // Fecha o modal após o sucesso.
+      onClose();
+    } catch (error) {
+      // Mantém o modal aberto caso ocorra algum erro.
+      // Assim o usuário consegue identificar a falha.
+      console.error("Erro ao adicionar equipamento:", error);
+
+      alert("Não foi possível concluir a inclusão dos equipamentos.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   if (isVisible == false) return null;
 
@@ -147,6 +170,7 @@ export default function NewEquipmentModal({
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="
                 rounded-md
                 bg-[#0052CC]
@@ -160,7 +184,7 @@ export default function NewEquipmentModal({
                 active:bg-[#003884]
               "
             >
-              Adicionar
+              {isSubmitting ? "Adicionando..." : "Adicionar"}
             </button>
           </div>
         </div>

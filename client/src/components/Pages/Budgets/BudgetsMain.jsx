@@ -26,6 +26,10 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
   const [isVisible, setVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("equipments");
+  // ATUALIZAÇÃO AUTOMÁTICA DOS EQUIPAMENTOS:
+  // Permite avisar ao React Query quando os dados do orçamento
+  // precisam ser consultados novamente, sem atualizar a página inteira.
+  const queryClient = useQueryClient();
 
   const recipesQuery = useQuery({
     queryKey: ["equipmentRecipes"],
@@ -159,8 +163,26 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
         isVisible={isVisible}
         onClose={() => setVisible(false)}
         onConfirm={async (selectedRecipe, quantity) => {
-          for (let q = 0; q < quantity; q++)
+          // Mantemos a lógica original de criação:
+          // cada unidade solicitada gera um equipamento individual no banco.
+          for (let q = 0; q < quantity; q++) {
             await createBudgetEquipment(currentBudget.id, selectedRecipe);
+          }
+
+          // Após o backend concluir os cadastros, atualizamos somente
+          // os dados do orçamento selecionado.
+          // Isso evita precisar trocar de página ou pressionar F5.
+          await queryClient.invalidateQueries({
+            queryKey: ["budgetDetails", currentBudget.id],
+            exact: true,
+          });
+
+          // Atualizamos também a consulta geral, caso esteja em cache.
+          // Isso mantém a visualização de todos os orçamentos consistente.
+          await queryClient.invalidateQueries({
+            queryKey: ["budgetDetails", "all"],
+            exact: true,
+          });
         }}
         recipesList={recipesQuery.data || []}
       />
