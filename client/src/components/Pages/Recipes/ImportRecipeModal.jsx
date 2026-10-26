@@ -6,17 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { createMaterial } from "@services/MaterialService.js";
 import { createAccessory } from "@services/AccessoriesServices.js";
+import api from "@services/api.js";
 
-const MATERIAL_UNITS = [
-  "t",
-  "kg",
-  "g",
-  "Uni",
-  "Caixa",
-  "Milheiro",
-  "L",
-  "ml",
-];
+const MATERIAL_UNITS = ["t", "kg", "g", "Uni", "Caixa", "Milheiro", "L", "ml"];
 
 const IMPORT_TYPES = {
   materials: {
@@ -30,6 +22,81 @@ const IMPORT_TYPES = {
     queryKey: ["accessories"],
     headers: ["Nome", "Nº de Série", "Valor", "Data da Compra"],
   },
+
+  // NOVO: importação de receitas de equipamentos.
+  equipments: {
+    label: "Equipamentos",
+    queryKey: ["equipments"],
+    headers: ["Nome"],
+  },
+
+  // NOVO: importação de receitas de componentes.
+  components: {
+    label: "Componentes",
+    queryKey: ["components"],
+    headers: ["Nome", "Funcionários", "Horas"],
+  },
+};
+
+// Gera o modelo Excel conforme a categoria selecionada.
+// Não precisa armazenar arquivos .xlsx na pasta public.
+const downloadExcelTemplate = async (importType) => {
+  const config = IMPORT_TYPES[importType];
+
+  if (!config) return;
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(config.label);
+
+  // Cria os cabeçalhos utilizados pelo importador.
+  worksheet.addRow(config.headers);
+
+  // Estiliza o cabeçalho.
+  const headerRow = worksheet.getRow(1);
+
+  headerRow.font = {
+    bold: true,
+    color: { argb: "FFFFFFFF" },
+  };
+
+  headerRow.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF0052CC" },
+  };
+
+  headerRow.height = 16;
+
+  headerRow.alignment = {
+    vertical: "middle",
+    horizontal: "center",
+  };
+
+  // Ajusta a largura das colunas.
+  worksheet.columns = config.headers.map((header) => ({
+    width: Math.max(header.length + 8, 15),
+  }));
+
+  // Congela a primeira linha.
+  worksheet.views = [{ state: "frozen", ySplit: 1 }];
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `Modelo_Importacao_${config.label}_PCP.xlsx`;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
 const normalizeHeader = (value) => {
@@ -90,9 +157,7 @@ const formatExcelDate = (value) => {
 
   if (typeof value === "number") {
     const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-    const date = new Date(
-      excelEpoch.getTime() + value * 24 * 60 * 60 * 1000
-    );
+    const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
 
     if (!Number.isNaN(date.getTime())) {
       const year = date.getUTCFullYear();
@@ -115,7 +180,7 @@ const formatExcelDate = (value) => {
 
     return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
       2,
-      "0"
+      "0",
     )}`;
   }
 
@@ -127,7 +192,7 @@ const formatExcelDate = (value) => {
 
     return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
       2,
-      "0"
+      "0",
     )}`;
   }
 
@@ -151,21 +216,22 @@ const getCellValue = (cell) => {
     return cell.value.map((item) => item.text || "").join("");
   }
 
-  if (
-    cell.type === ExcelJS.ValueType.Formula &&
-    cell.result !== undefined
-  ) {
+  if (cell.type === ExcelJS.ValueType.Formula && cell.result !== undefined) {
     return cell.result;
   }
 
   return cell.value ?? "";
 };
 
-export default function ImportRecipeModal({ isOpen, onClose }) {
+export default function ImportRecipeModal({
+  isOpen,
+  onClose,
+  importType: initialImportType = "materials",
+}) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
 
-  const [importType, setImportType] = useState("materials");
+  const [importType, setImportType] = useState(initialImportType);
   const [file, setFile] = useState(null);
   const [rows, setRows] = useState([]);
   const [fileError, setFileError] = useState("");
@@ -182,7 +248,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
   }, [file, rows, importing]);
 
   const resetModal = () => {
-    setImportType("materials");
+    setImportType(initialImportType);
     setFile(null);
     setRows([]);
     setFileError("");
@@ -211,7 +277,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
     }
 
     return expectedHeaders.every(
-      (header, index) => normalizedHeaders[index] === header
+      (header, index) => normalizedHeaders[index] === header,
     );
   };
 
@@ -230,7 +296,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
 
     if (worksheet.rowCount < 2) {
       throw new Error(
-        "A planilha precisa possuir pelo menos uma linha de dados."
+        "A planilha precisa possuir pelo menos uma linha de dados.",
       );
     }
 
@@ -245,8 +311,8 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
     if (!validateHeaders(headers)) {
       throw new Error(
         `Cabeçalho inválido. Para ${currentConfig.label}, utilize exatamente: ${currentConfig.headers.join(
-          " | "
-        )}`
+          " | ",
+        )}`,
       );
     }
 
@@ -261,20 +327,44 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
         values.push(getCellValue(row.getCell(column)));
       }
 
-      const hasContent = values.some(
-        (value) => normalizeText(value) !== ""
-      );
+      const hasContent = values.some((value) => normalizeText(value) !== "");
 
       if (!hasContent) return;
 
       if (importType === "materials") {
-        parsedRows.push({
-          rowNumber,
-          name: normalizeText(values[0]),
-          description: normalizeText(values[1]),
-          value: parseNumber(values[2]),
-          unit: normalizeText(values[3]),
-        });
+        // ACESSÓRIOS: mantém o comportamento existente.
+        if (importType === "accessories") {
+          parsedRows.push({
+            rowNumber,
+            name: normalizeText(values[0]),
+            serialNumber: normalizeText(values[1]),
+            value: parseNumber(values[2]),
+            purchaseDate: formatExcelDate(values[3]),
+          });
+
+          return;
+        }
+
+        // EQUIPAMENTOS: somente o nome da receita.
+        if (importType === "equipments") {
+          parsedRows.push({
+            rowNumber,
+            name: normalizeText(values[0]),
+          });
+
+          return;
+        }
+
+        // COMPONENTES: nome e valores enviados à API.
+        // O cálculo de horas-homem continua no backend.
+        if (importType === "components") {
+          parsedRows.push({
+            rowNumber,
+            name: normalizeText(values[0]),
+            employees: parseNumber(values[1]),
+            hours: parseNumber(values[2]),
+          });
+        }
 
         return;
       }
@@ -328,7 +418,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
       setFile(null);
       setRows([]);
       setFileError(
-        error?.message || "Não foi possível ler a planilha selecionada."
+        error?.message || "Não foi possível ler a planilha selecionada.",
       );
 
       if (fileInputRef.current) {
@@ -355,7 +445,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
     }
 
     const validUnit = MATERIAL_UNITS.some(
-      (unit) => normalizeText(unit).toLowerCase() === item.unit.toLowerCase()
+      (unit) => normalizeText(unit).toLowerCase() === item.unit.toLowerCase(),
     );
 
     if (!validUnit) {
@@ -381,6 +471,32 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
     return null;
   };
 
+  // Validação dos campos de importação de equipamentos.
+  const validateEquipment = (item) => {
+    if (!item.name) {
+      return "Nome do equipamento não informado.";
+    }
+
+    return null;
+  };
+
+  // Validação de entrada de componentes.
+  // As regras e cálculos definitivos continuam na API.
+  const validateComponent = (item) => {
+    if (!item.name) {
+      return "Nome do componente não informado.";
+    }
+
+    if (!Number.isInteger(item.employees) || item.employees <= 0) {
+      return "Funcionários deve ser um inteiro maior que zero.";
+    }
+
+    if (!Number.isFinite(item.hours) || item.hours <= 0) {
+      return "Horas deve ser maior que zero.";
+    }
+
+    return null;
+  };
   const handleImport = async () => {
     if (!canImport) return;
 
@@ -395,10 +511,14 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
       const item = rows[index];
 
       try {
-        const validationError =
-          importType === "materials"
-            ? validateMaterial(item)
-            : validateAccessory(item);
+        const validators = {
+          materials: validateMaterial,
+          accessories: validateAccessory,
+          equipments: validateEquipment,
+          components: validateComponent,
+        };
+
+        const validationError = validators[importType](item);
 
         if (validationError) {
           errors.push({
@@ -411,27 +531,61 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
         }
 
         if (importType === "materials") {
+          // Importação original de materiais.
           const normalizedUnit =
             MATERIAL_UNITS.find(
-              (unit) => unit.toLowerCase() === item.unit.toLowerCase()
+              (unit) => unit.toLowerCase() === item.unit.toLowerCase(),
             ) || item.unit;
 
           const response = await createMaterial(
             item.name,
             item.description,
             item.value,
-            normalizedUnit
+            normalizedUnit,
           );
 
           if (Array.isArray(response) && response.length === 0) {
             throw new Error("A API não confirmou a criação do material.");
+          }
+        } else if (importType === "accessories") {
+          // Importação original de acessórios.
+          const response = await createAccessory(
+            item.name,
+            item.serialNumber,
+            item.value,
+            item.purchaseDate,
+          );
+
+          if (!response) {
+            throw new Error("A API não confirmou a criação do acessório.");
+          }
+        } else if (importType === "equipments") {
+          // NOVO: cria a receita de equipamento usando a API existente.
+          const response = await api.post("/equip-recipe", {
+            recipe_name: item.name,
+          });
+
+          if (!response.data?.length) {
+            throw new Error("A API não confirmou a criação do equipamento.");
+          }
+        } else if (importType === "components") {
+          // NOVO: cria a receita de componente usando a API existente.
+          // Horas-homem é calculado no backend, não neste componente.
+          const response = await api.post("/component-recipes", {
+            recipe_name: item.name,
+            qtd_employees: item.employees,
+            qtd_hours: item.hours,
+          });
+
+          if (!response.data?.length) {
+            throw new Error("A API não confirmou a criação do componente.");
           }
         } else {
           const response = await createAccessory(
             item.name,
             item.serialNumber,
             item.value,
-            item.purchaseDate
+            item.purchaseDate,
           );
 
           if (!response) {
@@ -441,10 +595,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
 
         successCount++;
       } catch (error) {
-        console.error(
-          `Erro ao importar linha ${item.rowNumber}:`,
-          error
-        );
+        console.error(`Erro ao importar linha ${item.rowNumber}:`, error);
 
         errors.push({
           rowNumber: item.rowNumber,
@@ -527,7 +678,8 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
               Tipo de importação
             </label>
 
-            <div className="grid grid-cols-2 gap-3">
+            {/* Quatro tipos de importação, mantendo o layout do PCP. */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {Object.entries(IMPORT_TYPES).map(([key, config]) => {
                 const selected = importType === key;
 
@@ -579,7 +731,28 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
             onChange={handleFileChange}
             className="hidden"
           />
+          {/* DOWNLOAD DO MODELO EXCEL */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#B3D4FF] bg-[#F4F8FF] px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-[#172B4D]">
+                Modelo de planilha
+              </p>
 
+              <p className="mt-1 text-xs text-[#5E6C84]">
+                Baixe o modelo padronizado de{" "}
+                {IMPORT_TYPES[importType].label.toLowerCase()}, preencha os
+                dados e importe o arquivo.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => downloadExcelTemplate(importType)}
+              className="inline-flex h-9 items-center justify-center rounded-md border border-[#0052CC] bg-white px-4 text-xs font-semibold text-[#0052CC] transition-colors hover:bg-[#DEEBFF]"
+            >
+              Baixar modelo Excel
+            </button>
+          </div>
           <button
             type="button"
             onClick={handleSelectFile}
@@ -611,15 +784,14 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
 
                 <div className="text-xs text-[#6B778C]">
                   {rows.length}{" "}
-                  {rows.length === 1 ? "registro encontrado" : "registros encontrados"}
+                  {rows.length === 1
+                    ? "registro encontrado"
+                    : "registros encontrados"}
                 </div>
               </div>
 
               {hasRows && (
-                <FiCheck
-                  size={20}
-                  className="shrink-0 text-[#00875A]"
-                />
+                <FiCheck size={20} className="shrink-0 text-[#00875A]" />
               )}
             </div>
           )}
@@ -637,9 +809,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
                   Não foi possível importar a planilha
                 </div>
 
-                <div className="mt-1 text-sm text-[#6B778C]">
-                  {fileError}
-                </div>
+                <div className="mt-1 text-sm text-[#6B778C]">{fileError}</div>
               </div>
             </div>
           )}
@@ -677,44 +847,52 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
                           {item.rowNumber}
                         </td>
 
-                        {importType === "materials" ? (
+                        {importType === "materials" && (
                           <>
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
-                              {item.name}
-                            </td>
-
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
+                            <td className="border-b px-3 py-2">{item.name}</td>
+                            <td className="border-b px-3 py-2">
                               {item.description}
                             </td>
-
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
+                            <td className="border-b px-3 py-2">
                               {Number.isFinite(item.value)
                                 ? `R$ ${item.value.toFixed(2)}`
                                 : "-"}
                             </td>
-
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
-                              {item.unit}
-                            </td>
+                            <td className="border-b px-3 py-2">{item.unit}</td>
                           </>
-                        ) : (
-                          <>
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
-                              {item.name}
-                            </td>
+                        )}
 
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
+                        {importType === "accessories" && (
+                          <>
+                            <td className="border-b px-3 py-2">{item.name}</td>
+                            <td className="border-b px-3 py-2">
                               {item.serialNumber || "-"}
                             </td>
-
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
+                            <td className="border-b px-3 py-2">
                               {Number.isFinite(item.value)
                                 ? `R$ ${item.value.toFixed(2)}`
                                 : "-"}
                             </td>
-
-                            <td className="border-b border-[#DFE1E6] px-3 py-2 text-xs text-[#172B4D]">
+                            <td className="border-b px-3 py-2">
                               {item.purchaseDate || "-"}
+                            </td>
+                          </>
+                        )}
+
+                        {importType === "equipments" && (
+                          <td className="border-b px-3 py-2">{item.name}</td>
+                        )}
+
+                        {importType === "components" && (
+                          <>
+                            <td className="border-b px-3 py-2">{item.name}</td>
+                            <td className="border-b px-3 py-2">
+                              {Number.isFinite(item.employees)
+                                ? item.employees
+                                : "-"}
+                            </td>
+                            <td className="border-b px-3 py-2">
+                              {Number.isFinite(item.hours) ? item.hours : "-"}
                             </td>
                           </>
                         )}
@@ -740,9 +918,7 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
                   Importando...
                 </span>
 
-                <span className="text-sm text-[#6B778C]">
-                  {progress}%
-                </span>
+                <span className="text-sm text-[#6B778C]">{progress}%</span>
               </div>
 
               <div className="h-2 overflow-hidden rounded-full bg-[#DFE1E6]">
@@ -838,8 +1014,8 @@ export default function ImportRecipeModal({ isOpen, onClose }) {
             {rows.length > 0 && !result
               ? `${rows.length} registros prontos para importação`
               : result
-              ? "Importação finalizada"
-              : "Selecione uma planilha para continuar"}
+                ? "Importação finalizada"
+                : "Selecione uma planilha para continuar"}
           </div>
 
           <div className="flex items-center gap-2">

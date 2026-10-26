@@ -268,7 +268,12 @@ function Recipes() {
     {
       label: "Componente",
       description: "Receitas e composição dos componentes.",
+      importAction: () => {
+        setImportType("components");
+        setIsImportOpen(true);
+      },
       list: filterComponents,
+
       total: componentsList.length,
       isExpand: componentsExpanded,
       setExpand: setComponentsExpanded,
@@ -277,7 +282,12 @@ function Recipes() {
     {
       label: "Equipamento",
       description: "Receitas e composição dos equipamentos.",
+      importAction: () => {
+        setImportType("equipments");
+        setIsImportOpen(true);
+      },
       list: filterEquipments,
+
       total: equipmentsList.length,
       isExpand: equipmentsExpanded,
       setExpand: setEquipmentsExpanded,
@@ -345,6 +355,7 @@ function Recipes() {
         </div>
       </div>
       <ImportRecipeModal
+        key={importType}
         isOpen={isImportOpen}
         importType={importType}
         onClose={() => setIsImportOpen(false)}
