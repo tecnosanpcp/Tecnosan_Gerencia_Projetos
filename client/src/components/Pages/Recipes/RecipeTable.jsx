@@ -22,6 +22,8 @@ import { deleteEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { deleteAccessory } from "@services/AccessoriesServices.js";
 import { useQueryClient } from "@tanstack/react-query";
 
+
+
 export default function RecipeTable({ i }) {
   const [modalDeleteVisible, setModalDeleteVisible] = useState({
     Material: false,
