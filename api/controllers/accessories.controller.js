@@ -1,5 +1,11 @@
 import { pool } from "../config/db.js";
 
+
+import {
+  importarRegistros,
+  responderErroImportacao,
+} from "../utils/importacaoLotes.js";
+
 // ===================================================================================
 // 1. GESTÃO DE ACESSÓRIOS (Itens Físicos - Tabela 'accessories')
 // ===================================================================================
@@ -273,5 +279,23 @@ export const deleteBudgetLoan = async (req, res) => {
   } catch (error) {
     console.error("Erro ao deletar planejamento:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+
+export const importAccessories = async (req, res) => {
+  try {
+    const resultado = await importarRegistros(
+      "accessories",
+      req.body?.accessories,
+      req.body?.politica ?? "ignore"
+    );
+
+    return res.status(200).json({
+      mensagem: "Importação concluída.",
+      ...resultado,
+    });
+  } catch (error) {
+    return responderErroImportacao(error, res);
   }
 };

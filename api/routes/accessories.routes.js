@@ -12,6 +12,8 @@ import {
   updateBudgetLoan, 
   deleteBudgetLoan  
 } from "../controllers/accessories.controller.js";
+import { importAccessories } from "../controllers/accessories.controller.js";
+import { deleteAccessoriesBatch } from "../controllers/exclusaoLotes.controller.js";
 
 const router = Router();
 
@@ -32,5 +34,7 @@ router.put("/:id", updateAccessory);
 router.put("/budget/:id", updateBudgetLoan);   
 router.delete("/budget/:id", deleteBudgetLoan); 
 router.delete("/:id", deleteAccessory);
+router.post("/import", importAccessories);
+router.post("/delete-batch", deleteAccessoriesBatch);
 
 export default router;

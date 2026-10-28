@@ -15,4 +15,5 @@ router.get("/:component_recipe_id", readCompRecipeMatByComp);
 router.put("/:component_recipe_id/:material_id", updateCompRecipeMat);
 router.delete("/:component_recipe_id/:material_id", deleteCompRecipeMat);
 
+
 export default router;

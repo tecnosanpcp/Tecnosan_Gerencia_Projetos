@@ -1,5 +1,10 @@
 import { pool } from "../config/db.js";
 
+import {
+  importarRegistros,
+  responderErroImportacao,
+} from "../utils/importacaoLotes.js";
+
 export const getComponentRecipe = async (req, res) => {
   try {
     const response = await pool.query("select * from component_recipes");
@@ -76,5 +81,22 @@ export const updateComponentRecipe = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const importComponentRecipes = async (req, res) => {
+  try {
+    const resultado = await importarRegistros(
+      "components",
+      req.body?.components,
+      req.body?.politica ?? "ignore"
+    );
+
+    return res.status(200).json({
+      mensagem: "Importação concluída.",
+      ...resultado,
+    });
+  } catch (error) {
+    return responderErroImportacao(error, res);
   }
 };

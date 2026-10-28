@@ -6,6 +6,9 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 
+
+import { deleteItemsBatch } from "@services/BatchDeleteService.js";
+
 import AlertModal from "../../Ui/AlertModal.jsx";
 import EditMaterialModal from "./EditMaterialModal.jsx";
 import EditComponentRecipeModal from "./EditComponentRecipeModal.jsx";
@@ -230,11 +233,20 @@ export default function RecipeTable({ i }) {
                 ? [selectedRow]
                 : [];
 
-          await Promise.all(
-            rowsToDelete.map((row) =>
-              currentModalConfig.deleteFunc(row?.ID ?? row?.id),
-            ),
-          );
+          const tipoPorLabel = {
+            Material: "materials",
+            Acessório: "accessories",
+            Componente: "components",
+            Equipamento: "equipments",
+          };
+
+          const ids = rowsToDelete.map((row) => Number(row.ID ?? row.id));
+
+          await deleteItemsBatch(tipoPorLabel[i.label], ids);
+
+          await queryClient.invalidateQueries({
+            queryKey: [tipoPorLabel[i.label]],
+          });
 
           setSelectedRow(null);
           setSelectedRowIds([]);

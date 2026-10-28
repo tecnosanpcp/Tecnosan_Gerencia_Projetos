@@ -4,8 +4,6 @@ import { FiUpload, FiFileText, FiCheck, FiAlertCircle } from "react-icons/fi";
 import ExcelJS from "exceljs";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { createMaterial } from "@services/MaterialService.js";
-import { createAccessory } from "@services/AccessoriesServices.js";
 import api from "@services/api.js";
 
 const MATERIAL_UNITS = ["t", "kg", "g", "Uni", "Caixa", "Milheiro", "L", "ml"];
@@ -318,65 +316,57 @@ export default function ImportRecipeModal({
 
     const parsedRows = [];
 
-    worksheet.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) return;
+    
+worksheet.eachRow((row, rowNumber) => {
+  if (rowNumber === 1) return;
 
-      const values = [];
+  const values = [];
 
-      for (let column = 1; column <= currentConfig.headers.length; column++) {
-        values.push(getCellValue(row.getCell(column)));
-      }
+  for (
+    let column = 1;
+    column <= currentConfig.headers.length;
+    column++
+  ) {
+    values.push(getCellValue(row.getCell(column)));
+  }
 
-      const hasContent = values.some((value) => normalizeText(value) !== "");
+  const hasContent = values.some(
+    (value) => normalizeText(value) !== ""
+  );
 
-      if (!hasContent) return;
+  if (!hasContent) return;
 
-      if (importType === "materials") {
-        // ACESSÓRIOS: mantém o comportamento existente.
-        if (importType === "accessories") {
-          parsedRows.push({
-            rowNumber,
-            name: normalizeText(values[0]),
-            serialNumber: normalizeText(values[1]),
-            value: parseNumber(values[2]),
-            purchaseDate: formatExcelDate(values[3]),
-          });
-
-          return;
-        }
-
-        // EQUIPAMENTOS: somente o nome da receita.
-        if (importType === "equipments") {
-          parsedRows.push({
-            rowNumber,
-            name: normalizeText(values[0]),
-          });
-
-          return;
-        }
-
-        // COMPONENTES: nome e valores enviados à API.
-        // O cálculo de horas-homem continua no backend.
-        if (importType === "components") {
-          parsedRows.push({
-            rowNumber,
-            name: normalizeText(values[0]),
-            employees: parseNumber(values[1]),
-            hours: parseNumber(values[2]),
-          });
-        }
-
-        return;
-      }
-
-      parsedRows.push({
-        rowNumber,
-        name: normalizeText(values[0]),
-        serialNumber: normalizeText(values[1]),
-        value: parseNumber(values[2]),
-        purchaseDate: formatExcelDate(values[3]),
-      });
+  if (importType === "materials") {
+    parsedRows.push({
+      rowNumber,
+      name: normalizeText(values[0]),
+      description: normalizeText(values[1]),
+      value: parseNumber(values[2]),
+      unit: normalizeText(values[3]),
     });
+  } else if (importType === "accessories") {
+    parsedRows.push({
+      rowNumber,
+      name: normalizeText(values[0]),
+      serialNumber: normalizeText(values[1]),
+      value: parseNumber(values[2]),
+      purchaseDate: formatExcelDate(values[3]),
+    });
+  } else if (importType === "equipments") {
+    parsedRows.push({
+      rowNumber,
+      name: normalizeText(values[0]),
+    });
+  } else if (importType === "components") {
+    parsedRows.push({
+      rowNumber,
+      name: normalizeText(values[0]),
+      employees: parseNumber(values[1]),
+      hours: parseNumber(values[2]),
+    });
+  }
+});
+
 
     if (parsedRows.length === 0) {
       throw new Error("Nenhum dado foi encontrado na planilha.");
@@ -497,130 +487,144 @@ export default function ImportRecipeModal({
 
     return null;
   };
-  const handleImport = async () => {
-    if (!canImport) return;
+  
+const handleImport = async () => {
+  if (!canImport || importing) return;
 
-    setImporting(true);
-    setResult(null);
-    setProgress(0);
+  setImporting(true);
+  setResult(null);
+  setProgress(0);
 
-    const errors = [];
-    let successCount = 0;
+  const validators = {
+    materials: validateMaterial,
+    accessories: validateAccessory,
+    equipments: validateEquipment,
+    components: validateComponent,
+  };
 
-    for (let index = 0; index < rows.length; index++) {
-      const item = rows[index];
+  const endpoints = {
+    materials: "/materials/import",
+    accessories: "/accessories/import",
+    equipments: "/equip-recipe/import",
+    components: "/component-recipes/import",
+  };
 
-      try {
-        const validators = {
-          materials: validateMaterial,
-          accessories: validateAccessory,
-          equipments: validateEquipment,
-          components: validateComponent,
-        };
+  const validos = [];
+  const errors = [];
 
-        const validationError = validators[importType](item);
+  try {
+    for (const item of rows) {
+      const validationError = validators[importType](item);
 
-        if (validationError) {
-          errors.push({
-            rowNumber: item.rowNumber,
-            message: validationError,
-          });
-
-          setProgress(Math.round(((index + 1) / rows.length) * 100));
-          continue;
-        }
-
-        if (importType === "materials") {
-          // Importação original de materiais.
-          const normalizedUnit =
-            MATERIAL_UNITS.find(
-              (unit) => unit.toLowerCase() === item.unit.toLowerCase(),
-            ) || item.unit;
-
-          const response = await createMaterial(
-            item.name,
-            item.description,
-            item.value,
-            normalizedUnit,
-          );
-
-          if (Array.isArray(response) && response.length === 0) {
-            throw new Error("A API não confirmou a criação do material.");
-          }
-        } else if (importType === "accessories") {
-          // Importação original de acessórios.
-          const response = await createAccessory(
-            item.name,
-            item.serialNumber,
-            item.value,
-            item.purchaseDate,
-          );
-
-          if (!response) {
-            throw new Error("A API não confirmou a criação do acessório.");
-          }
-        } else if (importType === "equipments") {
-          // NOVO: cria a receita de equipamento usando a API existente.
-          const response = await api.post("/equip-recipe", {
-            recipe_name: item.name,
-          });
-
-          if (!response.data?.length) {
-            throw new Error("A API não confirmou a criação do equipamento.");
-          }
-        } else if (importType === "components") {
-          // NOVO: cria a receita de componente usando a API existente.
-          // Horas-homem é calculado no backend, não neste componente.
-          const response = await api.post("/component-recipes", {
-            recipe_name: item.name,
-            qtd_employees: item.employees,
-            qtd_hours: item.hours,
-          });
-
-          if (!response.data?.length) {
-            throw new Error("A API não confirmou a criação do componente.");
-          }
-        } else {
-          const response = await createAccessory(
-            item.name,
-            item.serialNumber,
-            item.value,
-            item.purchaseDate,
-          );
-
-          if (!response) {
-            throw new Error("A API não confirmou a criação do acessório.");
-          }
-        }
-
-        successCount++;
-      } catch (error) {
-        console.error(`Erro ao importar linha ${item.rowNumber}:`, error);
-
+      if (validationError) {
         errors.push({
           rowNumber: item.rowNumber,
-          message:
-            error?.response?.data?.error ||
-            error?.message ||
-            "Erro desconhecido ao criar registro.",
+          message: validationError,
         });
+        continue;
       }
 
-      setProgress(Math.round(((index + 1) / rows.length) * 100));
+      if (importType === "materials") {
+        const normalizedUnit =
+          MATERIAL_UNITS.find(
+            (unit) =>
+              unit.toLowerCase() === item.unit.toLowerCase()
+          ) || item.unit;
+
+        validos.push({
+          material_name: item.name,
+          material_desc: item.description,
+          value: item.value,
+          uni: normalizedUnit,
+        });
+      } else if (importType === "accessories") {
+        validos.push({
+          name: item.name,
+          serial_number: item.serialNumber,
+          value: item.value,
+          purchase_date: item.purchaseDate,
+        });
+      } else if (importType === "equipments") {
+        validos.push({
+          recipe_name: item.name,
+        });
+      } else if (importType === "components") {
+        validos.push({
+          recipe_name: item.name,
+          qtd_employees: item.employees,
+          qtd_hours: item.hours,
+        });
+      }
     }
 
-    await queryClient.invalidateQueries({
-      queryKey: currentConfig.queryKey,
-    });
+    if (validos.length > 5000) {
+      throw new Error(
+        "O limite é de 5.000 registros válidos por importação."
+      );
+    }
 
-    setImporting(false);
+    let resultado = {
+      totalInseridos: 0,
+      totalAtualizados: 0,
+      invalidos: 0,
+      ignoradosExistentes: 0,
+      duplicadosArquivo: 0,
+    };
+
+    if (validos.length > 0) {
+      const { data } = await api.post(
+        endpoints[importType],
+        {
+          [importType]: validos,
+          politica: "ignore",
+        },
+        {
+          timeout: 120000,
+        }
+      );
+
+      resultado = data;
+
+      await queryClient.invalidateQueries({
+        queryKey: currentConfig.queryKey,
+      });
+    }
+
+    setProgress(100);
 
     setResult({
-      successCount,
-      errorCount: errors.length,
+      successCount:
+        (resultado.totalInseridos ?? 0) +
+        (resultado.totalAtualizados ?? 0),
+      errorCount:
+        errors.length + (resultado.invalidos ?? 0),
       errors,
+      ignoradosExistentes:
+        resultado.ignoradosExistentes ?? 0,
+      duplicadosArquivo:
+        resultado.duplicadosArquivo ?? 0,
     });
-  };
+  } catch (error) {
+    console.error("Erro ao importar lote:", error);
+
+    setResult({
+      successCount: 0,
+      errorCount: 1,
+      errors: [
+        {
+          rowNumber: null,
+          message:
+            error.response?.data?.error ||
+            error.message ||
+            "Erro ao importar lote.",
+        },
+      ],
+    });
+  } finally {
+    setImporting(false);
+  }
+};
+
 
   const handleSelectFile = () => {
     if (importing) return;
