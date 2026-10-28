@@ -6,7 +6,6 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 
-
 import { deleteItemsBatch } from "@services/BatchDeleteService.js";
 
 import AlertModal from "../../Ui/AlertModal.jsx";
@@ -22,8 +21,6 @@ import { deleteEquipmentRecipe } from "@services/EquipmentRecipesService.js";
 import { deleteAccessory } from "@services/AccessoriesServices.js";
 import { useQueryClient } from "@tanstack/react-query";
 
-
-
 export default function RecipeTable({ i }) {
   const [modalDeleteVisible, setModalDeleteVisible] = useState({
     Material: false,
@@ -37,6 +34,10 @@ export default function RecipeTable({ i }) {
   const [selectedRow, setSelectedRow] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 50;
+
   const queryClient = useQueryClient();
 
   /*
@@ -44,6 +45,16 @@ export default function RecipeTable({ i }) {
    * Não fazemos nenhuma chamada de API aqui.
    */
   const list = Array.isArray(i?.list) ? i.list : [];
+
+  const totalPages = Math.max(1, Math.ceil(list.length / ITEMS_PER_PAGE));
+
+  const page = Math.min(currentPage, totalPages);
+
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, list.length);
+
+  const paginatedList = list.slice(startIndex, endIndex);
 
   const updateModalDeleteVisible = (key, value) => {
     setModalDeleteVisible((prev) => ({
@@ -166,17 +177,21 @@ export default function RecipeTable({ i }) {
     );
   };
 
+  const pageIds = paginatedList.map((row, index) =>
+    getRowId(row, startIndex + index),
+  );
+
   const allRowsSelected =
-    list.length > 0 &&
-    list.every((row, index) => selectedRowIds.includes(getRowId(row, index)));
+    pageIds.length > 0 && pageIds.every((id) => selectedRowIds.includes(id));
 
   const toggleSelectAll = () => {
-    if (allRowsSelected) {
-      setSelectedRowIds([]);
-      return;
-    }
+    setSelectedRowIds((current) => {
+      if (allRowsSelected) {
+        return current.filter((id) => !pageIds.includes(id));
+      }
 
-    setSelectedRowIds(list.map((row, index) => getRowId(row, index)));
+      return [...new Set([...current, ...pageIds])];
+    });
   };
 
   const selectedRows = list.filter((row, index) =>
@@ -321,8 +336,9 @@ export default function RecipeTable({ i }) {
               </thead>
 
               <tbody>
-                {list.map((row, idx) => {
-                  const expanded = isRowExpanded(row, idx);
+                {paginatedList.map((row, idx) => {
+                  const globalIndex = startIndex + idx;
+                  const expanded = isRowExpanded(row, globalIndex);
 
                   return (
                     <React.Fragment key={getRowId(row, idx)}>
@@ -453,14 +469,45 @@ export default function RecipeTable({ i }) {
         )}
 
         {/* RODAPÉ */}
-        <div className="flex h-9 items-center justify-between border-t border-[#DFE1E6] bg-[#F4F5F7] px-3">
-          <span className="text-[10px] text-[#5E6C84]">
-            {list.length} {list.length === 1 ? "registro" : "registros"}
+
+        <div className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-t border-[#DFE1E6] bg-[#F4F5F7] px-3 py-2">
+          <span className="text-[11px] text-[#5E6C84]">
+            {list.length === 0 ? 0 : startIndex + 1}
+            {" - "}
+            {endIndex}
+            {" de "}
+            {list.length} registros
           </span>
 
-          <span className="text-[10px] text-[#97A0AF]">
-            {i.label || "Lista"}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.max(1, Math.min(prev, totalPages) - 1),
+                )
+              }
+              disabled={page === 1}
+              className="rounded border border-[#DFE1E6] bg-white px-3 py-1 text-xs text-[#172B4D] transition hover:bg-[#EBECF0] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Anterior
+            </button>
+
+            <span className="whitespace-nowrap text-[11px] font-medium text-[#172B4D]">
+              Página {page} de {totalPages}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={page === totalPages}
+              className="rounded border border-[#DFE1E6] bg-white px-3 py-1 text-xs text-[#172B4D] transition hover:bg-[#EBECF0] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Próxima
+            </button>
+          </div>
         </div>
       </div>
     </>
