@@ -112,51 +112,61 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
 
   return (
     <React.Fragment>
-      <main className="card m-0 p-4 gap-4 overflow-y-auto">
-        <div className="flex flex-row justify-between w-full">
-          <div className="flex flex-row items-center space-x-4 p-2 rounded-xl bg-gray-100 h-fit">
-            <FaSearch className="text-gray-500" />
+      <main className="min-w-0 overflow-hidden border border-[#DFE1E6] bg-white">
+        <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex h-9 min-w-0 w-full items-center gap-2 rounded border border-[#DFE1E6] bg-white px-3 lg:max-w-[360px] xl:max-w-[420px]">
+            <FaSearch className="shrink-0 text-xs text-[#6B778C]" />
+
             <input
               type="text"
               placeholder="Pesquisar equipamento"
-              className="bg-transparent outline-none"
+              className="min-w-0 flex-1 bg-transparent text-sm text-[#172B4D] outline-none placeholder:text-[#7A869A]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex flex-row gap-4 h-fit">
+          <div className="flex min-w-0 flex-wrap items-center gap-1 sm:gap-2">
             {currentBudget && (
-              <button className="bnt-add" onClick={() => setVisible(true)}>
+              <button
+                type="button"
+                className="h-8 rounded border border-[#0052CC] bg-[#0052CC] px-3 text-xs font-medium text-white hover:bg-[#0747A6] sm:text-sm"
+                onClick={() => setVisible(true)}
+              >
                 + Novo Equipamento
               </button>
             )}
-            <button
-              className={`bnt ${view === "equipments" ? "bg-blue-100" : ""}`}
-              onClick={() => setView("equipments")}
-            >
-              Equipamentos
-            </button>
-            <button
-              className={`bnt ${view === "timeline" ? "bg-blue-100" : ""}`}
-              onClick={() => setView("timeline")}
-            >
-              Cronograma
-            </button>
-            <button
-              className={`bnt ${view === "accessories" ? "bg-blue-100" : ""}`}
-              onClick={() => setView("accessories")}
-            >
-              Acessórios
-            </button>
+
+            <div className="flex min-w-0 overflow-hidden rounded border border-[#DFE1E6]">
+              {[
+                { value: "equipments", label: "Equipamentos" },
+                { value: "timeline", label: "Cronograma" },
+                { value: "accessories", label: "Acessórios" },
+              ].map((tab) => (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setView(tab.value)}
+                  className={`h-8 px-2 text-xs font-medium transition sm:px-3 sm:text-sm ${
+                    view === tab.value
+                      ? "bg-[#DEEBFF] text-[#0052CC]"
+                      : "bg-white text-[#5E6C84] hover:bg-[#F4F5F7]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {budgetDetailsQuery.isLoading ? (
-          <div className="text-center p-10">Sincronizando PCP...</div>
-        ) : (
-          renderView()
-        )}
+        <div className="min-w-0 overflow-hidden">
+          {budgetDetailsQuery.isLoading ? (
+            <div className="text-center p-10">Sincronizando PCP...</div>
+          ) : (
+            renderView()
+          )}
+        </div>
       </main>
 
       <NewEquipmentModal

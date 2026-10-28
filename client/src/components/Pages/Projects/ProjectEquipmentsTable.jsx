@@ -384,11 +384,7 @@ export default function ProjectEquipmentsTable({
 
                             <span
                               className="
-                              block
-                              truncate
-                              text-[10px]
-                              font-semibold
-                              text-[#172B4D]
+                              truncate text-xs font-semibold text-[#172B4D]
                             "
                             >
                               {equipment.equipment_name}
@@ -523,11 +519,11 @@ export default function ProjectEquipmentsTable({
                                   </span>
                                 </td>
 
-                                <td className="whitespace-nowrap px-3 py-2 text-[10px] text-[#5E6C84]">
+                                <td className="px-1.5 py-2 text-[9px] text-[#5E6C84]">
                                   {formatDateTime(componentTime.real_start)}
                                 </td>
 
-                                <td className="whitespace-nowrap px-3 py-2 text-[10px] text-[#97A0AF]">
+                                <td className="px-1.5 py-2 text-[9px] text-[#5E6C84]">
                                   {formatDateTime(componentTime.planned_end)}
                                 </td>
 

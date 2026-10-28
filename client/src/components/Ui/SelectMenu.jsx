@@ -224,10 +224,10 @@ function SelectMenu({
       {/* botão */}
       <button
         type="button"
-        className="col-start-1 row-start-1 flex items-center justify-between  border border-[#DFE1E6] bg-white px-1 py-1 text-left text-xs text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
+        className="col-start-1 row-start-1 flex items-center justify-between  border border-[#DFE1E6] bg-white px-1 py-1 text-left text-[10px] text-[#172B4D] transition-colors hover:bg-[#F4F5F7] focus:border-[#4C9AFF] focus:outline-none focus:ring-2 focus:ring-[#DEEBFF]"
         onClick={toggleOpen}
       >
-        <span className="truncate px-1 text-s text-[#172B4D]">
+        <span className="truncate px-1 text-[10px] text-[#172B4D]">
           {selectedOption.length === 0
             ? "Selecionar"
             : selectedOption.length === 1

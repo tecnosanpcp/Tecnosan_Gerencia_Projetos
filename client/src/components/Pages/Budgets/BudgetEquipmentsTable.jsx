@@ -60,15 +60,25 @@ function BudgetEquipmentTable({
   };
 
   const handleDateSave = (budgetEquipmentId, compId, key, type) => {
-    const newValue = modifiedData[key]?.[type];
+    const dates = modifiedData[key];
 
-    if (!newValue) return;
+    if (!dates) return;
+
+    const start = dates.start;
+    const end = dates.end;
+
+    if (!start || !end) return;
+
+    if (end < start) {
+      alert("A data de término não pode ser anterior à data de início.");
+      return;
+    }
 
     dateMutation.mutate({
       budgetEquipmentId,
       compId,
-      start: type === "start" ? newValue : null,
-      end: type === "end" ? newValue : null,
+      start,
+      end,
     });
   };
 
@@ -109,7 +119,7 @@ function BudgetEquipmentTable({
     "h-7 w-full rounded border border-[#DFE1E6] bg-white px-1 text-[10px] text-[#172B4D] outline-none transition focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30 disabled:bg-[#F4F5F7] disabled:text-[#8993A4]";
 
   return (
-    <div className="flex w-full flex-col ">
+    <div className="flex min-w-0 w-full flex-col">
       {groupedData.map((group) => {
         const term = (searchTerm || "").toLowerCase();
 
@@ -121,10 +131,10 @@ function BudgetEquipmentTable({
         return (
           <div
             key={group.budget_id}
-            className="flex w-full flex-col border-b border-[#DFE1E6]"
+            className="flex min-w-0 w-full flex-col border-b border-[#DFE1E6]"
           >
             {!currentBudget && (
-              <div className="flex items-center justify-between bg-gray-100 px-3 py-2 border-x border-[#DFE1E6]">
+              <div className="flex items-center justify-between border-y border-[#B3D4FF] bg-[#E9F2FF] px-3 py-2">
                 <div className="min-w-0">
                   <h2 className="truncate text-sm font-semibold text-[#172B4D]">
                     {group.budget_name}
@@ -137,8 +147,8 @@ function BudgetEquipmentTable({
               </div>
             )}
 
-            <div className="w-full overflow-x-auto">
-              <table className="w-full table-fixed ">
+            <div className="w-full min-w-0 overflow-x-auto">
+              <table className="w-full table-fixed border-collapse">
                 <colgroup>
                   <col className="w-[17%]" />
                   <col className="w-[8%]" />
@@ -157,7 +167,7 @@ function BudgetEquipmentTable({
 
                 <thead>
                   <tr className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
-                    <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84] border border-t-0 border-r-0 border-[#DFE1E6]">
+                    <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
                       Equipamento
                     </th>
                     <th className={thBase}>Início</th>
@@ -171,7 +181,7 @@ function BudgetEquipmentTable({
                     <th className={thBase}>Resina ISO</th>
                     <th className={thBase}>Valor</th>
                     <th className={thBase}>Horas</th>
-                    <th className={`${thBase} border-r `}>Ações</th>
+                    <th className={thBase}>Ações</th>
                   </tr>
                 </thead>
 
@@ -207,7 +217,7 @@ function BudgetEquipmentTable({
                               : "bg-white hover:bg-[#F4F5F7]"
                           }`}
                         >
-                          <td className="px-3 py-2 text-left border-l border-[#DFE1E6]">
+                          <td className="px-3 py-2 text-left">
                             <div className="flex min-w-0 items-center gap-2">
                               <span
                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold transition-colors ${
