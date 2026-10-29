@@ -160,10 +160,11 @@ export const deleteBudgetComponentSchedule = async (req, res) => {
 // "onBlur" de um input de data, tipo BudgetEquipmentTable.jsx.
 export const upsertBudgetComponentSchedule = async (req, res) => {
   try {
-    const { budget_equipment_id, component_recipe_id } = req.params;
+    const { budget_equipment_id, component_recipe_id, budget_id } = req.params;
     const { planned_start_at, planned_end_at } = req.body;
 
     if (
+      !budget_id ||
       !budget_equipment_id ||
       !component_recipe_id ||
       (!planned_start_at && !planned_end_at)
@@ -181,19 +182,21 @@ export const upsertBudgetComponentSchedule = async (req, res) => {
       [budget_equipment_id, component_recipe_id],
     );
 
+    const start = `${planned_start_at} 00:00:00`
+    const end = `${planned_end_at} 00:00:00`
+
     if (existing.rows.length === 0) {
-      if (!planned_start_at || !planned_end_at) {
-        return res.status(422).json({
-          message:
-            "Primeira gravação do cronograma precisa de planned_start_at e planned_end_at juntos",
-        });
-      }
       const response = await pool.query(
         `INSERT INTO budgets_components_schedule
-          (budget_equipment_id, component_recipe_id, planned_start_at, planned_end_at)
-         VALUES ($1, $2, $3, $4)
+          (budget_equipment_id, component_recipe_id, planned_start_at, planned_end_at, budget_id)
+         VALUES (
+          $1,
+          $2, 
+          $3, 
+          $4,
+          $5)
          RETURNING *`,
-        [budget_equipment_id, component_recipe_id, planned_start_at, planned_end_at],
+        [budget_equipment_id, component_recipe_id, start, end, budget_id],
       );
       return res.status(201).json(response.rows[0]);
     }
@@ -204,7 +207,7 @@ export const upsertBudgetComponentSchedule = async (req, res) => {
         planned_end_at = COALESCE($2, planned_end_at)
        WHERE budget_equipment_id = $3 AND component_recipe_id = $4
        RETURNING *`,
-      [planned_start_at, planned_end_at, budget_equipment_id, component_recipe_id],
+      [start, end, budget_equipment_id, component_recipe_id],
     );
 
     res.status(200).json(response.rows[0]);

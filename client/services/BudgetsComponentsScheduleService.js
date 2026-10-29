@@ -80,6 +80,7 @@ export const deleteBudgetComponentSchedule = async (id) => {
 // budget_equipment_id + component_recipe_id). Pensado pra telas que
 // salvam a cada "onBlur" de um input de data.
 export const upsertBudgetComponentSchedule = async (
+  budget_id,
   budget_equipment_id,
   component_recipe_id,
   planned_start_at,
@@ -87,6 +88,7 @@ export const upsertBudgetComponentSchedule = async (
 ) => {
   try {
     if (
+      !budget_id ||
       !budget_equipment_id ||
       !component_recipe_id ||
       (!planned_start_at && !planned_end_at)
@@ -95,7 +97,7 @@ export const upsertBudgetComponentSchedule = async (
     }
 
     const response = await api.put(
-      `/budgets-components-schedule/${budget_equipment_id}/${component_recipe_id}`,
+      `/budgets-components-schedule/${budget_id}/${budget_equipment_id}/${component_recipe_id}`,
       { planned_start_at, planned_end_at }
     );
 

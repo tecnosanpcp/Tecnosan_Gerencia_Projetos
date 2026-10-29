@@ -17,7 +17,7 @@ router.put("/:id", updateBudgetComponentSchedule);
 // upsert por chave natural (budget_equipment_id, component_recipe_id),
 // para telas que editam data a data sem conhecer o "id" da linha
 router.put(
-  "/:budget_equipment_id/:component_recipe_id",
+  "/:budget_id/:budget_equipment_id/:component_recipe_id",
   upsertBudgetComponentSchedule
 );
 router.delete("/:id", deleteBudgetComponentSchedule);

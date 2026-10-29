@@ -43,7 +43,12 @@ function BudgetEquipmentTable({
 
   const dateMutation = useMutation({
     mutationFn: ({ budgetEquipmentId, compId, start, end }) =>
-      upsertBudgetComponentSchedule(budgetEquipmentId, compId, start, end),
+      upsertBudgetComponentSchedule(
+        currentBudget?.id || currentBudget?.budget_id,
+        budgetEquipmentId, 
+        compId, 
+        start, 
+        end),
     onSuccess: invalidateAll,
   });
 
@@ -64,13 +69,14 @@ function BudgetEquipmentTable({
 
     if (!dates) return;
 
-    const start = dates.start;
-    const end = dates.end;
+    let start = dates.start;
+    let end = dates.end;
 
     if (!start || !end) return;
 
     if (end < start) {
       alert("A data de término não pode ser anterior à data de início.");
+      end = start
       return;
     }
 
