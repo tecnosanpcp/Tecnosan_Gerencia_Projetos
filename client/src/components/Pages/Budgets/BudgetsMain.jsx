@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Componentes
 import NewEquipmentModal from "../../Ui/newEquipmentModal";
@@ -67,7 +67,6 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
           vwEquipmentRecipesMaterialSummary(id),
           vwComponentRecipeMaterialsSummary(id),
         ]);
-        console.log[(equipSummary, compSummary)];
         results.push({
           budget_id: id,
           budget_name: bud.name || bud.budget_name,
@@ -107,8 +106,6 @@ export default function BudgetsMain({ currentBudget, allBudgets }) {
         return <h1>Escolha uma tela</h1>;
     }
   };
-
-  useEffect(() => console.log(budgetDetailsQuery.data));
 
   return (
     <React.Fragment>

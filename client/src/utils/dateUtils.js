@@ -65,10 +65,18 @@ export const formatDate = (timestamp) => {
 
 export const formatForInput = (timestamp) => {
   if (!timestamp) return "";
-  try {
-    return new Date(timestamp).toISOString().split("T")[0];
-  } catch (error) {
-    console.error(error);
-    return "";
+
+  if (typeof timestamp === "string") {
+    return timestamp.slice(0, 10);
   }
+
+  if (timestamp instanceof Date && !isNaN(timestamp.getTime())) {
+    const year = timestamp.getFullYear();
+    const month = String(timestamp.getMonth() + 1).padStart(2, "0");
+    const day = String(timestamp.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
 };
