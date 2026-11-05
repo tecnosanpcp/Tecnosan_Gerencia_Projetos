@@ -284,8 +284,8 @@ export default function BudgetTimeline({
                     .map((comp) => {
                       const task = timelineTasks.find(
                         (item) =>
-                          String(item.equipment_recipe_id) ===
-                            String(equip.equipment_recipe_id) &&
+                          String(item.budget_equipment_id) ===
+                            String(equip.budget_equipment_id) &&
                           String(item.component_recipe_id) ===
                             String(comp.component_recipe_id),
                       );
