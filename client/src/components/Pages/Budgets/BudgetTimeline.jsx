@@ -42,8 +42,8 @@ export default function BudgetTimeline({
           const mergedEquips = rawEquips.map((equip) => {
             const timelineInfo = timelineEquipments.find(
               (timeline) =>
-                String(timeline.equipment_recipe_id) ===
-                String(equip.equipment_recipe_id),
+                String(timeline.budget_equipment_id) ===
+                String(equip.budget_equipment_id),
             );
 
             return {
