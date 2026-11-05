@@ -153,8 +153,12 @@ function BudgetEquipmentTable({
     const start = maskedDateToIso(startText);
     const end = maskedDateToIso(endText);
 
-    if (!start || !end) {
-      alert("Informe datas válidas no formato DD/MM/AAAA.");
+    if (
+      !startText ||
+      !endText ||
+      startText.length !== 10 ||
+      endText.length !== 10
+    ) {
       return;
     }
 
