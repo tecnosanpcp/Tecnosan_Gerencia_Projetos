@@ -119,18 +119,41 @@ export default function BudgetTimeline({
         checkDate(budgetTimeline.project_end_at);
       }
     });
+    console.log("[GANTT ORIGEM DAS DATAS]", {
+      budget: timelineBudgets
+        .filter((item) => String(item.budget_id) === "39")
+        .map((item) => ({
+          budget_id: item.budget_id,
+          inicio: item.project_start_at,
+          fim: item.project_end_at,
+        })),
 
-    timelineTasks.forEach((task) => {
-      checkDate(task.planned_start_at);
-      checkDate(task.planned_end_at);
+      tasks: timelineTasks
+        .filter((item) => String(item.budget_id) === "39")
+        .map((item) => ({
+          budget_equipment_id: item.budget_equipment_id,
+          component_name: item.component_name,
+          inicio: item.planned_start_at,
+          fim: item.planned_end_at,
+        })),
     });
+    timelineTasks
+      .filter((task) =>
+        budgetsChecking.some(
+          (budget) =>
+            String(task.budget_id) === String(budget.id ?? budget.budget_id),
+        ),
+      )
+      .forEach((task) => {
+        checkDate(task.planned_start_at);
+        checkDate(task.planned_end_at);
+      });
 
     let start;
     let end;
 
     if (minTime !== Infinity) {
       start = new Date(minTime);
-      start.setDate(start.getDate() - 2);
     } else {
       start = new Date();
     }
