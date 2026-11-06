@@ -11,23 +11,38 @@ function SidebarList({
   filterOptions,
   titleAll = "Todos",
   idPrefix = "sidebar",
-  defaultFilter = null,
+  defaultFilter,
 }) {
   const [isExtend, setIsExtend] = useState(false);
-  const [filter, setFilter] = useState(defaultFilter);
+  const [filter, setFilter] = useState(
+      Array.isArray(defaultFilter)
+        ? defaultFilter
+        : defaultFilter
+        ? [defaultFilter]
+        : []
+    )
+  
+  const handleFilterChange = (value) => {
+    setFilter((prevFilters) =>
+      prevFilters.includes(value)
+        ? prevFilters.filter((item) => item !== value) // Remove se já estiver marcado
+        : [...prevFilters, value] // Adiciona se não estiver marcado
+    );
+  };
 
   const matchesFilter = (item) => {
-    if (!filter) return true;
+    if (filter.length === 0) return true; // Se nenhum filtro for selecionado, exibe todos
 
-    const status = (item?.status ?? "")
-      .toString()
-      .toLowerCase();
+    const status = (item?.status ?? "").toString().toLowerCase();
 
-    return status === filter.toString().toLowerCase();
+    // Verifica se o status do item condiz com algum dos filtros selecionados
+    return filter.some(
+      (f) => f.toString().toLowerCase() === status
+    );
   };
 
   const filteredItems = useMemo(() => {
-    if (filter) {
+    if (filter.length > 0) {
       return items.filter(matchesFilter);
     }
 
@@ -87,7 +102,7 @@ function SidebarList({
           >
             <span className="flex items-center gap-2">
               <FaFilter size={11} />
-              Filtro
+              Filtro {filter.length > 0 && `(${filter.length})`}
             </span>
 
             <FaChevronDown
@@ -103,6 +118,7 @@ function SidebarList({
               {filterOptions.map((opt) => {
                 const name = `${idPrefix}-status`;
                 const id = `${idPrefix}-status-${opt.value}`;
+                const isChecked = filter.includes(opt.value);
 
                 return (
                   <label
@@ -123,12 +139,12 @@ function SidebarList({
                     "
                   >
                     <input
-                      type="radio"
+                      type="checkbox"
                       id={id}
                       name={name}
                       value={opt.value}
-                      checked={filter === opt.value}
-                      onChange={() => setFilter(opt.value)}
+                      checked={isChecked}
+                      onChange={() => handleFilterChange(opt.value)}
                       className="accent-[#0052CC]"
                     />
 
@@ -217,7 +233,10 @@ SidebarList.propTypes = {
   filterOptions: PropTypes.array,
   titleAll: PropTypes.string,
   idPrefix: PropTypes.string,
-  defaultFilter: PropTypes.string,
+  defaultFilter: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string),
+  ])
 };
 
 export default SidebarList; 
