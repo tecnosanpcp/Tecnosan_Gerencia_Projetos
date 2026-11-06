@@ -30,13 +30,17 @@ export const readEquipRecipeCompRecipeById = async (equipment_recipe_id) => {
 export const createEquipRecipeCompRecipe = async (
   equipment_recipe_id,
   component_recipe_id,
-  quantity_plan
+  quantity_plan,
+  offset_start_hours,
+  duration_hours
 ) => {
   try {
     const response = await api.post("/equip-recipe-comp-recipe", {
       equipment_recipe_id,
       component_recipe_id,
       quantity_plan,
+      offset_start_hours,
+      duration_hours,
     });
 
     return response.data;
@@ -66,26 +70,32 @@ export const updateEquipRecipeCompRecipe = async (
   }
 };
 
-export const updateDates = async (
+// Antes chamava-se updateDates e mandava planned_start_at/planned_end_at.
+// A receita agora guarda tempo RELATIVO ao início do equipamento:
+// offset_start_hours (quantas horas depois o componente começa) e
+// duration_hours (quanto tempo dura). A data absoluta real de cada
+// orçamento fica em budgets_components_schedule
+// (ver budgetsComponentsSchedule.service.js).
+export const updateRecipeSchedule = async (
   equipment_recipe_id,
   component_recipe_id,
-  planned_start_at,
-  planned_end_at
+  offset_start_hours,
+  duration_hours
 ) => {
   try {
     if (
       !equipment_recipe_id ||
       !component_recipe_id ||
-      (!planned_start_at && !planned_end_at)
+      (offset_start_hours === undefined && duration_hours === undefined)
     ) {
       throw new Error("Faltando dados");
     }
 
     const response = await api.put(
-      `/equip-recipe-comp-recipe/dates/${equipment_recipe_id}/${component_recipe_id}`,
+      `/equip-recipe-comp-recipe/schedule/${equipment_recipe_id}/${component_recipe_id}`,
       {
-        planned_start_at,
-        planned_end_at,
+        offset_start_hours,
+        duration_hours,
       }
     );
 

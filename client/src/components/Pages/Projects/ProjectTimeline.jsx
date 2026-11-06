@@ -11,7 +11,10 @@ import { selectedProjectContext } from "@content/SeletedProject.jsx";
 const isValidDate = (d) => {
   return d instanceof Date && !isNaN(d);
 };
-
+const isWeekend = (date) => {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+};
 // Busca segura (Array ou Objeto)
 const getDataSafe = (source, type, id) => {
   if (!source || !source[type]) return null;
@@ -146,12 +149,14 @@ export default function ProjectTimeline({ searchTerm, times }) {
 
     let cur = new Date(s);
     let safety = 0;
-    // Limite de segurança de 1 ano (366 dias) para não travar o browser
+
     while (cur <= e && safety < 366) {
       dates.push(new Date(cur));
+
       cur.setDate(cur.getDate() + 1);
       safety++;
     }
+
     return dates;
   };
 
@@ -200,15 +205,18 @@ export default function ProjectTimeline({ searchTerm, times }) {
           >
             {/* Título do Projeto */}
             {!currentProject && (
-              <h2 className="text-lg font-bold text-gray-700 border-l-4 border-green-500 pl-2 mt-2">
-                {group.projectInfo.name || group.projectInfo.project_name}
-                <span className="text-xs font-normal text-gray-400 ml-2 uppercase border border-gray-200 rounded px-1">
+              <div className="flex items-center gap-2 border-t border-b border-[#B3D4FF] bg-[#E9F2FF] px-3 py-2">
+                <h2 className="m-0 text-[13px] font-semibold text-[#172B4D]">
+                  {group.projectInfo.name || group.projectInfo.project_name}
+                </h2>
+
+                <span className="text-[10px] font-medium uppercase text-[#6B778C]">
                   {group.projectInfo.status || "Status N/A"}
                 </span>
-              </h2>
+              </div>
             )}
 
-            <div className="w-full max-w-[calc(100vw-280px)] overflow-x-auto pb-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+            <div className="w-full max-w-[calc(100vw-280px)] overflow-x-auto  border border-gray-200  bg-white shadow-sm">
               <table className="w-full text-sm text-left border-collapse whitespace-nowrap">
                 {/* CABEÇALHO COM DATAS DO PROJETO */}
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
@@ -259,11 +267,14 @@ export default function ProjectTimeline({ searchTerm, times }) {
                           {projectDates.map((date, index) => (
                             <td
                               key={index}
-                              className="text-center border-r border-gray-200/50 last:border-0 p-0 h-10"
+                              className={`text-center border-r border-gray-200/50 last:border-0 p-0 h-10 ${
+                                isWeekend(date) ? "bg-red-500" : ""
+                              }`}
                             >
-                              {isDateInRange(date, equipStart, equipEnd) && (
-                                <StatusButton status={status_equip?.status} />
-                              )}
+                              {!isWeekend(date) &&
+                                isDateInRange(date, equipStart, equipEnd) && (
+                                  <StatusButton status={status_equip?.status} />
+                                )}
                             </td>
                           ))}
                         </tr>
@@ -305,17 +316,20 @@ export default function ProjectTimeline({ searchTerm, times }) {
                                 {projectDates.map((date, index) => (
                                   <td
                                     key={index}
-                                    className="text-center border-r border-gray-100 last:border-0 p-0 h-8"
+                                    className={`text-center border-r border-gray-100 last:border-0 p-0 h-8 ${
+                                      isWeekend(date) ? "bg-red-500" : ""
+                                    }`}
                                   >
-                                    {isDateInRange(
-                                      date,
-                                      compStart,
-                                      compEnd,
-                                    ) && (
-                                      <StatusButton
-                                        status={status_comp?.status}
-                                      />
-                                    )}
+                                    {!isWeekend(date) &&
+                                      isDateInRange(
+                                        date,
+                                        compStart,
+                                        compEnd,
+                                      ) && (
+                                        <StatusButton
+                                          status={status_comp?.status}
+                                        />
+                                      )}
                                   </td>
                                 ))}
                               </tr>

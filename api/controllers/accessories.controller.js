@@ -1,5 +1,11 @@
 import { pool } from "../config/db.js";
 
+
+import {
+  importarRegistros,
+  responderErroImportacao,
+} from "../utils/importacaoLotes.js";
+
 // ===================================================================================
 // 1. GESTÃO DE ACESSÓRIOS (Itens Físicos - Tabela 'accessories')
 // ===================================================================================
@@ -33,7 +39,7 @@ export const createAccessory = async (req, res) => {
       `INSERT INTO accessories (name, serial_number, value, purchase_date, status)
        VALUES ($1, $2, $3, $4, 'Available')
        RETURNING *`,
-      [name, serial_number, value, purchase_date]
+      [name, serial_number, value, purchase_date],
     );
 
     res.status(200).json({
@@ -56,7 +62,7 @@ export const updateAccessory = async (req, res) => {
        SET name = $1, serial_number = $2, value = $3, purchase_date = $4
        WHERE accessory_id = $5
        RETURNING *`,
-      [name, serial_number, value, purchase_date, id]
+      [name, serial_number, value, purchase_date, id],
     );
 
     res.json(result.rows[0]);
@@ -71,7 +77,7 @@ export const deleteAccessory = async (req, res) => {
     const { id } = req.params;
     const result = await pool.query(
       "DELETE FROM accessories WHERE accessory_id = $1 RETURNING *",
-      [id]
+      [id],
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -92,7 +98,7 @@ export const loanToProject = async (req, res) => {
       `INSERT INTO accessories_projects (project_id, accessory_id, taken_by_user_id, taken_at)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [project_id, accessory_id, user_id, taken_at]
+      [project_id, accessory_id, user_id, taken_at],
     );
 
     res.status(200).json({
@@ -101,28 +107,41 @@ export const loanToProject = async (req, res) => {
     });
   } catch (error) {
     console.error("Error loaning to project:", error);
-    res.status(500).json({ error: error.message }); 
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const loanToBudget = async (req, res) => {
   try {
-    const { 
-      budget_id, 
-      accessory_id, 
-      user_id,         
-      taken_at,        
-      received_by_id,  
-      returned_at      
+    const {
+      budget_id,
+      accessory_id,
+      user_id,
+      taken_at,
+      received_by_id,
+      returned_at,
     } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO accessories_budgets 
-       (budget_id, accessory_id, taken_by_user_id, taken_at, received_by_user_id, returned_at)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [budget_id, accessory_id, user_id, taken_at, received_by_id, returned_at]
-    );
+  `INSERT INTO accessories_budgets (
+    budget_id,
+    accessory_id,
+    taken_by_user_id,
+    taken_at,
+    received_by_user_id,
+    returned_at
+  )
+  VALUES ($1, $2, $3, $4, $5, $6)
+  RETURNING *`,
+  [
+    budget_id,
+    accessory_id,
+    user_id,
+    taken_at,
+    received_by_id || null,
+    returned_at || null,
+  ]
+);
 
     res.status(200).json({
       message: "Planejamento salvo com sucesso!",
@@ -141,18 +160,19 @@ export const returnAccessory = async (req, res) => {
   try {
     const { movement_id, received_by_user_id, returned_at, type } = req.body;
 
-    if (!['project', 'budget'].includes(type)) {
+    if (!["project", "budget"].includes(type)) {
       return res.status(400).json({ error: "Tipo inválido." });
     }
 
-    const tableName = type === 'project' ? 'accessories_projects' : 'accessories_budgets';
+    const tableName =
+      type === "project" ? "accessories_projects" : "accessories_budgets";
     const result = await pool.query(
       `UPDATE ${tableName}
        SET returned_at = COALESCE($3, NOW()), 
            received_by_user_id = $1
        WHERE movement_id = $2
        RETURNING *`,
-      [received_by_user_id, movement_id, returned_at]
+      [received_by_user_id, movement_id, returned_at],
     );
     res.status(200).json({
       message: "Acessório devolvido com sucesso!",
@@ -168,7 +188,7 @@ export const listActiveLoans = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM vw_loans_full_history 
-       ORDER BY returned_at ASC NULLS FIRST, taken_at DESC`
+       ORDER BY returned_at ASC NULLS FIRST, taken_at DESC`,
     );
     return res.json(result.rows);
   } catch (error) {
@@ -203,7 +223,9 @@ export const listBudgetHistory = async (req, res) => {
     return res.json(result.rows);
   } catch (error) {
     console.error("Error listing budget history:", error);
-    return res.status(500).json({ error: "Erro ao listar histórico de orçamentos." });
+    return res
+      .status(500)
+      .json({ error: "Erro ao listar histórico de orçamentos." });
   }
 };
 
@@ -211,12 +233,12 @@ export const listBudgetHistory = async (req, res) => {
 export const updateBudgetLoan = async (req, res) => {
   try {
     const { id } = req.params; // movement_id
-    const { 
-      accessory_id, 
-      taken_by_user_id, 
-      taken_at, 
-      received_by_user_id, 
-      returned_at 
+    const {
+      accessory_id,
+      taken_by_user_id,
+      taken_at,
+      received_by_user_id,
+      returned_at,
     } = req.body;
 
     const result = await pool.query(
@@ -228,7 +250,14 @@ export const updateBudgetLoan = async (req, res) => {
            returned_at = $5
        WHERE movement_id = $6
        RETURNING *`,
-      [accessory_id, taken_by_user_id, taken_at, received_by_user_id, returned_at, id]
+      [
+        accessory_id,
+        taken_by_user_id,
+        taken_at,
+        received_by_user_id,
+        returned_at,
+        id,
+      ],
     );
     res.json({ message: "Planejamento atualizado!", loan: result.rows[0] });
   } catch (error) {
@@ -244,11 +273,29 @@ export const deleteBudgetLoan = async (req, res) => {
 
     const result = await pool.query(
       "DELETE FROM accessories_budgets WHERE movement_id = $1 RETURNING *",
-      [id]
+      [id],
     );
     res.json({ message: "Planejamento removido!", deleted: result.rows[0] });
   } catch (error) {
     console.error("Erro ao deletar planejamento:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+
+export const importAccessories = async (req, res) => {
+  try {
+    const resultado = await importarRegistros(
+      "accessories",
+      req.body?.accessories,
+      req.body?.politica ?? "ignore"
+    );
+
+    return res.status(200).json({
+      mensagem: "Importação concluída.",
+      ...resultado,
+    });
+  } catch (error) {
+    return responderErroImportacao(error, res);
   }
 };

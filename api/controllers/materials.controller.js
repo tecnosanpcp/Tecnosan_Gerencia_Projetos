@@ -1,5 +1,10 @@
 import { pool } from "../config/db.js";
 
+import {
+  importarRegistros,
+  responderErroImportacao,
+} from "../utils/importacaoLotes.js";
+
 export const listMaterials = async (req, res) => {
   try {
     const response = await pool.query("SELECT * FROM materials");
@@ -13,7 +18,7 @@ export const createMaterial = async (req, res) => {
     const { material_name, material_desc, value, uni } = req.body;
     const response = await pool.query(
       "INSERT INTO materials(material_name, material_desc, value, uni) VALUES ($1, $2, $3, $4) RETURNING *",
-      [material_name, material_desc, value, uni]
+      [material_name, material_desc, value, uni],
     );
     res.status(200).json(response.rows);
   } catch (error) {
@@ -36,9 +41,9 @@ export const updateMaterial = async (req, res) => {
           WHERE
             material_id = $5
           RETURNING *`,
-      [material_name, material_desc, value, uni, material_id]
+      [material_name, material_desc, value, uni, material_id],
     );
-   res.status(200).json(response.rows)
+    res.status(200).json(response.rows);
   } catch (error) {
     res.status(500).json({ error: "Erro ao editar material" + error });
   }
@@ -56,10 +61,29 @@ export const deleteMaterial = async (req, res) => {
 
     const response = await pool.query(
       "DELETE FROM materials WHERE material_id = $1 RETURNING *",
-      [material_id]
+      [material_id],
     );
-    res.status(200).json(response.rows)
+    res.status(200).json(response.rows);
   } catch (error) {
     res.status(500).json({ error: "Erro ao excluir material " + error });
   }
 };
+
+
+export const importMaterials = async (req, res) => {
+  try {
+    const resultado = await importarRegistros(
+      "materials",
+      req.body?.materials,
+      req.body?.politica ?? "ignore"
+    );
+
+    return res.status(200).json({
+      mensagem: "Importação concluída.",
+      ...resultado,
+    });
+  } catch (error) {
+    return responderErroImportacao(error, res);
+  }
+};
+

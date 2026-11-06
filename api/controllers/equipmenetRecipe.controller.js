@@ -1,5 +1,11 @@
 import { pool } from "../config/db.js";
 
+
+import {
+  importarRegistros,
+  responderErroImportacao,
+} from "../utils/importacaoLotes.js";
+
 export const getEquipmentRecipe = async (req, res) => {
   try {
     const response = await pool.query("select * from equipment_recipes");
@@ -61,5 +67,22 @@ export const updateEquipmentRecipe = async (req, res) => {
     res
       .status(500)
       .json({ error: "Erro ao atualizar a receita do Equipamento " + error });
+  }
+};
+
+export const importEquipmentRecipes = async (req, res) => {
+  try {
+    const resultado = await importarRegistros(
+      "equipments",
+      req.body?.equipments,
+      req.body?.politica ?? "ignore"
+    );
+
+    return res.status(200).json({
+      mensagem: "Importação concluída.",
+      ...resultado,
+    });
+  } catch (error) {
+    return responderErroImportacao(error, res);
   }
 };

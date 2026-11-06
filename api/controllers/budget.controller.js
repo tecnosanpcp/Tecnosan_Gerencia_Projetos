@@ -40,7 +40,8 @@ export const listBudget = async (req, res) => {
       `SELECT b.*
        FROM budgets b
        JOIN budgets_users bu ON b.budget_id = bu.budget_id
-       WHERE bu.user_id = $1`,
+       LEFT JOIN projects p ON p.budget_id = b.budget_id
+       WHERE bu.user_id = $1 AND p.budget_id IS NULL`,
       [user_id],
     );
 

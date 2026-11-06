@@ -1,81 +1,151 @@
 import { IoMdClose } from "react-icons/io";
+import {
+  FiEdit3,
+  FiBriefcase,
+} from "react-icons/fi";
+
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { editDepartment } from "@services/DepartmentService";
 
-function DepartmentModalEdit({ visible, setVisible, department, id }) {
+function DepartmentModalEdit({
+  visible,
+  setVisible,
+  department,
+  id,
+}) {
   const [departmentName, setDepartmentName] = useState(
     department?.department_name || ""
   );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    setDepartmentName(
+      department?.department_name || ""
+    );
+  }, [department]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     try {
       await editDepartment(id, departmentName);
+
       setVisible(false);
       window.location.reload();
-
     } catch (error) {
       console.error("Erro ao editar departamento:", error);
       alert("Erro ao editar departamento.");
     }
   };
 
+  if (!visible) return null;
+
   return (
-    <>
-      {visible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto w-screen h-screen">
-          <div className="bg-gray-200 p-6 rounded-lg shadow-lg w-fit flex flex-col space-y-8">
-            <form className="flex flex-col space-y-8" onSubmit={handleSubmit}>
-              <div className="flex flex-row items-center justify-between">
-                <p className="text-lg font-semibold">Editar Departamento</p>
-                <button onClick={() => setVisible(false)} type="button">
-                  <IoMdClose className="text-gray-600 hover:text-gray-700 hover:bg-gray-300 rounded" />
-                </button>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091E42]/55 px-4 backdrop-blur-[2px]"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          setVisible(false);
+        }
+      }}
+    >
+      <div className="w-full max-w-[460px] overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-2xl">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.requestSubmit();
+            }
+          }}
+        >
+          {/* HEADER */}
+          <div className="flex items-center justify-between border-b border-[#DFE1E6] px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#DEEBFF] text-[#0052CC]">
+                <FiEdit3 size={18} />
               </div>
 
-              <div className="flex flex-col space-y-4">
-                <label htmlFor="department_name" className="text-gray-700">
-                  Nome do Departamento
-                </label>
-                <input
-                  type="text"
-                  name="department_name"
-                  className="p-2 rounded"
-                  placeholder="Digite o novo nome do departamento"
-                  value={departmentName}
-                  onChange={(e) => setDepartmentName(e.target.value)}
-                  required
-                />
-              </div>
+              <div>
+                <h2 className="text-[16px] font-semibold text-[#172B4D]">
+                  Editar departamento
+                </h2>
 
-              <div className="flex flex-row justify-end items-center gap-4">
-                <button
-                  type="button"
-                  className="p-4 bg-slate-50 hover:bg-gray-300 rounded"
-                  onClick={() => setVisible(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="p-4 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Editar Departamento
-                </button>
+                <p className="mt-0.5 text-[11px] text-[#6B778C]">
+                  Altere o nome do departamento.
+                </p>
               </div>
-            </form>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setVisible(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B778C] transition hover:bg-[#F4F5F7] hover:text-[#172B4D]"
+              aria-label="Fechar"
+            >
+              <IoMdClose size={19} />
+            </button>
           </div>
-        </div>
-      )}
-    </>
+
+          {/* CONTENT */}
+          <div className="px-5 py-5">
+            <label
+              htmlFor="department_name"
+              className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[#172B4D]"
+            >
+              <FiBriefcase
+                size={14}
+                className="text-[#6B778C]"
+              />
+
+              Nome do departamento
+
+              <span className="text-[#DE350B]">*</span>
+            </label>
+
+            <input
+              autoFocus
+              type="text"
+              id="department_name"
+              name="department_name"
+              placeholder="Digite o novo nome do departamento"
+              value={departmentName}
+              onChange={(event) =>
+                setDepartmentName(event.target.value)
+              }
+              required
+              className="h-10 w-full rounded-md border border-[#DFE1E6] bg-white px-3 text-[12px] text-[#172B4D] outline-none transition placeholder:text-[#97A0AF] focus:border-[#4C9AFF] focus:ring-2 focus:ring-[#DEEBFF]"
+            />
+          </div>
+
+          {/* FOOTER */}
+          <div className="flex flex-col-reverse gap-2 border-t border-[#DFE1E6] bg-[#FAFBFC] px-5 py-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setVisible(false)}
+              className="h-9 rounded-md border border-[#DFE1E6] bg-white px-4 text-[12px] font-semibold text-[#172B4D] transition hover:bg-[#F4F5F7]"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              className="h-9 rounded-md bg-[#0052CC] px-5 text-[12px] font-semibold text-white transition hover:bg-[#0065FF] active:scale-[0.98]"
+            >
+              Salvar alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
 DepartmentModalEdit.propTypes = {
   visible: PropTypes.bool.isRequired,
   setVisible: PropTypes.func.isRequired,
-  department: PropTypes.string.isRequired, // precisa receber o departamento a ser editado
+  department: PropTypes.string.isRequired,
   id: PropTypes.number.isRequired,
 };
 

@@ -15,12 +15,17 @@ import BudgetsMain from "./BudgetsMain";
 import BudgetFooter from "./BudgetFooter";
 
 function Budgets() {
-  const { data: budgets, isLoading, isError, error } = useQuery({
+  const {
+    data: budgets,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["budgets"],
     queryFn: async () => {
       const user = await VerifyAuth();
       return await listBudgets(user.user_id);
-    }
+    },
   });
   const [selectedBudget, setSelectedBudget] = useState(null);
   const [isAddBudgetModalOpen, setAddBudgetModalOpen] = useState(false);
@@ -39,8 +44,22 @@ function Budgets() {
       title="Orçamento"
       actions={
         <button
-          className="px-4 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm"
+          type="button"
           onClick={() => navigate("/projects")}
+          className="
+        inline-flex
+        items-center
+        justify-center
+        rounded-[4px]
+        border border-[#DFE1E6]
+        bg-white
+        px-3 py-1.5
+        text-[12px]
+        font-semibold
+        text-[#172B4D]
+        transition-colors
+        hover:bg-[#F4F5F7]
+      "
         >
           Ir para Projetos
         </button>
@@ -53,12 +72,12 @@ function Budgets() {
             local: bud.budget_local,
             status: bud.status,
             start_date: bud.start_date,
-            deadline: bud.deadline
+            deadline: bud.deadline,
           }))}
           selectedItem={selectedBudget}
           onSelectItem={setSelectedBudget}
           onAdd={() => setAddBudgetModalOpen(true)}
-          addLabel="+ Novo Orçamento"
+          addLabel="Novo Orçamento"
           titleAll="Todos os Orçamentos"
           defaultFilter="Em Planejamento"
           filterOptions={[
@@ -68,12 +87,17 @@ function Budgets() {
           ]}
         />
       }
-      header={<BudgetHeader currentBudget={selectedBudget} />}
+      header={
+        <BudgetHeader
+          currentBudget={selectedBudget}
+          allBudgets={budgets || []}
+        />
+      }
     >
       <div className="flex flex-col gap-4">
         {/* Passamos a lista completa de budgets aqui */}
         <BudgetsMain currentBudget={selectedBudget} allBudgets={budgets} />
-        
+
         {/* Footer só aparece se tiver um orçamento específico selecionado */}
         {selectedBudget && <BudgetFooter currentBudget={selectedBudget} />}
       </div>

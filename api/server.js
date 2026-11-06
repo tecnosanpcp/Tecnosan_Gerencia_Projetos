@@ -23,11 +23,14 @@ import componentRecipeMaterialsRouter from "./routes/componentRecipeMaterials.ro
 import componentRecipeRoutes from "./routes/componentRecipes.routes.js";
 import equipRecipeCompRecipeRoutes from "./routes/equipRecipeCompRecipe.routes.js";
 import equipmentRecipeRouter from "./routes/equipmentRecipe.routes.js";
-import budgetsEquipRecipesRouter from "./routes/budgetsEquipRecipes.routes.js";
 import budgetRoutes from "./routes/budget.routes.js";
 import employeesComponentsRoutes from "./routes/employees_components.routes.js";
 import componentsMaterialsRoutes from "./routes/components.materials.routes.js";
 import homeRoutes from "./routes/home.routes.js";
+
+// Rotas do novo fluxo de orçamento (data real por orçamento)
+import budgetsEquipmentsRoutes from "./routes/budgetsEquipments.routes.js";
+import budgetsComponentsScheduleRoutes from "./routes/budgetsComponentsSchedule.routes.js";
 
 const app = express();
 app.use(express.json());
@@ -35,7 +38,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://tecnosan-gerencia-projetos.vercel.app",
+      "https://read-me-tgp.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Adicione OPTIONS
     allowedHeaders: ["Content-Type", "Authorization"], // Adicione isso
@@ -76,8 +79,11 @@ app.use("/comp-recipe-mat", componentRecipeMaterialsRouter);
 app.use("/component-recipes", componentRecipeRoutes);
 app.use("/equip-recipe-comp-recipe", equipRecipeCompRecipeRoutes);
 app.use("/equip-recipe", equipmentRecipeRouter);
-app.use("/budgets-equip-recipes", budgetsEquipRecipesRouter);
 app.use("/budgets", budgetRoutes);
+
+// Novo fluxo: data real calculada por orçamento
+app.use("/budgets-equipments", budgetsEquipmentsRoutes);
+app.use("/budgets-components-schedule", budgetsComponentsScheduleRoutes);
 
 const port = process.env.PORT || 3001;
 

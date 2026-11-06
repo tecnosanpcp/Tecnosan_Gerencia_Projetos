@@ -1,26 +1,67 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FaTrash } from "react-icons/fa";
 
-// Serviços
-import { updateDates } from "@services/EquipRecipeCompRecipe";
-import { deleteRelation } from "@services/BudgetsEquipRecipesServices.js";
+import { upsertBudgetComponentSchedule } from "@services/BudgetsComponentsScheduleService.js";
+// TODO: descomente quando o service existir e confirme o caminho do import
+import { deleteBudgetEquipment } from "@services/BudgetsEquipmentsService.js";
 
-// Utilitários
 import { formatDate, formatForInput } from "@utils/dateUtils.js";
+
+// Stub temporário: remova quando importar o deleteRelation real.
+
+const maskDateInput = (value) => {
+  const digits = String(value).replace(/\D/g, "").slice(0, 8);
+
+  if (digits.length <= 2) {
+    return digits.length === 2 ? `${digits}/` : digits;
+  }
+
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}${digits.length === 4 ? "/" : ""}`;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+};
+
+const formatMaskedDate = (date) => {
+  const iso = formatForInput(date);
+  if (!iso) return "";
+
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
+};
+
+const maskedDateToIso = (value) => {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+
+  const [, day, month, year] = match;
+  const date = new Date(Date.UTC(+year, +month - 1, +day));
+
+  if (
+    date.getUTCFullYear() !== +year ||
+    date.getUTCMonth() !== +month - 1 ||
+    date.getUTCDate() !== +day
+  ) {
+    return null;
+  }
+
+  return `${year}-${month}-${day}`;
+};
 
 function BudgetEquipmentTable({
   currentBudget,
   groupedData,
   searchTerm = "",
-  timelineTasks,
-  timelineEquipments,
+  timelineEquipments = [],
+  timelineTasks = [],
 }) {
   const queryClient = useQueryClient();
+
   const [rowsExpands, setRowsExpand] = useState([]);
   const [modifiedData, setModifiedData] = useState({});
 
-  // --- MUTAÇÕES ---
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["budgetDetails"] });
     queryClient.invalidateQueries({ queryKey: ["timelineTasks"] });
@@ -28,243 +69,509 @@ function BudgetEquipmentTable({
   };
 
   const deleteMutation = useMutation({
-    mutationFn: ({ budgetId, equipId }) => deleteRelation(budgetId, equipId),
-    onSuccess: invalidateAll,
+    mutationFn: (budgetEquipmentId) => deleteBudgetEquipment(budgetEquipmentId),
+
+    onSuccess: () => {
+      invalidateAll();
+    },
+
+    onError: (error) => {
+      console.error("Erro ao excluir equipamento:", error);
+      alert("Não foi possível excluir o equipamento.");
+    },
   });
 
   const dateMutation = useMutation({
-    mutationFn: ({ equipId, compId, start, end }) =>
-      updateDates(equipId, compId, start, end),
+    mutationFn: ({ budgetEquipmentId, compId, start, end }) =>
+      upsertBudgetComponentSchedule(
+        currentBudget?.id || currentBudget?.budget_id,
+        budgetEquipmentId,
+        compId,
+        start,
+        end,
+      ),
     onSuccess: invalidateAll,
   });
 
-  // --- LÓGICA ---
-  const handleInputChange = (componentId, field, value) => {
+  // A chave é composta (linha + componente) porque o mesmo equipamento
+  // pode aparecer mais de uma vez no orçamento.
+  const handleInputChange = (key, field, value) => {
     setModifiedData((prev) => ({
       ...prev,
-      [componentId]: { ...prev[componentId], [field]: value },
+      [key]: {
+        ...prev[key],
+        [field]: value,
+      },
     }));
   };
 
-  const handleDateSave = (equipId, compId, type) => {
-    const newValue = modifiedData[compId]?.[type];
-    if (!newValue) return;
+  const advanceDateFocus = (event, value) => {
+    if (!maskedDateToIso(value)) return;
+
+    const currentInput = event.currentTarget;
+    const table = currentInput.closest("table");
+
+    if (!table) return;
+
+    const inputs = Array.from(
+      table.querySelectorAll('input[data-gantt-date="true"]'),
+    );
+
+    const currentIndex = inputs.indexOf(currentInput);
+
+    if (currentIndex === -1) return;
+
+    const nextInput = inputs
+      .slice(currentIndex + 1)
+      .find((input) => !input.disabled);
+
+    if (nextInput) {
+      nextInput.focus();
+      nextInput.select();
+    }
+  };
+
+  const handleDateSave = (
+    budgetEquipmentId,
+    compId,
+    key,
+    type,
+    originalStart,
+    originalEnd,
+  ) => {
+    const dates = modifiedData[key];
+    if (!dates) return;
+
+    const startText =
+      dates.start !== undefined ? dates.start : formatMaskedDate(originalStart);
+
+    const endText =
+      dates.end !== undefined ? dates.end : formatMaskedDate(originalEnd);
+
+    if (!startText || !endText) return;
+
+    const start = maskedDateToIso(startText);
+    const end = maskedDateToIso(endText);
+
+    if (
+      !startText ||
+      !endText ||
+      startText.length !== 10 ||
+      endText.length !== 10
+    ) {
+      return;
+    }
+
+    if (end < start) {
+      alert("A data de término não pode ser anterior à data de início.");
+      return;
+    }
+
     dateMutation.mutate({
-      equipId,
+      budgetEquipmentId,
       compId,
-      start: type === "start" ? newValue : null,
-      end: type === "end" ? newValue : null,
+      start,
+      end,
     });
   };
 
-  const getInputValue = (componentId, field, originalDate) => {
-    if (modifiedData[componentId]?.[field] !== undefined) {
-      return modifiedData[componentId][field];
+  const getInputValue = (key, field, originalDate) => {
+    if (modifiedData[key]?.[field] !== undefined) {
+      return modifiedData[key][field];
     }
-    return formatForInput(originalDate);
+
+    return formatMaskedDate(originalDate);
+  };
+
+  const toggleRow = (rowKey) => {
+    setRowsExpand((prev) =>
+      prev.includes(rowKey)
+        ? prev.filter((id) => id !== rowKey)
+        : [...prev, rowKey],
+    );
   };
 
   if (!groupedData || groupedData.length === 0) {
     return (
-      <div className="text-gray-500 text-center p-4">
-        Nenhum dado encontrado.
+      <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-[#DFE1E6] bg-white">
+        <div className="text-center">
+          <p className="text-sm font-medium text-[#172B4D]">
+            Nenhum equipamento encontrado
+          </p>
+          <p className="mt-1 text-xs text-[#5E6C84]">
+            Não existem dados para exibir neste orçamento.
+          </p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col gap-8 w-full pb-4">
-      {groupedData.map((group) => (
-        <div key={group.budget_id} className="flex flex-col gap-2">
-          {!currentBudget && (
-            <h2 className="text-lg font-bold text-gray-700 border-l-4 border-blue-500 pl-2">
-              {group.budget_name}{" "}
-              <span className="text-sm font-normal text-gray-500">
-                ({group.status})
-              </span>
-            </h2>
-          )}
+  const thBase =
+    "px-2 py-2.5 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]";
+  const dateInputClass =
+    "h-7 w-full rounded border border-[#DFE1E6] bg-white px-1 text-[10px] text-[#172B4D] outline-none transition focus:border-[#4C9AFF] focus:ring-1 focus:ring-[#4C9AFF]/30 disabled:bg-[#F4F5F7] disabled:text-[#8993A4]";
 
-          <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-            <table className="w-full project-equipments text-center">
-              <thead>
-                <tr className="text-left bg-[#DBEBFF]">
-                  <th className="first:rounded-tl-lg px-4 py-2">
-                    Equipamentos
-                  </th>
-                  <th>Início</th>
-                  <th>Fim</th>
-                  <th>Resina</th>
-                  <th>Roving</th>
-                  <th>Tecido KG</th>
-                  <th>Tec. CMD</th>
-                  <th>Catalizador</th>
-                  <th>Manta</th>
-                  <th>Reina ISO</th>
-                  <th>Valor</th>
-                  <th>Horas</th>
-                  <th className="last:rounded-tr-lg px-2 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.equipments
-                  ?.filter((equip) =>
-                    equip?.recipe_name
-                      ?.toLowerCase()
-                      ?.includes(searchTerm?.toLowerCase()),
-                  )
-                  .map((equip) => {
-                    const timeline_proj = timelineEquipments.find(
+  useEffect(() => {
+    console.log(timelineTasks, timelineEquipments);
+  }, [timelineTasks, timelineEquipments]);
+
+  return (
+    <div className="flex min-w-0 w-full flex-col">
+      {groupedData.map((group) => {
+        const term = (searchTerm || "").toLowerCase();
+
+        const filteredEquipments =
+          group.equipments?.filter((equip) =>
+            (equip?.equipment_name || "").toLowerCase().includes(term),
+          ) || [];
+
+        return (
+          <div
+            key={group.budget_id}
+            className="flex min-w-0 w-full flex-col border-b border-[#DFE1E6]"
+          >
+            {!currentBudget && (
+              <div className="flex items-center justify-between border-y border-[#B3D4FF] bg-[#E9F2FF] px-3 py-2">
+                <div className="min-w-0">
+                  <h2 className="truncate text-sm font-semibold text-[#172B4D]">
+                    {group.budget_name}
+                  </h2>
+                </div>
+
+                <span className="ml-3 shrink-0 rounded-full bg-[#F4F5F7] px-2 py-1 text-[10px] font-semibold text-[#5E6C84]">
+                  {group.status}
+                </span>
+              </div>
+            )}
+
+            <div className="w-full min-w-0 overflow-x-auto">
+              <table className="w-full table-fixed border-collapse">
+                <colgroup>
+                  <col className="w-[17%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[6%]" />
+                  <col className="w-[6%]" />
+                </colgroup>
+
+                <thead>
+                  <tr className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
+                    <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                      Equipamento
+                    </th>
+                    <th className={thBase}>Início</th>
+                    <th className={thBase}>Fim</th>
+                    <th className={thBase}>Resina</th>
+                    <th className={thBase}>Roving</th>
+                    <th className={thBase}>Tecido KG</th>
+                    <th className={thBase}>Tec. CMD</th>
+                    <th className={thBase}>Catalizador</th>
+                    <th className={thBase}>Manta</th>
+                    <th className={thBase}>Resina ISO</th>
+                    <th className={thBase}>Valor</th>
+                    <th className={thBase}>Horas</th>
+                    <th className={thBase}>Ações</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredEquipments.map((equip, idx) => {
+                    // Chave única por linha (o mesmo equipamento pode se repetir)
+                    const rowKey =
+                      equip.budget_equipment_id ??
+                      `${equip.budget_id}-${equip.equipment_recipe_id}-${idx}`;
+
+                    const timelineProj = timelineEquipments.find(
                       (te) =>
-                        te.equipment_recipe_id == equip.equipment_recipe_id,
+                        String(te.budget_equipment_id) ===
+                        String(equip.budget_equipment_id),
                     );
+
                     const isLocked = group.status !== "Em Planejamento";
+                    const isExpanded = rowsExpands.includes(rowKey);
+
+                    const components =
+                      group.components?.filter(
+                        (c) =>
+                          String(c.budget_equipment_id) ===
+                          String(equip.budget_equipment_id),
+                      ) || [];
 
                     return (
-                      <Fragment key={equip.equipment_recipe_id}>
+                      <Fragment key={rowKey}>
                         <tr
-                          className="bg-gray-200 hover:cursor-pointer"
-                          onClick={() => {
-                            setRowsExpand((prev) =>
-                              prev.includes(equip.equipment_recipe_id)
-                                ? prev.filter(
-                                    (id) => id !== equip.equipment_recipe_id,
-                                  )
-                                : [...prev, equip.equipment_recipe_id],
-                            );
-                          }}
+                          onClick={() => toggleRow(rowKey)}
+                          className={`group cursor-pointer border-b border-[#EBECF0] transition-colors ${
+                            isExpanded
+                              ? "bg-[#DEEBFF]/40"
+                              : "bg-white hover:bg-[#F4F5F7]"
+                          }`}
                         >
-                          <td>{equip.recipe_name}</td>
-                          <td>
-                            {formatDate(timeline_proj?.equipment_start_at)}
+                          <td className="px-3 py-2 text-left">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold transition-colors ${
+                                  isExpanded
+                                    ? "bg-[#0052CC] text-white"
+                                    : "bg-[#F4F5F7] text-[#5E6C84]"
+                                }`}
+                              >
+                                {isExpanded ? "−" : "+"}
+                              </span>
+
+                              <span
+                                className="truncate text-xs font-semibold text-[#172B4D]"
+                                title={equip.equipment_name}
+                              >
+                                {equip.equipment_name}
+                              </span>
+                            </div>
                           </td>
-                          <td>{formatDate(timeline_proj?.equipment_end_at)}</td>
-                          <td>{equip.resina}</td>
-                          <td>{equip.roving}</td>
-                          <td>{equip.tecido_kg}</td>
-                          <td>{equip.tecido_cmd}</td>
-                          <td>{equip.catalizador}</td>
-                          <td>{equip.manta}</td>
-                          <td>{equip.resina_iso}</td>
-                          <td>{equip.total_value}</td>
-                          <td>{equip.horas_homem}</td>
-                          {/* LIXEIRA */}
-                          <td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#5E6C84]">
+                            {formatDate(timelineProj?.equipment_start_at)}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#5E6C84]">
+                            {formatDate(timelineProj?.equipment_end_at)}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.resina ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.roving ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.tecido_kg ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.tecido_cmd ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.catalizador ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.manta ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.resina_iso ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] font-medium text-[#172B4D]">
+                            {equip.total_value ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center text-[11px] text-[#172B4D]">
+                            {equip.horas_homem ?? "-"}
+                          </td>
+
+                          <td className="px-2 py-2 text-center">
                             {!isLocked && (
                               <button
+                                type="button"
                                 onClick={(e) => {
-                                  e.stopPropagation(); // Evita expandir a linha ao clicar na lixeira
-                                  if (confirm(`Remover ${equip.recipe_name}?`))
-                                    deleteMutation.mutate({
-                                      budgetId: group.budget_id,
-                                      equipId: equip.equipment_recipe_id,
-                                    });
+                                  e.stopPropagation();
+
+                                  if (
+                                    confirm(`Remover ${equip.equipment_name}?`)
+                                  ) {
+                                    if (!equip.budget_equipment_id) {
+                                      alert(
+                                        "Não foi possível identificar o equipamento.",
+                                      );
+                                      return;
+                                    }
+
+                                    deleteMutation.mutate(
+                                      equip.budget_equipment_id,
+                                    );
+                                  }
                                 }}
-                                className="text-red-500 hover:text-red-700 p-1"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[#5E6C84] transition-colors hover:bg-[#FFEBE6] hover:text-[#DE350B]"
+                                title="Remover equipamento"
                               >
-                                <FaTrash size={13} />
+                                <FaTrash size={11} />
                               </button>
                             )}
                           </td>
                         </tr>
 
-                        {rowsExpands.includes(equip.equipment_recipe_id) &&
-                          group.components
-                            .filter(
-                              (c) =>
-                                c.equipment_recipe_id ==
-                                equip.equipment_recipe_id,
-                            )
-                            .map((comp, index) => {
-                              const comp_tasks = timelineTasks.find(
-                                (t) =>
-                                  t.component_recipe_id ==
-                                  comp.component_recipe_id,
-                              );
-                              return (
-                                <tr
-                                  key={comp.component_recipe_id}
-                                  className={
-                                    index % 2 === 0
-                                      ? "bg-gray-50"
-                                      : "bg-gray-100"
-                                  }
-                                >
-                                  <td>{comp.recipe_name}</td>
-                                  <td>
-                                    <input
-                                      type="date"
-                                      className="bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none w-full text-center"
-                                      value={getInputValue(
-                                        comp.component_recipe_id,
+                        {isExpanded &&
+                          components.map((comp, index) => {
+                            const compKey = `${rowKey}-${comp.component_recipe_id}`;
+
+                            const compTasks = timelineTasks.find(
+                              (t) =>
+                                String(t.budget_equipment_id) ===
+                                  String(equip.budget_equipment_id) &&
+                                String(t.component_recipe_id) ===
+                                  String(comp.component_recipe_id),
+                            );
+
+                            return (
+                              <tr
+                                key={compKey}
+                                className={`border-b border-[#EBECF0] ${
+                                  index % 2 === 0 ? "bg-[#FAFBFC]" : "bg-white"
+                                }`}
+                              >
+                                <td className="px-3 py-2 pl-10 text-left">
+                                  <div className="truncate text-[11px] font-medium text-[#5E6C84]">
+                                    {comp.recipe_name}
+                                  </div>
+                                </td>
+
+                                <td className="px-2 py-1.5">
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={10}
+                                    placeholder="DD/MM/AAAA"
+                                    className={dateInputClass}
+                                    data-gantt-date="true"
+                                    value={getInputValue(
+                                      compKey,
+                                      "start",
+                                      compTasks?.planned_start_at,
+                                    )}
+                                    onChange={(e) => {
+                                      const value = maskDateInput(
+                                        e.target.value,
+                                      );
+
+                                      handleInputChange(
+                                        compKey,
                                         "start",
-                                        comp_tasks?.planned_start_at,
-                                      )}
-                                      onChange={(e) =>
-                                        handleInputChange(
-                                          comp.component_recipe_id,
-                                          "start",
-                                          e.target.value,
-                                        )
-                                      }
-                                      onBlur={() =>
-                                        handleDateSave(
-                                          equip.equipment_recipe_id,
-                                          comp.component_recipe_id,
-                                          "start",
-                                        )
-                                      }
-                                      disabled={isLocked}
-                                    />
-                                  </td>
-                                  <td>
-                                    <input
-                                      type="date"
-                                      className="bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none w-full text-center"
-                                      value={getInputValue(
+                                        value,
+                                      );
+                                      advanceDateFocus(e, value);
+                                    }}
+                                    onBlur={() =>
+                                      handleDateSave(
+                                        equip.budget_equipment_id,
                                         comp.component_recipe_id,
+                                        compKey,
+                                        "start",
+                                        compTasks?.planned_start_at,
+                                        compTasks?.planned_end_at,
+                                      )
+                                    }
+                                    disabled={isLocked}
+                                  />
+                                </td>
+
+                                <td className="px-2 py-1.5">
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={10}
+                                    placeholder="DD/MM/AAAA"
+                                    className={dateInputClass}
+                                    data-gantt-date="true"
+                                    value={getInputValue(
+                                      compKey,
+                                      "end",
+                                      compTasks?.planned_end_at,
+                                    )}
+                                    onChange={(e) => {
+                                      const value = maskDateInput(
+                                        e.target.value,
+                                      );
+
+                                      handleInputChange(compKey, "end", value);
+                                      advanceDateFocus(e, value);
+                                    }}
+                                    onBlur={() =>
+                                      handleDateSave(
+                                        equip.budget_equipment_id,
+                                        comp.component_recipe_id,
+                                        compKey,
                                         "end",
-                                        comp_tasks?.planned_end_at,
-                                      )}
-                                      onChange={(e) =>
-                                        handleInputChange(
-                                          comp.component_recipe_id,
-                                          "end",
-                                          e.target.value,
-                                        )
-                                      }
-                                      onBlur={() =>
-                                        handleDateSave(
-                                          equip.equipment_recipe_id,
-                                          comp.component_recipe_id,
-                                          "end",
-                                        )
-                                      }
-                                      disabled={isLocked}
-                                    />
-                                  </td>
-                                  <td>{comp.resina}</td>
-                                  <td>{comp.roving}</td>
-                                  <td>{comp.tecido_kg}</td>
-                                  <td>{comp.tecido_cmd}</td>
-                                  <td>{comp.catalizador}</td>
-                                  <td>{comp.manta}</td>
-                                  <td>{comp.resina_iso}</td>
-                                  <td>{comp.total_value}</td>
-                                  <td>{comp.horas_homem}</td>
-                                  <td></td>{" "}
-                                  {/* Coluna da lixeira vazia para manter alinhamento */}
-                                </tr>
-                              );
-                            })}
+                                        compTasks?.planned_start_at,
+                                        compTasks?.planned_end_at,
+                                      )
+                                    }
+                                    disabled={isLocked}
+                                  />
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.resina ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.roving ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.tecido_kg ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.tecido_cmd ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.catalizador ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.manta ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.resina_iso ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.total_value ?? "-"}
+                                </td>
+
+                                <td className="px-2 py-2 text-center text-[10px] text-[#5E6C84]">
+                                  {comp.horas_homem ?? "-"}
+                                </td>
+
+                                <td />
+                              </tr>
+                            );
+                          })}
                       </Fragment>
                     );
                   })}
-              </tbody>
-            </table>
+
+                  {filteredEquipments.length === 0 && (
+                    <tr>
+                      <td colSpan={13} className="px-4 py-10 text-center">
+                        <p className="text-sm font-medium text-[#172B4D]">
+                          Nenhum equipamento encontrado
+                        </p>
+                        <p className="mt-1 text-xs text-[#5E6C84]">
+                          Tente alterar o termo de pesquisa.
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

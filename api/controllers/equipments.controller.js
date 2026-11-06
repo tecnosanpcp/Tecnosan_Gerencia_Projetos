@@ -12,6 +12,7 @@ export const getEquipment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 export const listEquipments = async (req, res) => {
   try {
     const response = await pool.query("SELECT * FROM equipments");
@@ -28,23 +29,40 @@ export const createEquipment = async (req, res) => {
       start_date,
       deadline,
       project_id,
-      equipment_recipe_id
+      equipment_recipe_id,
+      // opcional: liga o equipamento a uma instância de orçamento
+      // (budgets_equipments), usada pelas triggers de cálculo automático
+      budget_equipment_id,
     } = req.body;
 
+    // bug corrigido: estava "equipment_recipe_id" sem "!", então a validação
+    // reprovava exatamente quando o dado ESTAVA presente
     if (
       !equipment_name ||
       !start_date ||
       !deadline ||
       !project_id ||
-      equipment_recipe_id
+      !equipment_recipe_id
     ) {
-      res.status(400).json({ message: "Faltando dados" });
-      throw new Error("Faltando dados");
+      return res.status(400).json({ message: "Faltando dados" });
     }
 
-    const response = await pool.query(`
-      INSERT INTO EQUIPMENTS(equipment_name, start_date, deadline, project_id, equipment_recipe_id)
-      VALUES ('TESTE', '14-01-2026', '14-04-2026', 10, 1) RETURNING *`);
+    // bug corrigido: o INSERT ignorava req.body e gravava valores fixos de
+    // teste ('TESTE', '14-01-2026', '14-04-2026', 10, 1)
+    const response = await pool.query(
+      `INSERT INTO equipments
+        (equipment_name, start_date, deadline, project_id, equipment_recipe_id, budget_equipment_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *`,
+      [
+        equipment_name,
+        start_date,
+        deadline,
+        project_id,
+        equipment_recipe_id,
+        budget_equipment_id ?? null,
+      ],
+    );
 
     res.status(200).json(response.rows[0]);
   } catch (error) {

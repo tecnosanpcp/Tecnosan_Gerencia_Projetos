@@ -18,23 +18,28 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
 
   const [materials, setMaterials] = useState([]);
   const [materialsList, setMaterialsList] = useState([]);
+  const [materialsToAdd, setMaterialsToAdd] = useState([]);
   const [materialsQuantity, setMaterialsQuantity] = useState([]);
 
   useEffect(() => {
     const fletchMaterials = async () => {
       const data = await listMaterials();
+
       if (!Array.isArray(data) || data.length <= 0) {
         console.error("erro no array materiasl");
         return null;
       }
+
       setMaterials(data);
     };
+
     fletchMaterials();
   }, []);
 
   useEffect(() => {
     setMaterialsQuantity((prev) => {
       const existingIds = new Set(prev.map((item) => item.id));
+
       const newItems = materialsList
         .filter((id) => !existingIds.has(id))
         .map((id) => ({ id, quantity: 1 }));
@@ -48,6 +53,7 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
     setMen("");
     setHours("");
     setMaterialsList([]);
+    setMaterialsToAdd([]);
     setMaterialsQuantity([]);
     setVisible(false);
   };
@@ -87,7 +93,6 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
     }
   };
 
-  // --- ALTERAÇÃO: Lógica para calcular o valor total ---
   const totalValue = materialsList.reduce((acc, id) => {
     const material = materials.find((m) => m.material_id === id);
     const itemQty = materialsQuantity.find((q) => q.id === id);
@@ -101,222 +106,370 @@ export default function AddComponenteRecipeModal({ isVisible, setVisible }) {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 w-screen min-h-screen overflow-auto">
-      <div className="bg-gray-200 p-6 rounded-lg shadow-lg w-[70vw] max-w-[120vw] h-[70vh] max-h-[90vh] flex flex-col space-y-8 overflow-auto">
+    <div className="fixed inset-0 z-[8000] flex items-center justify-center bg-[#091E42]/45 p-6 backdrop-blur-[2px]">
+      <div className="flex h-full w-[1100px] flex-col overflow-hidden rounded-xl border border-[#DFE1E6] bg-white shadow-[0_20px_60px_rgba(9,30,66,0.20)  ]">
         <form
-          className="flex flex-col  space-y-8"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
           }}
         >
-          {/* Título + botão X */}
-          <div className="flex flex-row items-center justify-between space-x-2">
-            <p className="text-lg font-semibold">
-              Adicionar Receita do Componente
-            </p>
+          {/* HEADER */}
+          <div className="flex items-center justify-between border-b border-[#DFE1E6] px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[#172B4D]">
+                Adicionar Receita do Componente
+              </h2>
 
-            <button onClick={() => setVisible(false)} type="button">
-              <IoMdClose className="text-gray-600 hover:text-gray-700 hover:bg-gray-300 rounded" />
-            </button>
-          </div>
-
-          <div className="flex flex-row w-full justify-between gap-6">
-            {/* Nome do componente */}
-            <div className="flex flex-col space-y-2 w-1/2">
-              <label className="text-gray-700">Nome *</label>
-              <input
-                type="text"
-                className="p-2 rounded"
-                placeholder="Digite o nome do Componente"
-                value={componenteRecipeName}
-                onChange={(e) => setComponentRecipeName(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Inputs para Homens e Horas */}
-            <div className="flex flex-row w-1/2 gap-4">
-              <div className="flex flex-col space-y-2 w-1/2">
-                <label className="text-gray-700">Qtd. Homens *</label>
-                <input
-                  type="number"
-                  className="p-2 rounded"
-                  placeholder="Ex: 2"
-                  value={men}
-                  onChange={(e) => setMen(e.target.value)}
-                  min="1"
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col space-y-2 w-1/2">
-                <label className="text-gray-700">Qtd. Horas *</label>
-                <input
-                  type="number"
-                  className="p-2 rounded"
-                  placeholder="Ex: 1.5"
-                  value={hours}
-                  onChange={(e) => setHours(e.target.value)}
-                  step="0.1"
-                  min="0"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-gray-700">Materiais *</label>
-            <SelectMenu
-              options={materials.map((m) => ({
-                id: m.material_id,
-                label: m.material_name,
-              }))}
-              selectedOption={materialsList}
-              setSelectedOption={setMaterialsList}
-            />
-          </div>
-
-          {/* Lista de Materiais */}
-          <div className="flex flex-col justify-center intems-center bg-white p-2 rounded w-full">
-            <table className="space-y-2 w-full">
-              <thead>
-                <tr className="grid grid-cols-6 gap-6">
-                  <th className="font-normal ">Material</th>
-                  <th className="font-normal ">Descrição</th>
-                  <th className="font-normal ">Valor Unitário</th>
-                  <th className="font-normal ">Quantidade</th>
-                  <th className="font-normal ">Valor Total</th>
-                  <th className="font-normal">Ação</th>
-                </tr>
-              </thead>
-
-              <tbody className="font-serif text-center">
-                {materialsList.map((id) => (
-                  <tr key={id} className="grid grid-cols-6 gap-6">
-                    {/* Material */}
-                    <td>
-                      {Array.isArray(materialsList) && materialsList.length > 0
-                        ? (() => {
-                            const found = materials.find(
-                              (m) => m.material_id === id,
-                            );
-                            return found ? (found.material_name ?? "-") : "-";
-                          })()
-                        : "-"}
-                    </td>
-
-                    {/* Descrição */}
-                    <td>
-                      {Array.isArray(materialsList) && materialsList.length > 0
-                        ? (() => {
-                            const found = materials.find(
-                              (m) => m.material_id === id,
-                            );
-                            return found ? (found.material_desc ?? "-") : "-";
-                          })()
-                        : "-"}
-                    </td>
-
-                    {/* Valor unitário */}
-                    <td>
-                      {Array.isArray(materialsList) && materialsList.length > 0
-                        ? (() => {
-                            const found = materials.find(
-                              (m) => m.material_id === id,
-                            );
-                            return found
-                              ? Number(found.value).toLocaleString("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                })
-                              : "R$ 0.00";
-                          })()
-                        : "0.00"}
-                    </td>
-
-                    {/* Quantidade */}
-                    <td>
-                      <input
-                        type="number"
-                        className="border p-1 w-20"
-                        value={
-                          materialsQuantity.find((m) => m.id === id)
-                            ?.quantity || ""
-                        }
-                        onChange={(e) => {
-                          const newValue = Number(e.target.value);
-                          setMaterialsQuantity((prev) =>
-                            prev.map((m) =>
-                              m.id === id ? { ...m, quantity: newValue } : m,
-                            ),
-                          );
-                        }}
-                      />
-                    </td>
-
-                    {/* Valor total */}
-                    <td>
-                      {(() => {
-                        const qtd =
-                          materialsQuantity.find((q) => q.id === id)
-                            ?.quantity || 0;
-                        const unit = (() => {
-                          if (
-                            Array.isArray(materialsList) &&
-                            materialsList.length > 0
-                          ) {
-                            const found = materials.find(
-                              (m) => m.material_id === id,
-                            );
-                            return found ? Number(found.value) : 0;
-                          }
-                          return 0;
-                        })();
-                        return (qtd * unit).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        });
-                      })()}
-                    </td>
-                    <td>
-                      <button
-                        className="bnt font-normal font-sans"
-                        type="button"
-                        onClick={() => {
-                          setMaterialsList(
-                            materialsList.filter((i) => i != id),
-                          );
-                        }}
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Botões */}
-          <div className="flex flex-row justify-end items-center space-x-4">
-            <div className="bg-white p-2 rounded">
-              Total:{" "}
-              {totalValue.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
+              <p className="mt-0.5 text-[11px] text-[#6B778C]">
+                Cadastre um novo componente e defina seus materiais.
+              </p>
             </div>
 
             <button
-              className="p-2 bg-slate-50 hover:bg-gray-300 rounded"
-              onClick={() => clearStates()}
               type="button"
+              onClick={clearStates}
+              className="
+                flex h-7 w-7 items-center justify-center
+                rounded-md
+                text-[#5E6C84]
+                transition
+                hover:bg-[#F4F5F7]
+                hover:text-[#172B4D]
+              "
+            >
+              <IoMdClose size={18} />
+            </button>
+          </div>
+
+          {/* BODY */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 py-5">
+            <div className="shrink-0 space-y-5">
+              {/* DADOS DO COMPONENTE */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* NOME */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                    Nome <span className="text-[#DE350B]">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="Digite o nome do componente"
+                    value={componenteRecipeName}
+                    onChange={(e) => setComponentRecipeName(e.target.value)}
+                    required
+                    className="
+                    h-9 w-full rounded-md
+                    border border-[#DFE1E6]
+                    bg-white px-3
+                    text-xs text-[#172B4D]
+                    outline-none
+                    transition
+                    placeholder:text-[#97A0AF]
+                    focus:border-[#4C9AFF]
+                    focus:ring-2
+                    focus:ring-[#DEEBFF]
+                  "
+                  />
+                </div>
+
+                {/* HOMENS */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                      Qtd. Homens <span className="text-[#DE350B]">*</span>
+                    </label>
+
+                    <input
+                      type="number"
+                      placeholder="Ex: 2"
+                      value={men}
+                      onChange={(e) => setMen(e.target.value)}
+                      min="1"
+                      required
+                      className="
+                      h-9 w-full rounded-md
+                      border border-[#DFE1E6]
+                      bg-white px-3
+                      text-xs text-[#172B4D]
+                      outline-none
+                      transition
+                      placeholder:text-[#97A0AF]
+                      focus:border-[#4C9AFF]
+                      focus:ring-2
+                      focus:ring-[#DEEBFF]
+                    "
+                    />
+                  </div>
+
+                  {/* HORAS */}
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                      Qtd. Horas <span className="text-[#DE350B]">*</span>
+                    </label>
+
+                    <input
+                      type="number"
+                      placeholder="Ex: 1.5"
+                      value={hours}
+                      onChange={(e) => setHours(e.target.value)}
+                      step="0.1"
+                      min="0"
+                      required
+                      className="
+                      h-9 w-full rounded-md
+                      border border-[#DFE1E6]
+                      bg-white px-3
+                      text-xs text-[#172B4D]
+                      outline-none
+                      transition
+                      placeholder:text-[#97A0AF]
+                      focus:border-[#4C9AFF]
+                      focus:ring-2
+                      focus:ring-[#DEEBFF]
+                    "
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* MATERIAIS */}
+              <div>
+                <label className="mb-1.5 block text-[11px] font-semibold text-[#172B4D]">
+                  Materiais <span className="text-[#DE350B]">*</span>
+                </label>
+
+                <SelectMenu
+                  variant="full"
+                  options={materials
+                    .filter((m) => !materialsList.includes(m.material_id))
+                    .map((m) => ({
+                      id: m.material_id,
+                      label: m.material_name,
+                    }))}
+                  selectedOption={materialsToAdd}
+                  setSelectedOption={setMaterialsToAdd}
+                  closeOnSelect={false}
+                  searchable
+                  searchPlaceholder="Pesquisar material..."
+                  confirmOnEnter
+                  onConfirmSelection={(selected) => {
+                    setMaterialsList((prev) => [
+                      ...prev,
+                      ...selected.filter((id) => !prev.includes(id)),
+                    ]);
+
+                    setMaterialsToAdd([]);
+                  }}
+                />
+              </div>
+            </div>
+            {/* TABELA */}
+            <div className="mt-4 min-h-[360px] min-w-0 flex-1 overflow-hidden rounded-md border border-[#DFE1E6] bg-white">
+              <div className="h-full min-h-0 overflow-auto">
+                <table className="w-full table-fixed text-xs">
+                  <thead className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
+                    <tr>
+                      <th className="w-[20%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                        Material
+                      </th>
+
+                      <th className="w-[23%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                        Descrição
+                      </th>
+
+                      <th className="w-[15%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                        Valor Unitário
+                      </th>
+
+                      <th className="w-[14%] px-3 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                        Quantidade
+                      </th>
+
+                      <th className="w-[15%] px-3 py-1 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                        Valor Total
+                      </th>
+
+                      <th className="w-[13%] px-3 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
+                        Ação
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {materialsList.length > 0 ? (
+                      materialsList.map((id) => {
+                        const found = materials.find(
+                          (m) => m.material_id === id,
+                        );
+
+                        const quantity =
+                          materialsQuantity.find((m) => m.id === id)
+                            ?.quantity || 0;
+
+                        const unitValue = found ? Number(found.value) : 0;
+
+                        const totalItem = quantity * unitValue;
+
+                        return (
+                          <tr
+                            key={id}
+                            className={`border-b border-[#DFE1E6] last:border-b-0 transition-colors ${materialsList.indexOf(id) % 2 === 0
+                                ? "bg-white hover:bg-[#EBECF0]"
+                                : "bg-[#F4F5F7] hover:bg-[#EBECF0]"
+                              }`}
+                          >
+                            {/* MATERIAL */}
+                            <td className="truncate px-3 py-1 text-left text-[11px] font-medium text-[#172B4D]">
+                              {found?.material_name ?? "-"}
+                            </td>
+
+                            {/* DESCRIÇÃO */}
+                            <td className="truncate px-3 py-1 text-left text-[11px] text-[#6B778C]">
+                              {found?.material_desc ?? "-"}
+                            </td>
+
+                            {/* VALOR UNITÁRIO */}
+                            <td className="px-3 py-1  text-left text-[11px] text-[#42526E]">
+                              {unitValue.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              })}
+                            </td>
+
+                            {/* QUANTIDADE */}
+                            <td className="px-3 py-1 text-center">
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={quantity}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+
+                                  if (!/^\d*\.?\d*$/.test(value)) {
+                                    return;
+                                  }
+
+                                  setMaterialsQuantity((prev) =>
+                                    prev.map((m) =>
+                                      m.id === id
+                                        ? {
+                                          ...m,
+                                          quantity: value,
+                                        }
+                                        : m,
+                                    ),
+                                  );
+                                }}
+                                className="
+                                  h-7 w-20 rounded-md
+                                  border border-[#DFE1E6]
+                                  bg-white px-2
+                                  text-center text-[11px]
+                                  text-[#172B4D]
+                                  outline-none
+                                  transition
+                                  focus:border-[#4C9AFF]
+                                  focus:ring-2
+                                  focus:ring-[#DEEBFF]
+                                "
+                              />
+                            </td>
+
+                            {/* VALOR TOTAL */}
+                            <td className="px-3 py-1 text-left text-[11px] font-medium text-[#172B4D]">
+                              {totalItem.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              })}
+                            </td>
+
+                            {/* AÇÃO */}
+                            <td className="px-3 py-1 text-center">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMaterialsList(
+                                    materialsList.filter((i) => i !== id),
+                                  );
+                                }}
+                                className="
+                                  rounded-md
+                                  px-2 py-1
+                                  text-[10px] font-medium
+                                  text-[#DE350B]
+                                  transition
+                                  hover:bg-[#FFEBE6]
+                                "
+                              >
+                                Excluir
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-3 py-8 text-center text-[11px] text-[#6B778C]"
+                        >
+                          Nenhum material selecionado.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* TOTAL */}
+            <div className="flex justify-end">
+              <div className="rounded-md border border-[#DFE1E6] bg-[#FAFBFC] px-4 py-2">
+                <span className="mr-2 text-[11px] text-[#6B778C]">Total:</span>
+
+                <span className="text-xs font-semibold text-[#172B4D]">
+                  {totalValue.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div className="flex items-center justify-end gap-2 border-t border-[#DFE1E6] bg-[#FAFBFC] px-5 py-3">
+            <button
+              type="button"
+              onClick={clearStates}
+              className="
+                h-8 rounded-md
+                border border-[#DFE1E6]
+                bg-white px-3
+                text-[11px] font-medium
+                text-[#42526E]
+                transition
+                hover:bg-[#F4F5F7]
+              "
             >
               Cancelar
             </button>
-            <button className="bnt-add" type="submit">
+
+            <button
+              type="submit"
+              className="
+                h-8 rounded-md
+                bg-[#0052CC] px-3.5
+                text-[11px] font-semibold
+                text-white
+                transition
+                hover:bg-[#0065FF]
+                active:scale-[0.98]
+              "
+            >
               Salvar Receita
             </button>
           </div>
