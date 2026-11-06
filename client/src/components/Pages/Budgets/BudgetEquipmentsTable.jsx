@@ -10,18 +10,53 @@ import { formatDate, formatForInput } from "@utils/dateUtils.js";
 
 // Stub temporário: remova quando importar o deleteRelation real.
 
-const maskDateInput = (value) => {
+const maskDateInput = (value, previousValue = "") => {
   const digits = String(value).replace(/\D/g, "").slice(0, 8);
+
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+
+  if (day.length === 2) {
+    const dayNumber = Number(day);
+
+    if (dayNumber < 1 || dayNumber > 31) {
+      return previousValue;
+    }
+  }
+
+  if (month.length === 2) {
+    const monthNumber = Number(month);
+
+    if (monthNumber < 1 || monthNumber > 12) {
+      return previousValue;
+    }
+  }
+
+  if (year.length === 4) {
+    const yearNumber = Number(year);
+    const currentYear = new Date().getFullYear();
+
+    if (yearNumber < currentYear) {
+      return previousValue;
+    }
+
+    const maxDays = new Date(yearNumber, Number(month), 0).getDate();
+
+    if (Number(day) > maxDays) {
+      return previousValue;
+    }
+  }
 
   if (digits.length <= 2) {
     return digits.length === 2 ? `${digits}/` : digits;
   }
 
   if (digits.length <= 4) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}${digits.length === 4 ? "/" : ""}`;
+    return `${day}/${month}${digits.length === 4 ? "/" : ""}`;
   }
 
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  return `${day}/${month}/${year}`;
 };
 
 const formatMaskedDate = (date) => {
@@ -34,16 +69,26 @@ const formatMaskedDate = (date) => {
 
 const maskedDateToIso = (value) => {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+
   if (!match) return null;
 
   const [, day, month, year] = match;
-  const date = new Date(Date.UTC(+year, +month - 1, +day));
 
-  if (
-    date.getUTCFullYear() !== +year ||
-    date.getUTCMonth() !== +month - 1 ||
-    date.getUTCDate() !== +day
-  ) {
+  const dayNumber = Number(day);
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+
+  const currentYear = new Date().getFullYear();
+
+  if (yearNumber < currentYear) return null;
+
+  if (monthNumber < 1 || monthNumber > 12) {
+    return null;
+  }
+
+  const maxDays = new Date(yearNumber, monthNumber, 0).getDate();
+
+  if (dayNumber < 1 || dayNumber > maxDays) {
     return null;
   }
 
@@ -173,6 +218,65 @@ function BudgetEquipmentTable({
       start,
       end,
     });
+  };
+
+  const handleEndDateComplete = async (
+    event,
+    budgetEquipmentId,
+    compId,
+    compKey,
+    originalStart,
+    endText,
+  ) => {
+    const startText = getInputValue(compKey, "start", originalStart);
+
+    const start = maskedDateToIso(startText);
+    const end = maskedDateToIso(endText);
+
+    if (!start || !end) return;
+
+    if (end < start) {
+      alert("A data de término não pode ser anterior à data de início.");
+      return;
+    }
+
+    const currentInput = event.currentTarget;
+    const table = currentInput.closest("table");
+
+    if (!table || currentInput.dataset.saving === "true") return;
+
+    const currentIndex = Array.from(
+      table.querySelectorAll('input[data-gantt-date="true"]'),
+    ).indexOf(currentInput);
+
+    currentInput.dataset.saving = "true";
+
+    try {
+      await dateMutation.mutateAsync({
+        budgetEquipmentId,
+        compId,
+        start,
+        end,
+      });
+
+      const inputs = Array.from(
+        table.querySelectorAll('input[data-gantt-date="true"]'),
+      );
+
+      const nextInput = inputs
+        .slice(currentIndex + 1)
+        .find((input) => !input.disabled);
+
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
+    } catch (error) {
+      console.error("Erro ao salvar datas:", error);
+      alert("Não foi possível salvar as datas do componente.");
+    } finally {
+      currentInput.dataset.saving = "false";
+    }
   };
 
   const getInputValue = (key, field, originalDate) => {
@@ -452,6 +556,11 @@ function BudgetEquipmentTable({
                                     onChange={(e) => {
                                       const value = maskDateInput(
                                         e.target.value,
+                                        getInputValue(
+                                          compKey,
+                                          "start",
+                                          compTasks?.planned_start_at,
+                                        ),
                                       );
 
                                       handleInputChange(
@@ -491,10 +600,25 @@ function BudgetEquipmentTable({
                                     onChange={(e) => {
                                       const value = maskDateInput(
                                         e.target.value,
+                                        getInputValue(
+                                          compKey,
+                                          "end",
+                                          compTasks?.planned_end_at,
+                                        ),
                                       );
 
                                       handleInputChange(compKey, "end", value);
-                                      advanceDateFocus(e, value);
+
+                                      if (maskedDateToIso(value)) {
+                                        handleEndDateComplete(
+                                          e,
+                                          equip.budget_equipment_id,
+                                          comp.component_recipe_id,
+                                          compKey,
+                                          compTasks?.planned_start_at,
+                                          value,
+                                        );
+                                      }
                                     }}
                                     onBlur={() =>
                                       handleDateSave(
