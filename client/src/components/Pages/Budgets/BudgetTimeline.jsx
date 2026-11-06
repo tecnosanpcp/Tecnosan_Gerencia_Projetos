@@ -1,6 +1,4 @@
 import React, { useMemo, useState, useEffect } from "react";
-
-import StatusButton from "../../Ui/StatusButton";
 import { vwEquipmentRecipesMaterialSummary } from "@services/ViewsService.js";
 
 const isValidDate = (date) => {
@@ -20,6 +18,29 @@ export default function BudgetTimeline({
   timelineBudgets = [],
 }) {
   const [groupedTimelines, setGroupedTimelines] = useState([]);
+
+  const [collapsedEquipments, setCollapsedEquipments] = useState({});
+
+  const toggleEquipment = (id) => {
+    setCollapsedEquipments((previous) => ({
+      ...previous,
+      [id]: !previous[id],
+    }));
+  };
+
+  const expandAll = () => setCollapsedEquipments({});
+
+  const collapseAll = () => {
+    const collapsed = {};
+
+    groupedTimelines.forEach((group) => {
+      group.equipments.forEach((equip) => {
+        collapsed[equip.budget_equipment_id] = true;
+      });
+    });
+
+    setCollapsedEquipments(collapsed);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -227,11 +248,34 @@ export default function BudgetTimeline({
   };
 
   const formatDateHeader = (date) => {
-    return date.toLocaleDateString("pt-BR", {
+    const weekday = date
+      .toLocaleDateString("pt-BR", { weekday: "short" })
+      .replace(".", "");
+
+    const dayMonth = date.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
-      year: "2-digit",
     });
+
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-[10px] font-medium capitalize">{weekday}</span>
+        <span className="text-[11px] font-semibold">{dayMonth}</span>
+      </div>
+    );
+  };
+
+  const formatPeriod = (start, end) => {
+    if (!start) return "—";
+
+    const format = (value) =>
+      new Date(value).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        timeZone: "UTC",
+      });
+
+    return `${format(start)} – ${format(end || start)}`;
   };
 
   if (timelineDates.length === 0) {
@@ -253,7 +297,7 @@ export default function BudgetTimeline({
   }
 
   return (
-    <div className="flex w-full flex-col pb-2">
+    <div className="flex w-full flex-col">
       {groupedTimelines.map((group) => (
         <div
           key={group.budgetInfo.id || group.budgetInfo.budget_id}
@@ -271,145 +315,239 @@ export default function BudgetTimeline({
             </div>
           )}
 
-          <div className="w-full overflow-x-auto border border-[#DFE1E6] bg-white">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-[#DFE1E6] bg-[#F4F5F7]">
-                  <th className="sticky left-0 z-20 min-w-[190px] border-r border-[#DFE1E6] bg-[#F4F5F7] px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wide text-[#5E6C84]">
-                    Item
-                  </th>
+          <div className="w-full overflow-hidden bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DFE1E6] bg-white px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-[#172B4D]">
+                  Cronograma de produção
+                </span>
+                <span className="rounded-full bg-[#EAF2FF] px-2 py-1 text-[11px] font-medium text-[#0052CC]">
+                  {group.equipments.length} equipamentos
+                </span>
+              </div>
 
-                  {timelineDates.map((date, index) => (
-                    <th
-                      key={index}
-                      className="min-w-[52px] border-r border-[#EBECF0] px-1 py-2 text-center text-[9px] font-medium text-[#5E6C84] last:border-r-0"
-                    >
-                      {formatDateHeader(date)}
+              <div className="flex flex-nowrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={expandAll}
+                  className="rounded-md border border-[#DFE1E6] px-3 py-1.5 text-xs font-medium text-[#42526E] hover:bg-[#F4F5F7]"
+                >
+                  Expandir tudo
+                </button>
+
+                <button
+                  type="button"
+                  onClick={collapseAll}
+                  className="rounded-md border border-[#DFE1E6] px-3 py-1.5 text-xs font-medium text-[#42526E] hover:bg-[#F4F5F7]"
+                >
+                  Recolher tudo
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[65vh] w-full overflow-auto">
+              <table className="w-max min-w-full border-separate border-spacing-0 text-left">
+                <thead className="sticky top-0 z-30">
+                  <tr className="bg-[#F4F6FA]">
+                    <th className="sticky left-0 z-40 min-w-[280px] w-[280px] border-b border-r border-[#DFE1E6] bg-[#F4F6FA] px-4 py-3 text-left text-[11px] font-semibold uppercase text-[#42526E]">
+                      Atividade
                     </th>
-                  ))}
-                </tr>
-              </thead>
 
-              <tbody>
-                {group.equipments.map((equip) => {
-                  const budgetGroup = groupedData.find(
-                    (item) =>
-                      String(item.budget_id) ===
-                      String(group.budgetInfo.id || group.budgetInfo.budget_id),
-                  );
+                    <th className="sticky left-[280px] z-40 min-w-[125px] border-b border-r border-[#DFE1E6] bg-[#F4F6FA] px-3 py-3 text-center text-[11px] font-semibold uppercase text-[#42526E]">
+                      Período
+                    </th>
 
-                  const equipmentTasks = (budgetGroup?.components || [])
-                    .filter(
-                      (comp) =>
-                        String(comp.budget_equipment_id) ===
-                        String(equip.budget_equipment_id),
-                    )
-                    .map((comp) => {
-                      const task = timelineTasks.find(
-                        (item) =>
-                          String(item.budget_equipment_id) ===
-                            String(equip.budget_equipment_id) &&
-                          String(item.component_recipe_id) ===
-                            String(comp.component_recipe_id),
-                      );
+                    {timelineDates.map((date, index) => (
+                      <th
+                        key={index}
+                        className={`min-w-[48px] border-b border-r border-[#DFE1E6] px-1 py-2 text-center ${
+                          isWeekend(date)
+                            ? "bg-[#FFF0EE] text-[#BF2600]"
+                            : "bg-[#F4F6FA] text-[#42526E]"
+                        }`}
+                      >
+                        {formatDateHeader(date)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
 
-                      return {
-                        ...task,
-                        ...comp,
-                        component_name:
-                          task?.component_name || comp.recipe_name,
-                      };
-                    });
+                <tbody>
+                  {group.equipments.map((equip) => {
+                    const budgetGroup = groupedData.find(
+                      (item) =>
+                        String(item.budget_id) ===
+                        String(
+                          group.budgetInfo.id || group.budgetInfo.budget_id,
+                        ),
+                    );
 
-                  return (
-                    <React.Fragment key={equip.budget_equipment_id}>
-                      <tr className="border-b border-[#EBECF0] bg-white">
-                        <td className="sticky left-0 z-10 min-w-[190px] border-r border-[#DFE1E6] bg-white px-3 py-2">
-                          <span
-                            className="block max-w-[180px] truncate text-xs font-semibold text-[#172B4D]"
-                            title={equip.equipment_name}
-                          >
-                            {equip.equipment_name}
-                          </span>
-                        </td>
+                    const equipmentTasks = (budgetGroup?.components || [])
+                      .filter(
+                        (comp) =>
+                          String(comp.budget_equipment_id) ===
+                          String(equip.budget_equipment_id),
+                      )
+                      .map((comp) => {
+                        const task = timelineTasks.find(
+                          (item) =>
+                            String(item.budget_equipment_id) ===
+                              String(equip.budget_equipment_id) &&
+                            String(item.component_recipe_id) ===
+                              String(comp.component_recipe_id),
+                        );
 
-                        {timelineDates.map((date, index) => (
-                          <td
-                            key={index}
-                            className={`h-9 border-r border-[#EBECF0] p-0 text-center last:border-r-0 ${
-                              isWeekend(date) ? "bg-red-500" : ""
-                            }`}
-                          >
-                            {!isWeekend(date) &&
+                        return {
+                          ...task,
+                          ...comp,
+                          component_name:
+                            task?.component_name || comp.recipe_name,
+                        };
+                      });
+
+                    return (
+                      <React.Fragment key={equip.budget_equipment_id}>
+                        <tr className="group border-b border-[#DFE1E6] bg-[#EAF2FF]">
+                          <td className="sticky left-0 z-20 min-w-[280px] w-[280px] border-b border-r border-[#DFE1E6] bg-[#EAF2FF] px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleEquipment(equip.budget_equipment_id)
+                              }
+                              className="flex w-full items-center gap-2 text-left"
+                            >
+                              <span className="text-[#0052CC]">
+                                {collapsedEquipments[equip.budget_equipment_id]
+                                  ? "▸"
+                                  : "▾"}
+                              </span>
+
+                              
+
+                              <span
+                                className="block truncate text-xs font-semibold text-[#172B4D]"
+                                title={equip.equipment_name}
+                              >
+                                {equip.equipment_name}
+                              </span>
+                            </button>
+                          </td>
+
+                          <td className="sticky left-[280px] z-20 min-w-[125px] border-b border-r border-[#DFE1E6] bg-[#EAF2FF] px-2 text-center text-[10px] font-semibold text-[#253858]">
+                            {formatPeriod(
+                              equip.equipment_start_at,
+                              equip.equipment_end_at,
+                            )}
+                          </td>
+
+                          {timelineDates.map((date, index) => {
+                            const active =
+                              !isWeekend(date) &&
                               isDateInRange(
                                 date,
-                                equip?.equipment_start_at,
-                                equip?.equipment_end_at,
-                              ) && (
-                                <div className="flex h-full items-center justify-center">
-                                  <StatusButton status="Pending" />
-                                </div>
-                              )}
-                          </td>
-                        ))}
-                      </tr>
+                                equip.equipment_start_at,
+                                equip.equipment_end_at,
+                              );
 
-                      {equipmentTasks.map((task) => (
-                        <tr
-                          key={
-                            task.task_id ||
-                            `${equip.equipment_recipe_id}-${task.component_recipe_id}`
-                          }
-                          className="border-b border-[#EBECF0] bg-[#FAFBFC] transition-colors hover:bg-[#F4F5F7]"
-                        >
-                          <td className="sticky left-0 z-10 min-w-[190px] border-r border-[#DFE1E6] bg-[#FAFBFC] px-3 py-1.5 pl-7">
-                            <span
-                              className="block max-w-[165px] truncate text-[10px] text-[#5E6C84]"
-                              title={task.component_name}
-                            >
-                              {task.component_name}
-                            </span>
-                          </td>
-
-                          {timelineDates.map((date, index) => (
-                            <td
-                              key={index}
-                              className={`h-8 border-r border-[#EBECF0] p-0 text-center last:border-r-0 ${
-                                isWeekend(date) ? "bg-red-500" : ""
-                              }`}
-                            >
-                              {!isWeekend(date) &&
-                                isDateInRange(
-                                  date,
-                                  task?.planned_start_at,
-                                  task?.planned_end_at,
-                                ) && (
-                                  <div className="flex h-full items-center justify-center">
-                                    <StatusButton status="Pending" />
-                                  </div>
+                            return (
+                              <td
+                                key={index}
+                                className={`h-10 min-w-[48px] border-b border-r border-[#EBECF0] p-0 ${
+                                  isWeekend(date)
+                                    ? "bg-[#FFF0EE]"
+                                    : "bg-[#EAF2FF]"
+                                }`}
+                              >
+                                {active && (
+                                  <div
+                                    className="my-[10px] h-5 bg-[#0052CC]"
+                                    title={`${equip.equipment_name}: ${formatPeriod(
+                                      equip.equipment_start_at,
+                                      equip.equipment_end_at,
+                                    )}`}
+                                  />
                                 )}
-                            </td>
-                          ))}
+                              </td>
+                            );
+                          })}
                         </tr>
-                      ))}
-                    </React.Fragment>
-                  );
-                })}
 
-                {group.equipments.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={timelineDates.length + 1}
-                      className="px-4 py-10 text-center"
-                    >
-                      <p className="text-sm font-medium text-[#172B4D]">
-                        Nenhum equipamento neste orçamento
-                      </p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        {!collapsedEquipments[equip.budget_equipment_id] &&
+                          equipmentTasks.map((task) => (
+                            <tr
+                              key={
+                                task.task_id ||
+                                `${equip.budget_equipment_id}-${task.component_recipe_id}`
+                              }
+                              className="group bg-white transition-colors hover:bg-[#F7F9FC]"
+                            >
+                              <td className="sticky left-0 z-20 min-w-[280px] w-[280px] border-b border-r border-[#EBECF0] bg-white py-2 pl-10 pr-3 group-hover:bg-[#F7F9FC]">
+                                <span
+                                  className="block truncate text-[11px] text-[#42526E]"
+                                  title={task.component_name}
+                                >
+                                  {task.component_name}
+                                </span>
+                              </td>
+
+                              <td className="sticky left-[280px] z-20 min-w-[125px] border-b border-r border-[#EBECF0] bg-white px-2 text-center text-[10px] text-[#5E6C84] group-hover:bg-[#F7F9FC]">
+                                {formatPeriod(
+                                  task.planned_start_at,
+                                  task.planned_end_at,
+                                )}
+                              </td>
+
+                              {timelineDates.map((date, index) => {
+                                const active =
+                                  !isWeekend(date) &&
+                                  isDateInRange(
+                                    date,
+                                    task.planned_start_at,
+                                    task.planned_end_at,
+                                  );
+
+                                return (
+                                  <td
+                                    key={index}
+                                    className={`h-9 min-w-[48px] border-b border-r border-[#EBECF0] p-0 ${
+                                      isWeekend(date)
+                                        ? "bg-[#FFF0EE]"
+                                        : "bg-white"
+                                    }`}
+                                  >
+                                    {active && (
+                                      <div
+                                        className="my-[11px] h-[14px] bg-[#69A5F8]"
+                                        title={`${task.component_name}: ${formatPeriod(
+                                          task.planned_start_at,
+                                          task.planned_end_at,
+                                        )}`}
+                                      />
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                      </React.Fragment>
+                    );
+                  })}
+
+                  {group.equipments.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={timelineDates.length + 2}
+                        className="px-4 py-10 text-center"
+                      >
+                        <p className="text-sm font-medium text-[#172B4D]">
+                          Nenhum equipamento neste orçamento
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ))}
